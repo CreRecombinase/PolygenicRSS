@@ -183,6 +183,8 @@ estimation_func <- function(Q,rd,asimd,parallel=F,confound_bounds = c(0,1)){
 
 [Read more about the large and small simulations](simulation.html)
 
+In the first plot, I show the estimate of PVE ($\hat{PVE}$) vs the true PVE. Remember that $\hat{PVE}=\frac{p}{n}\hat{\sigma^2_u}$.  This is without confounding.  In the second plot, I show the $\text{RMSE}(PVE)$ of the model that takes confounding into account (`Confound`) vs the model that doesn't take confounding into account (`No_Confound`), with increasing levels of counfounding `c = 0,0.1,0.2`
+
 ```{r filenames}
 small_genof <- "/home/nwknoblauch/Dropbox/eqtl_estimation/data/RSS_examples/genotype2.mat"
 small_evdf <- "/home/nwknoblauch/Dropbox/eqtl_estimation/data/small_sim_evd.h5"
