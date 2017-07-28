@@ -6,6 +6,7 @@
 # https://yihui.name/knitr/options/#chunk-options
 knitr::opts_chunk$set(
   comment = NA,
+  echo=F,
   fig.align = "center",
   tidy = FALSE,
   fig.path = paste0("figure/", knitr::current_input(), "/")

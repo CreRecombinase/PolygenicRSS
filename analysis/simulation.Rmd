@@ -55,7 +55,7 @@ $y$ is centered to have a mean of $0$. $\hat{\beta_i}$ and $\text{se}(\hat{\beta
 
 ## Simulations on small and medium datasets
 
-For this simulation I'll use Xiang's small and medium sized example datasets (`genotype2.mat` and `genotype.mat`)
+For this simulation I'll use Xiang's small  and medium sized example datasets (`genotype2.mat` and `genotype.mat`)
 
 
 ```{r echo=F,message=F}
