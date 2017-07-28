@@ -1,0 +1,8 @@
+---
+title: Results
+output: html_document
+---
+
+
+* [Polygenic Estimation With and Without Confounding](PolygenicEstimation.html)
+* [Standardized Effect Size Simulation](simulation.html)
