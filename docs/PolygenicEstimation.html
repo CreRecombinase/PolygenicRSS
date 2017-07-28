@@ -316,7 +316,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-07-28</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> f844707</p>
+<p><strong>Code version:</strong> 7170dab</p>
 <!-- Add your analysis here -->
 <!-- # Background -->
 <!-- ##General properties of compound normal -->
@@ -349,6 +349,7 @@ shared across the workflowr files. -->
 <div id="smaller-dataset" class="section level2">
 <h2>Smaller Dataset</h2>
 <p><a href="simulation.html">Read more about the large and small simulations</a></p>
+<p>In the first plot, I show the estimate of PVE (<span class="math inline">\(\hat{PVE}\)</span>) vs the true PVE. Remember that <span class="math inline">\(\hat{PVE}=\frac{p}{n}\hat{\sigma^2_u}\)</span>. This is without confounding. In the second plot, I show the <span class="math inline">\(\text{RMSE}(PVE)\)</span> of the model that takes confounding into account (<code>Confound</code>) vs the model that doesn’t take confounding into account (<code>No_Confound</code>), with increasing levels of counfounding <code>c = 0,0.1,0.2</code></p>
 <pre><code>Joining, by = &quot;fgeneid&quot;</code></pre>
 <p><img src="figure/PolygenicEstimation.Rmd/plot_small-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p><img src="figure/PolygenicEstimation.Rmd/plot2_small-1.png" width="672" style="display: block; margin: auto;" /></p>
