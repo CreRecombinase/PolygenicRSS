@@ -1,0 +1,268 @@
+---
+title: "Polygenic Estimation With and Without Confounding"
+author: "Nicholas Knoblauch"
+date: 2017-07-28
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+
+<!-- # Background -->
+
+<!-- ##General properties of compound normal -->
+
+<!-- If $$x|\mu \sim N(A\mu,\Sigma)$$ and $$\mu \sim N(\rho,\Lambda)$$ then the marginalized form of $x$ is $$x \sim N(A\rho,A \Lambda A^{T} + \Sigma)$$ -->
+
+<!-- ## RSS polygenic prior on $\beta$ -->
+
+<!-- According to the RSS likelihood: -->
+
+<!-- $$\hat{\beta}|\beta \sim N(SRS^{-1}\beta,SRS)$$ Where $R$ is the population LD matrix, and $S$ is a diagonal matrix with entires $S_{jj}=\frac{1}{\text{se}(\hat{\beta}_j)}$  This means that if $\beta \sim N(0,I\sigma_{\beta}^2)$ , then we can obtain the the marginalized form of $\hat{\beta}$ by substituting $$A=SRS^{-1}$$ $$\rho=0$$ $$\Lambda=I\sigma_{\beta}^2$$  and $$\Sigma=SRS$$ -->
+
+
+<!-- $$\hat{\beta} \sim N(0,(SRS^{-1})I\sigma_{\beta}^2(SRS^{-1})^{T}+SRS)=N(0,\sigma_{\beta}^2 SRS^{-2}RS+SRS)$$ -->
+
+# RSS with standardized effect size and polygenic prior
+
+If we define $\hat{u_i}=\hat{\beta_i}/s_i$ ,the likelihood becomes
+
+$$\hat{u}|u \sim N(Ru,R)$$
+
+The marginalized form is 
+
+$$\hat{u} \sim N(0,\sigma^2_uR^2+R)$$
+Let $V(\sigma_u) = \sigma_u^2R^2+R=\sigma^2_u(R+\frac{1}{\sigma^2_u}I)R$
+
+Using an eigen decomposition of $R$ ($R=QDQ^T$), we arrive at the log-likelihood function:
+
+$$l(\sigma_u)=-\frac{1}{2}\left[\sum_i \log(d_i\sigma_u^2+1) + \hat{u}^TQ\text{diag}(\frac{1}{d_i^2\sigma_u^2+d_i})Q^T\hat{u}\right]$$
+
+
+
+# With confounding term
+
+Adding a term for confounding is straightforward to implement
+
+$$\hat{u} \sim N(0,R S^{-1} \Sigma_u S^{-1} R+ cI)$$
+Special case:
+$$ \Sigma_u= S(\sigma^2_uI)S$$
+
+$$\hat{u} \sim N(0,\sigma^2u R^2+R+cI) $$
+MAF case: 
+$$\Sigma_u = S \sigma^2_u \text{diag}([2f_i(1-f_i)]^\alpha)S$$
+
+### Likelihood
+
+$$L(\hat{u})=\frac{-1}{2} |R S^{-1} \Sigma_u S^{-1} R + R + cI | -\frac{1}{2} \hat{u}^T(R S^{-1} \Sigma_u S^{-1} R + R + cI)^{-1}\hat{u}$$
+
+
+# Results
+
+
+
+```{Rcpp cpp_functions}
+#include <RcppEigen.h>
+// [[Rcpp::depends(RcppEigen)]]
+using namespace Rcpp;
+typedef Eigen::Map<Eigen::ArrayXd> mapa;
+typedef Eigen::Map<Eigen::MatrixXd> mapmat;
+typedef Eigen::Map<Eigen::VectorXd> mapvec;
+
+//[[Rcpp::export]]
+double norm_flfun_cpp(const double sigu,const mapvec dvec, const mapmat quh){
+  double varu=sigu*sigu;
+  double tsum = ((dvec.array()*varu+1).log()).sum();
+  double tprod = (quh.transpose()*(1/(dvec.array().square()*varu+dvec.array())).matrix().asDiagonal()*quh).coeff(0,0);
+  return -(-0.5*(tsum+tprod));
+}
+
+
+
+//[[Rcpp::export]]
+double norm_alfun_cpp(const mapa par,const mapa dvec, const mapa quh){
+  const double sigu=par(0);
+  const double varu=sigu*sigu;
+  const double a=par(1);
+  double tsum = ((dvec*dvec*varu+dvec+a).log()).sum();
+  double tprod = ((quh*(1/(dvec*dvec*varu+dvec+a)))*(quh)).sum();
+  return -(-0.5*(tsum+tprod));
+}
+
+
+
+
+//[[Rcpp::export]]
+Rcpp::List eigen_evd(const Eigen::MatrixXd &R){
+  using namespace Rcpp;
+  Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(R.rows());
+  es.compute(R);
+  return(Rcpp::List::create(_["D"]=es.eigenvalues(),
+                            _["Q"]=es.eigenvectors()));
+}
+```
+
+
+```{r simdat,echo=F,message=F}
+library(RcppEigenH5)
+library(tidyverse)
+library(doParallel)
+library(progress)
+
+evd_norm <- function(Q,rd,uh,sigu_bounds){
+  quh <- t(Q)%*%uh
+  ldat  <- optimise(norm_flfun_cpp,interval=sigu_bounds,dvec=rd,quh=quh)
+  return(data_frame(sigu=ldat$minimum,lnZ=ldat$objective))
+}
+
+evd_anorm <- function(Q,rd,uh,sigu_bounds=c(0.3,2.6),a_bounds=c(0,1)){
+  # revd <- eigen(R)
+  # rd <- revd$values
+  # Q <- revd$vectors
+  quh <- c(t(Q)%*%uh)
+  minb <- c(sigu_bounds[1],
+            a_bounds[1])
+  maxb <- c(sigu_bounds[2],
+            a_bounds[2])
+  par0 <- runif(2,min=minb,max = maxb)
+  ldat  <- optim(par0,fn=norm_alfun_cpp,lower=minb,upper=maxb,method = "L-BFGS-B",
+                 dvec=rd,quh=quh)
+  return(data_frame(sigu=ldat$par[1],a=ldat$par[2],lnZ=ldat$value))
+}
+
+
+
+estimation_func <- function(Q,rd,asimd,parallel=F,confound_bounds = c(0,1)){
+  tparamdf <- asimd$tparam_df
+  uhmat_bias <- asimd$bias_uh_mat
+  sigu_bounds <- c(min(tparamdf$tsigu)/2,max(tparamdf$tsigu)*2)
+  ng <- ncol(uhmat_bias)
+  n <- nrow(asimd$ymat)
+  p <- nrow(asimd$betamat)
+  tresl_xf <- list()
+  #tresl_af <- list()
+  pb <- progress_bar$new(total=ng)
+  i <- 1
+  res_df <- foreach(i=1:ng,.export=c('evd_norm','evd_anorm','mutate'),.packages=c("dplyr"),.combine=bind_rows) %do%{
+    tuh_b <- uhmat_bias[,i]
+    bind_rows(
+      evd_norm(Q,rd,tuh_b,sigu_bounds = sigu_bounds) %>% mutate(fgeneid=i,method="No_Confound",pve=p/n*sigu^2),
+      evd_anorm(Q,rd,tuh_b,sigu_bounds=sigu_bounds,a_bounds = confound_bounds) %>% mutate(fgeneid=i,method="Confound",pve=p/n*sigu^2)
+    )
+  }
+  return(inner_join(res_df,tparamdf))
+}
+
+
+```
+
+
+
+
+
+## Smaller Dataset
+
+[Read more about the large and small simulations](simulation.html)
+
+```{r filenames}
+small_genof <- "/home/nwknoblauch/Dropbox/eqtl_estimation/data/RSS_examples/genotype2.mat"
+small_evdf <- "/home/nwknoblauch/Dropbox/eqtl_estimation/data/small_sim_evd.h5"
+small_simf <- "../data/polygenic_sim_genotype2/simulation1.RDS"
+large_genof <- "/home/nwknoblauch/Dropbox/eqtl_estimation/data/RSS_examples/genotype.mat"
+large_evdf <- "/home/nwknoblauch/Dropbox/eqtl_estimation/data/large_sim_evd.h5"
+large_simf <- "../data/polygenic_sim_genotype/simulation.RDS"
+
+
+
+```
+
+```{r helper_funs}
+est_param <- function(evdf,simf,genof){
+  if(!file.exists(evdf)){
+    R <- read_2d_mat_h5(genof,groupname = "/",dataname = "shrink_R")
+    evdR <- eigen(R)
+    Q <- evdR$vectors
+    rd <- evdR$values
+    write_dvec_h5(evdf,"EVD","D",rd,deflate_level = 4)
+    write_mat_h5(evdf,"EVD","Q",data=Q,deflate_level = 2)
+  }else{
+    Q <- read_2d_mat_h5(evdf,"EVD","Q")
+    rd <- read_dvec(evdf,"EVD","D")  
+  }
+  asimd <- readRDS(simf)
+  
+  res_df <- estimation_func(Q,rd,asimd,parallel = F)
+  return(res_df)
+}
+
+```
+
+
+
+```{r small_sim,cache=T}
+res_df <- est_param(small_evdf,small_simf,small_genof)
+
+```
+```{r plot_small,cache=T}
+filter(res_df,method=="No_Confound",tbias==0) %>% ggplot(aes(x=tpve,y=pve))+geom_point()+geom_smooth(method="lm")+xlab(expression(paste("PVE")))+ylab(expression(hat("PVE")))+ggtitle("Estimate of PVE vs True PVE")
+```
+
+
+
+
+```{r plot2_small,cache=T}
+rename(res_df,ahat=a) %>% rename(a=tbias) %>% ggplot(aes(y=sqrt((tpve-pve)^2),x=method,fill=method))+geom_boxplot()+xlab(expression(paste("Estimator")))+
+  ylab("RMSE(PVE)")+
+  ggtitle("Estimating PVE With Confounding",
+          paste0("Using a model with and without a confounding term"))+facet_wrap(~a)
+```
+
+# Larger Dataset
+
+
+```{r large_sim,cache=T}
+res_df_large <- est_param(large_evdf,large_simf,large_genof)
+```
+
+
+```{r plot_large}
+filter(res_df_large,method=="No_Confound",tbias==0) %>% ggplot(aes(x=tpve,y=pve))+geom_point()+geom_smooth(method="lm")+xlab(expression(paste("PVE")))+ylab(expression(hat("PVE")))+ggtitle("Estimate of PVE vs True PVE")
+```
+
+```{r plot2_large}
+rename(res_df_large,ahat=a) %>% rename(a=tbias) %>% ggplot(aes(y=sqrt((tpve-pve)^2),x=method,fill=method))+geom_boxplot()+xlab(expression(paste("Estimator")))+
+  ylab("RMSE(PVE)")+
+  ggtitle("Estimating PVE With Confounding",
+          paste0("Using a model with and without a confounding term"))+facet_wrap(~a)
+```
+
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
+
+
+

@@ -1,0 +1,179 @@
+---
+title: "Standardized Effect Size Simulation"
+author: "Nicholas Knoblauch"
+date: 2017-07-27
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+# GWAS Simulation Strategy
+
+## Overview
+
+The main idea is that we have a parameter we want to estimate ($PVE$) from data $\hat{u}=\frac{\hat{\beta}}{\text{se}(\hat{\beta})}$
+
+The path from $PVE$ to $\hat{u}$ looks like this:
+
+Start with an $n$x$p$ matrix of column-centered genotypes ($X$).
+
+For a chosen value of $PVE$, define $\sigma_u$ as :
+
+$$\sigma_u=\sqrt{\frac{n}{p}PVE}$$
+
+$$u_i \sim N(0,\sigma_u)$$
+
+$\beta$ is a transformation of $u$ based on $\sigma_y$ and $\sigma_{x_j}$ ($\sigma_y$ is chosen to be 1 for all simulations)
+
+
+$$\beta_i=\frac{\sigma_y}{\sqrt{n}\sigma_{x_i}} u_i$$
+From there we can construct $V(X\beta)$ which we can combine with our chosen PVE value to obtain the scale($\tau^{-1}$) of the residuals($\epsilon$):
+
+$$ PVE= \frac{V(X\beta)}{\tau^{-1} + V(X\beta)} \implies \tau^{-1} = V(X\beta) \left(\frac{1}{PVE}-1\right)  $$
+$$\epsilon \sim N(0,\tau^{-1}I_n)$$
+
+
+$$ y= X \beta + \epsilon $$
+$y$ is centered to have a mean of $0$. $\hat{\beta_i}$ and $\text{se}(\hat{\beta_i})$ Are obtained by univariate ordinary least squares (fit without an intercept term). If there is confounding in the simulation, it's added to $\hat{\beta}$ as $\hat{u}_{\text{confound}}=\hat{u}+N(0,a I_p)$
+
+## Simulations on small and medium datasets
+
+For this simulation I'll use Xiang's small and medium sized example datasets (`genotype2.mat` and `genotype.mat`)
+
+
+```{r echo=F,message=F}
+library(RcppEigenH5)
+library(RSSReQTL)
+library(tidyverse)
+large_genof <- "/home/nwknoblauch/Downloads/genotype.mat"
+small_genof <- "/home/nwknoblauch/Downloads/genotype2.mat"
+small_p <- get_rownum_h5(small_genof,"/","C")
+large_p <- get_rownum_h5(large_genof,"/","C")
+pve <- as.numeric(seq(0.1,0.3,length.out = 18))
+bias <- as.numeric(seq(0.0,0.5,length.out = 5))
+nreps <- 5
+```
+
+
+Let's start with a simulation on `r small_p` loci.  There will be several true values of PVE (`r pve`), and bias (`r bias`), and `r nreps` replication of each combination, for a total of `r length(pve)*length(bias)*nreps` simulations. Then we will move up to `r large_p` loci
+
+```{r echo=F,eval=F}
+
+gen_tparamdf_norm <- function(pve,bias=0,nreps,n,p){
+  tfp <- list(tpve=pve,tbias=bias) %>% purrr::cross_d() %>% 
+    distinct()
+  bind_rows(replicate(nreps,tfp,simplify = F)) %>%
+    group_by(tpve,tbias) %>%
+    mutate(replicate=1:n()) %>%
+    ungroup() %>%
+    mutate(fgeneid=1:n(),tsigu=sqrt(n/p*tpve))
+}
+
+gen_ti <- function(vy,PVE){
+  return(vy*(1/PVE-1))
+}
+
+gen_sim <- function(SNP,pve,bias=0,nreps,outdir,collapse_all=T,overwrite=F){
+  n <- nrow(SNP)
+  p <- ncol(SNP)
+  if(!dir.exists(outdir)){
+    dir.create(outdir)
+  }
+  tparam_df <- gen_tparamdf_norm(pve,bias,nreps,n,p)
+  u_mat <- sapply(tparam_df$tsigu,function(sigu,p){rnorm(n = p,mean = 0,sd = sigu)},p=p)
+
+  S <- 1/sqrt(n)*(1/apply(SNP,2,sd))
+  betamat <- u_mat*S
+  vy <- apply(SNP%*%betamat,2,var)
+  residvec <- gen_ti(vy,tparam_df$tpve)
+  residmat <- sapply(residvec,function(ti,n){rnorm(n=n,mean=0,sd=sqrt(ti))},n=n)
+  ymat <- scale(SNP%*%betamat+residmat,center=T,scale=F)
+  sigy <- apply(ymat,2,sd)
+  betahat_mat <- map_beta_exp(SNP,ymat)
+  se_mat <- map_se_exp(SNP,ymat,betahat_mat)
+  bias_mat <- sapply(tparam_df$tbias,function(ta,p){rnorm(n=p,mean=0,sd=ta)},p=p)
+  uh_mat <- betahat_mat/se_mat
+#  u_mat <- betamat/se_mat
+  bias_uh_mat <- uh_mat+bias_mat
+  
+  if(!collapse_all){
+    saveRDS(betamat,file.path(outdir,"betamat.RDS"))
+    saveRDS(residvec,file.path(outdir,"residvec.RDS"))
+    saveRDS(residmat,file.path(outdir,"residmat.RDS"))
+    saveRDS(ymat,file.path(outdir,"ymat.RDS"))
+    saveRDS(betahat,file.path(outdir,"betahat_mat.RDS"))
+    saveRDS(se_mat,file.path(outdir,"se_mat.RDS"))
+    saveRDS(bias_mat,file.path(outdir,"bias_mat.RDS"))
+    saveRDS(u_mat,file.path(outdir,"u_mat.RDS"))
+    saveRDS(uh_mat,file.path(outdir,"uh_mat.RDS"))
+    saveRDS(bias_uh_mat,file.path(outdir,"bias_uh_mat.RDS"))
+    saveRDS(tparam_df,file.path(outdir,"tparam_df.RDS"))
+  }else{
+    outfilep <- file.path(outdir,"simulation.RDS")
+    i <- 0
+    if(!overwrite){
+      while(file.exists(outfilep)){
+        i <- i+1
+        outfilep <- file.path(outdir,paste0("simulation",i,".RDS"))
+      }
+    }
+    saveRDS(list(betamat=betamat,
+                 residsd=residvec,
+                 residmat=residmat,
+                 ymat=ymat,
+                 betahat=betahat_mat,
+                 se_mat=se_mat,
+                 bias_mat=bias_mat,
+                 u_mat=u_mat,
+                 uh_mat=uh_mat,
+                 bias_uh_mat=bias_uh_mat,
+                 tparam_df=tparam_df,n=n,p=p),file = outfilep)
+    return(outfilep)
+  }
+}
+```
+
+
+```{r echo=F,eval=F}
+library(RcppEigenH5)
+SNP  <- scale(t(read_2d_mat_h5(small_genof,"/","C")),center=T,scale=F)
+outdir <- "../data/polygenic_sim_genotype2"
+
+gen_sim(SNP,pve,bias,nreps =nreps,outdir = outdir,collapse_all = T)
+```
+
+
+```{r eval=F}
+
+SNP  <- scale(t(read_2d_mat_h5(large_genof,"/","C")),center=T,scale=F)
+outdir <- "../data/polygenic_sim_genotype"
+gen_sim(SNP,pve,bias,nreps =nreps,outdir = outdir,collapse_all = T)
+```
+
+
+
+
+<!-- Add your analysis here -->
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
