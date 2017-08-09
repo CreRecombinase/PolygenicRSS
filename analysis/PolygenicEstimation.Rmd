@@ -109,6 +109,17 @@ double norm_alfun_cpp(const mapa par,const mapa dvec, const mapa quh){
 }
 
 
+//[[Rcpp::export]]
+double norm_allfun_cpp(const mapa par,const mapa dvec, const mapa quh){
+  const double sigu=exp(par(0));
+  const double varu=sigu*sigu;
+  const double a=exp(par(1));
+  double tsum = ((dvec*dvec*varu+dvec+a).log()).sum();
+  double tprod = ((quh*(1/(dvec*dvec*varu+dvec+a)))*(quh)).sum();
+  return -(-0.5*(tsum+tprod));
+}
+
+
 
 
 //[[Rcpp::export]]
@@ -149,6 +160,22 @@ evd_anorm <- function(Q,rd,uh,sigu_bounds=c(0.3,2.6),a_bounds=c(0,1)){
   return(data_frame(sigu=ldat$par[1],a=ldat$par[2],lnZ=ldat$value))
 }
 
+evd_alnorm <- function(Q,rd,uh,sigu_bounds=c(0.3,2.6),a_bounds=c(0,1)){
+  # revd <- eigen(R)
+  # rd <- revd$values
+  # Q <- revd$vectors
+  quh <- c(t(Q)%*%uh)
+  sigu_bounds <- log(sigu_bounds)
+  a_bounds <- log(a_bounds+.Machine$double.eps)
+  minb <- c(sigu_bounds[1],
+            a_bounds[1])
+  maxb <- c(sigu_bounds[2],
+            a_bounds[2])
+  par0 <- runif(2,min=minb,max = maxb)
+  ldat  <- optim(par0,fn=norm_allfun_cpp,dvec=rd,quh=quh)
+  return(data_frame(sigu=exp(ldat$par[1]),a=exp(ldat$par[2]),lnZ=ldat$value))
+}
+
 
 
 estimation_func <- function(Q,rd,asimd,parallel=F,confound_bounds = c(0,1)){
@@ -164,12 +191,14 @@ estimation_func <- function(Q,rd,asimd,parallel=F,confound_bounds = c(0,1)){
   i <- 1
   res_df <- foreach(i=1:ng,.export=c('evd_norm','evd_anorm','mutate'),.packages=c("dplyr"),.combine=bind_rows) %do%{
     tuh_b <- uhmat_bias[,i]
+    pb$tick()
     bind_rows(
       evd_norm(Q,rd,tuh_b,sigu_bounds = sigu_bounds) %>% mutate(fgeneid=i,method="No_Confound",pve=p/n*sigu^2),
-      evd_anorm(Q,rd,tuh_b,sigu_bounds=sigu_bounds,a_bounds = confound_bounds) %>% mutate(fgeneid=i,method="Confound",pve=p/n*sigu^2)
+      evd_alnorm(Q,rd,tuh_b,sigu_bounds=sigu_bounds,a_bounds = confound_bounds) %>% mutate(fgeneid=i,method="Confound",pve=p/n*sigu^2)
     )
   }
-  return(inner_join(res_df,tparamdf))
+  tresults <- inner_join(res_df,tparamdf)
+  return(tresults)
 }
 
 
@@ -188,11 +217,14 @@ In the first plot, I show the estimate of PVE ($\hat{PVE}$) vs the true PVE. Rem
 
 ## Smaller Dataset
 ```{r filenames}
+library(RcppEigenH5)
 small_genof <- "/home/nwknoblauch/Dropbox/eqtl_estimation/data/RSS_examples/genotype2.mat"
 small_evdf <- "/home/nwknoblauch/Dropbox/eqtl_estimation/data/small_sim_evd.h5"
 small_simf <- "../data/polygenic_sim_genotype2/simulation1.RDS"
-large_genof <- "/home/nwknoblauch/Dropbox/eqtl_estimation/data/RSS_examples/genotype.mat"
+large_genof <- "/home/nwknoblauch/Downloads/genotype.h5"
+
 large_evdf <- "/home/nwknoblauch/Dropbox/eqtl_estimation/data/large_sim_evd.h5"
+largest_simf <- "../data/polygenic_sim_genotype_larger/simulation.RDS"
 large_simf <- "../data/polygenic_sim_genotype/simulation.RDS"
 
 
@@ -202,7 +234,7 @@ large_simf <- "../data/polygenic_sim_genotype/simulation.RDS"
 ```{r helper_funs}
 est_param <- function(evdf,simf,genof){
   if(!file.exists(evdf)){
-    R <- read_2d_mat_h5(genof,groupname = "/",dataname = "shrink_R")
+    R <- read_2d_mat_h5(genof,groupname = "/",dataname = "R")
     evdR <- eigen(R)
     Q <- evdR$vectors
     rd <- evdR$values
@@ -214,8 +246,7 @@ est_param <- function(evdf,simf,genof){
   }
   asimd <- readRDS(simf)
   
-  res_df <- estimation_func(Q,rd,asimd,parallel = F)
-  return(res_df)
+  return(estimation_func(Q,rd,asimd,parallel = F))
 }
 
 ```
@@ -226,6 +257,8 @@ est_param <- function(evdf,simf,genof){
 res_df <- est_param(small_evdf,small_simf,small_genof)
 
 ```
+
+
 ```{r plot_small,cache=T}
 filter(res_df,method=="No_Confound",tbias==0) %>% ggplot(aes(x=tpve,y=pve))+geom_point()+geom_smooth(method="lm")+xlab(expression(paste("PVE")))+ylab(expression(hat("PVE")))+ggtitle("Estimate of PVE vs True PVE")
 ```
@@ -234,16 +267,27 @@ filter(res_df,method=="No_Confound",tbias==0) %>% ggplot(aes(x=tpve,y=pve))+geom
 
 
 ```{r plot2_small,cache=T}
-rename(res_df,ahat=a) %>% rename(a=tbias) %>% ggplot(aes(y=sqrt((tpve-pve)^2),x=method,fill=method))+geom_boxplot()+xlab(expression(paste("Estimator")))+
-  ylab("RMSE(PVE)")+
-  ggtitle("Estimating PVE With Confounding",
-          paste0("Using a model with and without a confounding term"))+facet_wrap(~a)
+
+tparamdf <- select(res_df,fgeneid,tpve,tbias,tsigu) %>% distinct()
+conf_comp_small <- select(res_df,fgeneid,sigu,a,pve,method,tpve) %>% mutate(rmse=abs(pve-tpve),rel_rmse=rmse/tpve) %>% select(-tpve) %>%  gather(key = param,value=value,a,pve,sigu,rmse,rel_rmse) %>% unite(method_param,method,param,sep = "_") %>% spread(key = method_param,value) %>% inner_join(tparamdf) %>% select(-No_Confound_a)
+
+mutate(conf_comp_small,rmse_rat=Confound_rmse/No_Confound_rmse) %>% rename(a=tbias) %>% ggplot(aes(x=(a^2),y=log(rmse_rat)))+geom_point()+geom_smooth(method="lm")+geom_abline(slope=0,intercept=0)+xlab("Confounding")+ylab("log(RMSE(No_Confound)/RMSE(Confound))")+ggtitle("Estimator with Confounding Outperforms","With increasing level confounding")
+
+
 ```
+
+
+```{r}
+mutate(conf_comp_small,rmse_rat=Confound_rmse-No_Confound_rmse,tbias=tbias^2) %>% rename(a=tbias) %>% filter(a>0) %>%  ggplot(aes(x=a/tpve,y=rmse_rat))+geom_point()+geom_smooth(method="lm")+geom_abline(slope=0,intercept=0)+xlab("Confounding/PVE")+ylab("RMSE(No_Confound)-RMSE(Confound)")+facet_wrap(~a)
+
+
+```
+
 
 # Larger Dataset
 
 
-```{r large_sim,cache=T}
+```{r large_sim,cache=F}
 res_df_large <- est_param(large_evdf,large_simf,large_genof)
 ```
 
@@ -259,7 +303,31 @@ rename(res_df_large,ahat=a) %>% rename(a=tbias) %>% ggplot(aes(y=sqrt((tpve-pve)
           paste0("Using a model with and without a confounding term"))+facet_wrap(~a)
 ```
 
+# Larger data set, Larger Simulation
 
+
+```{r larger_sim}
+#res_df_larger <- est_param(large_evdf,large_simf,largest_simf)
+res_df_larger <-readRDS("../data/polygenic_sim_genotype_larger/results.RDS")
+#trds <- readRDS(largest_simf)
+#ttparamdf <- trds$tparam_df
+```
+
+
+```{r plot_large}
+filter(res_df_larger,method=="No_Confound",tbias==0) %>% ggplot(aes(x=tpve,y=(pve-tpve)^2/tpve))+geom_point()+geom_smooth(method="lm")+xlab(expression(paste("PVE")))+ylab(expression(hat("PVE")))+ggtitle("Estimate of PVE vs True PVE")
+```
+
+```{r plot2_large}
+rename(res_df_larger,ahat=a) %>% rename(a=tbias) %>% ggplot(aes(y=sqrt((tpve-pve)^2)/tpve,x=method,fill=method))+geom_boxplot()+xlab(expression(paste("Estimator")))+
+  ylab("RMSE(PVE)")+
+  ggtitle("Estimating PVE With Confounding",
+          paste0("Using a model with and without a confounding term"))+facet_wrap(~a)+scale_y_sqrt()
+```
+
+```{r}
+filter(res_df_larger,method=="Confound") %>% rename(c_hat=a) %>% rename(c=tbias) %>% ggplot(aes(x=c,y=sqrt(c_hat)))+geom_point()
+```
 
 
 ## Session information

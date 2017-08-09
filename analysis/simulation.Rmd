@@ -66,9 +66,9 @@ large_genof <- "/home/nwknoblauch/Downloads/genotype.mat"
 small_genof <- "/home/nwknoblauch/Downloads/genotype2.mat"
 small_p <- get_rownum_h5(small_genof,"/","C")
 large_p <- get_rownum_h5(large_genof,"/","C")
-pve <- as.numeric(seq(0.1,0.3,length.out = 18))
-bias <- as.numeric(seq(0.0,0.5,length.out = 5))
-nreps <- 5
+pve <- as.numeric(seq(0.01,0.9,length.out = 10))
+bias <- as.numeric(seq(0.0,0.1,length.out = 5))
+nreps <- 7
 ```
 
 
@@ -108,7 +108,7 @@ gen_sim <- function(SNP,pve,bias=0,nreps,outdir,collapse_all=T,overwrite=F){
   sigy <- apply(ymat,2,sd)
   betahat_mat <- map_beta_exp(SNP,ymat)
   se_mat <- map_se_exp(SNP,ymat,betahat_mat)
-  bias_mat <- sapply(tparam_df$tbias,function(ta,p){rnorm(n=p,mean=0,sd=ta)},p=p)
+  bias_mat <- sapply(tparam_df$tbias,function(ta,p){rnorm(n=p,mean=0,sd=sqrt(ta))},p=p)
   uh_mat <- betahat_mat/se_mat
 #  u_mat <- betamat/se_mat
   bias_uh_mat <- uh_mat+bias_mat
@@ -154,16 +154,17 @@ gen_sim <- function(SNP,pve,bias=0,nreps,outdir,collapse_all=T,overwrite=F){
 ```{r echo=F,eval=F}
 library(RcppEigenH5)
 SNP  <- scale(t(read_2d_mat_h5(small_genof,"/","C")),center=T,scale=F)
-outdir <- "../data/polygenic_sim_genotype2"
-
+outdir <- "../data/polygenic_sim_genotype2_test"
+mprof <- profvis({
 gen_sim(SNP,pve,bias,nreps =nreps,outdir = outdir,collapse_all = T)
+})
 ```
 
 
 ```{r eval=F}
 
 SNP  <- scale(t(read_2d_mat_h5(large_genof,"/","C")),center=T,scale=F)
-outdir <- "../data/polygenic_sim_genotype"
+outdir <- "../data/polygenic_sim_genotype_larger"
 gen_sim(SNP,pve,bias,nreps =nreps,outdir = outdir,collapse_all = T)
 ```
 
