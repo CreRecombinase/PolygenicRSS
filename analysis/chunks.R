@@ -7,6 +7,8 @@
 knitr::opts_chunk$set(
   comment = NA,
   echo=F,
+  message=F,
+  warning=F,
   fig.align = "center",
   tidy = FALSE,
   fig.path = paste0("figure/", knitr::current_input(), "/")

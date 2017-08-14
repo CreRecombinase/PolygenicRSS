@@ -1,0 +1,141 @@
+---
+title: "Diagonal Approximation of LD matrix"
+author: "Nicholas Knoblauch"
+date: 2017-08-04
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+#Introduction
+
+
+The LD matrix $R$ is banded. It's possible to approximate a banded matrix as block-diagonal. In theory, as the block size gets smaller, the approximation should get worse. For this analysis, I've run 500 simulations with $PVE=0.1$ and $c=0.01$.  Using 18 block sizes ranging from $p$ (12758), to 10, I approximate the full LD matrix as block diagonal, take the EVD of each block, and instead of maximizing a single multivariate normal (log) density function that has a  $p\times p$ covariance matrix,the optimization is now maximizing the sum of $K$ multivariate densities, where $K$ is $\lceil  \frac{p}{\text{chunksize}} \rceil$.
+
+The plot below shows the distribution of RMSE relative to the RMSE calculated for $\text{chunksize}=p$. The y axis represents chunks of decreasing size (chunksize is plotted as $\frac{\text{chunksize}}{p}$).  As you can see, chunking doesn't seem to matter that much.
+
+
+
+
+```{r,echo=F,message=F,warning=F}
+library(LDshrink)
+
+
+
+library(RcppEigenH5)
+small_genof <- "/home/nwknoblauch/Dropbox/eqtl_estimation/data/RSS_examples/genotype2.mat"
+small_evdf <- "/home/nwknoblauch/Dropbox/eqtl_estimation/data/small_sim_evd.h5"
+small_simf <- "../data/polygenic_sim_genotype2/simulation2.RDS"
+large_genof <- "/home/nwknoblauch/Downloads/genotype.mat"
+
+large_evdf <- "/home/nwknoblauch/Dropbox/eqtl_estimation/data/large_sim_evd.h5"
+large_evdf <- "/home/nwknoblauch/Dropbox/eqtl_estimation/data/large_diag_approx_evd.h5"
+#largest_simf <- "../data/polygenic_sim_genotype_larger/simulation.RDS"
+large_simf <- "../data/polygenic_sim_genotype/simulation2.RDS"
+rep_simf <- "../data/rep_polygenic/simulation.RDS"
+
+
+library(RSSp)
+SNP  <- scale(t(read_2d_mat_h5(large_genof,"/","C")),center=T,scale=F)
+outdir <- "../data/rep_polygenic/"
+nreps <- 500
+pve <- 0.1
+bias <- 0.01
+nasimf <- gen_sim(SNP,pve,bias,nreps =nreps,outdir = outdir,collapse_all = T)
+
+
+asimf <- "../data/rep_polygenic/simulation.RDS"
+
+evdf <- large_evdf
+simf <- large_simf
+genof <- large_genof
+p <- get_colnum_h5(large_genof,"/","R")
+n <- get_colnum_h5(large_genof,"/","C")
+
+```
+
+## Direct Simulation
+
+By simulating data using $R$ directly, we can better see the effect of chunking on estimating parameters
+```{r,echo=F,eval=F}
+dir_simf <- "../data/polygenic_sim_genotype/simulation4.RDS"
+chunksizes <- unique(c(as.integer(seq.int(p,100,length.out = 10)),
+                       as.integer(seq.int(1506,100,length.out = 10))))
+
+
+
+dres_dfl <- list()
+#res_dfl[[1]] <- test_res_df
+for(i in 1:length(chunksizes)){
+  cat(i,"\n")
+  dres_dfl[[i]] <- estimate_RSSp_files(evdf,dir_simf,genof,chunksizes[i])
+}
+dares_df <- bind_rows(dres_dfl)
+saveRDS(ares_df,"../output/rep_chunk_sim_direct.RDS")
+```
+
+
+
+
+```{r,echo=F,message=F,warning=F}
+library(tidyverse)
+library(ggjoy)
+
+
+
+dares_df <- readRDS("../output/rep_chunk_sim_direct.RDS") %>% mutate(rmse=abs(pve-tpve))
+dtparamdf <- distinct(dares_df,tpve,tbias,tsigu)
+# ggplot(bad_resdf,aes(x=chunksize,y=rmse,col=fgeneid))+geom_point()+geom_smooth(method="lm",se=F)
+mrmse <- group_by(dares_df,tpve,tbias,chunksize) %>% summarise(mean_pve_rmse=mean(rmse),sd_rmse=sd(rmse)) %>% ungroup()
+
+ggplot(mrmse,aes(x=chunksize,y=mean_pve_rmse))+geom_point()+geom_smooth()
+dnres_df <- group_by(dares_df,fgeneid) %>% filter(chunksize==max(chunksize)) %>% mutate(denom_rmse=rmse) %>% ungroup() %>% select(fgeneid,denom_rmse) %>% inner_join(dares_df) %>% group_by(fgeneid) %>% mutate(rel_rmse=rmse/denom_rmse,rel_dim=chunksize/p)
+
+bad_resdf <- group_by(dares_df,fgeneid) %>% summarise(max_rmse=max(rmse)) %>% filter(max_rmse>0.75) %>% inner_join(dares_df)
+
+filter(dnres_df,rel_dim<1) %>% ggplot(aes(x=rel_rmse,y=factor(rel_dim)))+geom_joy()+ggtitle("Relative RMSE vs chunksize","Foldchange over no chunking")+scale_x_log10()+xlab("Foldchange RMSE")+ylab("Relative Chunksize")
+
+```
+
+Zooming in on the region around 1:
+
+```{r}
+filter(dnres_df,rel_dim<1) %>% ggplot(aes(x=rel_rmse,y=factor(rel_dim)))+geom_joy(rel_min_height=0.01)+ggtitle("Relative RMSE vs chunksize","Foldchange over no chunking")+scale_x_log10(limits=c(0.1,10))+xlab("Foldchange RMSE")+ylab("Relative Chunksize")
+```
+
+
+
+
+```{r}
+# denom_rmse <- filter(ares_df,chunksize==max(chunksize)) %>% summarise(mean_denom_rmse=mean(rmse))
+# sum_df <-  group_by(ares_df,chunksize) %>% summarise(mean_rel_rmse=mean(rmse)/denom_rmse$mean_denom_rmse)
+ggplot(dnres_df,aes(x=(chunksize^2)/p^2,y=rel_rmse))+geom_point()+geom_smooth()+scale_x_log10()+scale_y_log10()
+```
+
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
