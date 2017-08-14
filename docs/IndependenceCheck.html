@@ -11,9 +11,9 @@
 
 <meta name="author" content="Nicholas Knoblauch" />
 
-<meta name="date" content="2017-07-27" />
+<meta name="date" content="2017-08-04" />
 
-<title>Standardized Effect Size Simulation</title>
+<title>Diagonal Approximation of LD matrix</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -302,9 +302,9 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Standardized Effect Size Simulation</h1>
+<h1 class="title toc-ignore">Diagonal Approximation of LD matrix</h1>
 <h4 class="author"><em>Nicholas Knoblauch</em></h4>
-<h4 class="date"><em>2017-07-27</em></h4>
+<h4 class="date"><em>2017-08-04</em></h4>
 
 </div>
 
@@ -317,30 +317,18 @@ shared across the workflowr files. -->
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
 <p><strong>Code version:</strong> 4f131ca</p>
-<div id="gwas-simulation-strategy" class="section level1">
-<h1>GWAS Simulation Strategy</h1>
-<div id="overview" class="section level2">
-<h2>Overview</h2>
-<p>The main idea is that we have a parameter we want to estimate (<span class="math inline">\(PVE\)</span>) from data <span class="math inline">\(\hat{u}=\frac{\hat{\beta}}{\text{se}(\hat{\beta})}\)</span></p>
-<p>The path from <span class="math inline">\(PVE\)</span> to <span class="math inline">\(\hat{u}\)</span> looks like this:</p>
-<p>Start with an <span class="math inline">\(n\)</span>x<span class="math inline">\(p\)</span> matrix of column-centered genotypes (<span class="math inline">\(X\)</span>).</p>
-<p>For a chosen value of <span class="math inline">\(PVE\)</span>, define <span class="math inline">\(\sigma_u\)</span> as :</p>
-<p><span class="math display">\[\sigma_u=\sqrt{\frac{n}{p}PVE}\]</span></p>
-<p><span class="math display">\[u_i \sim N(0,\sigma_u)\]</span></p>
-<p><span class="math inline">\(\beta\)</span> is a transformation of <span class="math inline">\(u\)</span> based on <span class="math inline">\(\sigma_y\)</span> and <span class="math inline">\(\sigma_{x_j}\)</span> (<span class="math inline">\(\sigma_y\)</span> is chosen to be 1 for all simulations)</p>
-<p><span class="math display">\[\beta_i=\frac{\sigma_y}{\sqrt{n}\sigma_{x_i}} u_i\]</span> From there we can construct <span class="math inline">\(V(X\beta)\)</span> which we can combine with our chosen PVE value to obtain the scale(<span class="math inline">\(\tau^{-1}\)</span>) of the residuals(<span class="math inline">\(\epsilon\)</span>):</p>
-<p><span class="math display">\[ PVE= \frac{V(X\beta)}{\tau^{-1} + V(X\beta)} \implies \tau^{-1} = V(X\beta) \left(\frac{1}{PVE}-1\right)  \]</span> <span class="math display">\[\epsilon \sim N(0,\tau^{-1}I_n)\]</span></p>
-<p><span class="math display">\[ y= X \beta + \epsilon \]</span> <span class="math inline">\(y\)</span> is centered to have a mean of <span class="math inline">\(0\)</span>. <span class="math inline">\(\hat{\beta_i}\)</span> and <span class="math inline">\(\text{se}(\hat{\beta_i})\)</span> Are obtained by univariate ordinary least squares (fit without an intercept term). If there is confounding in the simulation, it’s added to <span class="math inline">\(\hat{\beta}\)</span> as <span class="math inline">\(\hat{u}_{\text{confound}}=\hat{u}+N(0,a I_p)\)</span></p>
-</div>
-<div id="simulations-on-small-and-medium-datasets" class="section level2">
-<h2>Simulations on small and medium datasets</h2>
-<p>For this simulation I’ll use Xiang’s small and medium sized example datasets (<code>genotype2.mat</code> and <code>genotype.mat</code>)</p>
-<p>Let’s start with a simulation on 982 loci. There will be several true values of PVE (0.01, 0.1088889, 0.2077778, 0.3066667, 0.4055556, 0.5044444, 0.6033333, 0.7022222, 0.8011111, 0.9), and bias (0, 0.025, 0.05, 0.075, 0.1), and 7 replication of each combination, for a total of 350 simulations. Then we will move up to 12758 loci</p>
-</div>
-<div id="simulating-from-the-model-directly" class="section level2">
-<h2>Simulating from the model “directly”</h2>
-<p>A simpler simulation strategy is to simply sample <span class="math inline">\(\hat{u}\)</span> directly from a multivariate normal distribution. This<br />
-<!-- Add your analysis here --></p>
+<!-- Add your analysis here -->
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>The LD matrix <span class="math inline">\(R\)</span> is banded. It’s possible to approximate a banded matrix as block-diagonal. In theory, as the block size gets smaller, the approximation should get worse. For this analysis, I’ve run 500 simulations with <span class="math inline">\(PVE=0.1\)</span> and <span class="math inline">\(c=0.01\)</span>. Using 18 block sizes ranging from <span class="math inline">\(p\)</span> (12758), to 10, I approximate the full LD matrix as block diagonal, take the EVD of each block, and instead of maximizing a single multivariate normal (log) density function that has a <span class="math inline">\(p\times p\)</span> covariance matrix,the optimization is now maximizing the sum of <span class="math inline">\(K\)</span> multivariate densities, where <span class="math inline">\(K\)</span> is <span class="math inline">\(\lceil \frac{p}{\text{chunksize}} \rceil\)</span>.</p>
+<p>The plot below shows the distribution of RMSE relative to the RMSE calculated for <span class="math inline">\(\text{chunksize}=p\)</span>. The y axis represents chunks of decreasing size (chunksize is plotted as <span class="math inline">\(\frac{\text{chunksize}}{p}\)</span>). As you can see, chunking doesn’t seem to matter that much.</p>
+<div id="direct-simulation" class="section level2">
+<h2>Direct Simulation</h2>
+<p>By simulating data using <span class="math inline">\(R\)</span> directly, we can better see the effect of chunking on estimating parameters</p>
+<p><img src="figure/IndependenceCheck.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/IndependenceCheck.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Zooming in on the region around 1:</p>
+<p><img src="figure/IndependenceCheck.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/IndependenceCheck.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
@@ -364,30 +352,32 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] forcats_0.2.0        stringr_1.2.0        dplyr_0.7.2         
+ [1] ggjoy_0.3.0.9000     forcats_0.2.0        stringr_1.2.0       
  [4] purrr_0.2.3          readr_1.1.1          tidyr_0.6.3         
  [7] tibble_1.3.3         ggplot2_2.2.1        tidyverse_1.1.1.9000
-[10] RSSReQTL_1.0         RcppEigenH5_0.1.0   
+[10] bindrcpp_0.2         dplyr_0.7.2          RSSp_1.0            
+[13] RcppEigenH5_0.1.0    LDshrink_1.0        
 
 loaded via a namespace (and not attached):
  [1] RcppEigen_0.3.3.3.0 clisymbols_1.2.0    reshape2_1.4.2     
- [4] haven_1.1.0         lattice_0.20-35     colorspace_1.3-2   
- [7] htmltools_0.3.6     yaml_2.1.14         rlang_0.1.1        
-[10] foreign_0.8-69      glue_1.1.1          modelr_0.1.0       
-[13] readxl_1.0.0        bindrcpp_0.2        bindr_0.1          
-[16] plyr_1.8.4          munsell_0.4.3       gtable_0.2.0       
-[19] cellranger_1.1.0    rvest_0.3.2         psych_1.7.5        
-[22] evaluate_0.10.1     knitr_1.16          parallel_3.4.0     
-[25] broom_0.4.2         Rcpp_0.12.12        backports_1.1.0    
-[28] scales_0.4.1        RcppParallel_4.3.20 jsonlite_1.5       
-[31] boxes_0.0.0.9000    mnormt_1.5-5        hms_0.3            
-[34] digest_0.6.12       stringi_1.1.5       grid_3.4.0         
-[37] rprojroot_1.2       tools_3.4.0         magrittr_1.5       
-[40] lazyeval_0.2.0      crayon_1.3.2.9000   pkgconfig_2.0.1    
-[43] Matrix_1.2-10       xml2_1.1.1          lubridate_1.6.0    
-[46] rstudioapi_0.6      assertthat_0.2.0    rmarkdown_1.6      
-[49] httr_1.2.1          R6_2.2.2            nlme_3.1-131       
-[52] git2r_0.19.0        compiler_3.4.0     </code></pre>
+ [4] RSSReQTL_1.0        haven_1.1.0         lattice_0.20-35    
+ [7] colorspace_1.3-2    htmltools_0.3.6     mgcv_1.8-17        
+[10] yaml_2.1.14         rlang_0.1.1         foreign_0.8-69     
+[13] glue_1.1.1          readxl_1.0.0        modelr_0.1.0       
+[16] bindr_0.1           plyr_1.8.4          cellranger_1.1.0   
+[19] munsell_0.4.3       gtable_0.2.0        rvest_0.3.2        
+[22] psych_1.7.5         evaluate_0.10.1     labeling_0.3       
+[25] knitr_1.16          parallel_3.4.0      broom_0.4.2        
+[28] Rcpp_0.12.12        backports_1.1.0     scales_0.4.1       
+[31] RcppParallel_4.3.20 jsonlite_1.5        boxes_0.0.0.9000   
+[34] mnormt_1.5-5        hms_0.3             digest_0.6.12      
+[37] stringi_1.1.5       grid_3.4.0          rprojroot_1.2      
+[40] tools_3.4.0         magrittr_1.5        lazyeval_0.2.0     
+[43] crayon_1.3.2.9000   pkgconfig_2.0.1     Matrix_1.2-10      
+[46] xml2_1.1.1          lubridate_1.6.0     rstudioapi_0.6     
+[49] assertthat_0.2.0    rmarkdown_1.6       httr_1.2.1         
+[52] R6_2.2.2            nlme_3.1-131        git2r_0.19.0       
+[55] compiler_3.4.0     </code></pre>
 </div>
 </div>
 
