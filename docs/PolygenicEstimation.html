@@ -313,10 +313,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-08-14</p>
+<p><strong>Last updated:</strong> 2017-08-16</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> f04b958</p>
+<p><strong>Code version:</strong> d02fbc6</p>
 <!-- Add your analysis here -->
 <!-- # Background -->
 <!-- ##General properties of compound normal -->
@@ -351,6 +351,7 @@ shared across the workflowr files. -->
 <div id="smaller-dataset" class="section level2">
 <h2>Smaller Dataset</h2>
 <p><img src="figure/PolygenicEstimation.Rmd/plot_small-1.png" width="672" style="display: block; margin: auto;" /> We see here that optimizing the log of the parameter value (<span class="math inline">\(\sigma_u\)</span>) gives us the same results when we don’t incorporate a confounding parameter (and there is no confounding in the data)</p>
+<p><img src="figure/PolygenicEstimation.Rmd/plot_pve_small-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p><img src="figure/PolygenicEstimation.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Here we see how RMSE increases as a function of level of confounding when there is no confounding term being estimated in the model. We also see how poorly the 2 parameter model performs when using log-transformed parameters (right panel) compared to the two parameter model on untransformed data (left panel).</p>
 <p><img src="figure/PolygenicEstimation.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /> Here we see that when estimating parameters in log-space,the confounding estimate is actually <em>more</em> likely to get “stuck” near zero. This might be due to the unconstrained optimizer choosing very large negative values for the log of the confounding.</p>
@@ -359,9 +360,10 @@ shared across the workflowr files. -->
 <div id="larger-dataset" class="section level1">
 <h1>Larger Dataset</h1>
 <p><img src="figure/PolygenicEstimation.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>The performance in the larger dataset is also very good. We also see that there is almost no difference between the (unconstrained) log-space estimates and the constrained linear-space estimates of <span class="math inline">\(\hat{\text{PVE}}\)</span></p>
 <p><img src="figure/PolygenicEstimation.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>For the larger dataset, the two-parameter model doesn’t seem to be appreciably better at the levels of confounding I used. <img src="figure/PolygenicEstimation.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>The performance in the larger dataset is also very good. We also see that there is almost no difference between the (unconstrained) log-space estimates and the constrained linear-space estimates of <span class="math inline">\(\hat{\text{PVE}}\)</span></p>
+<p><img src="figure/PolygenicEstimation.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>For the larger dataset, the two-parameter model doesn’t seem to be appreciably better at the levels of confounding I used.</p>
 <p><img src="figure/PolygenicEstimation.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
 <!-- ## A closer look at some of the worst estimates -->
 <!-- ```{r} -->
@@ -372,10 +374,9 @@ shared across the workflowr files. -->
 <div id="direct-simulation" class="section level2">
 <h2>“Direct” simulation</h2>
 <p>Instead of simulating genotype, phenotype, <span class="math inline">\(\hat{\beta}\)</span>, etc. we can simply directly simulate <span class="math inline">\(\hat{u}\)</span> given <span class="math inline">\(R\)</span>, <span class="math inline">\(n\)</span>, <span class="math inline">\(\sigma_u\)</span>, and <span class="math inline">\(c\)</span>. The results are overall similar</p>
-<p><img src="figure/PolygenicEstimation.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /> The one-parameter model seems to do equally well on data directly simulated from the model.</p>
+<p><img src="figure/PolygenicEstimation.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/PolygenicEstimation.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /> The two parameter model doesn’t seem to do any better than the one-parameter model using the levels of confounding I estimated</p>
 <p><img src="figure/PolygenicEstimation.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p><img src="figure/PolygenicEstimation.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /> The two parameter model doesn’t seem to do any better than the one-parameter model using the levels of confounding I estimated</p>
-<p><img src="figure/PolygenicEstimation.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
@@ -399,11 +400,11 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] ggjoy_0.3.0.9000     bindrcpp_0.2         LDshrink_1.0        
- [4] forcats_0.2.0        stringr_1.2.0        dplyr_0.7.2         
- [7] purrr_0.2.3          readr_1.1.1          tidyr_0.6.3         
-[10] tibble_1.3.3         ggplot2_2.2.1        tidyverse_1.1.1.9000
-[13] RSSp_1.0             RcppEigenH5_0.1.0   
+ [1] ggjoy_0.3.0.9000     bindrcpp_0.2         forcats_0.2.0       
+ [4] stringr_1.2.0        dplyr_0.7.2          purrr_0.2.3         
+ [7] readr_1.1.1          tidyr_0.6.3          tibble_1.3.3        
+[10] ggplot2_2.2.1        tidyverse_1.1.1.9000 RSSp_1.0            
+[13] RcppEigenH5_0.1.0   
 
 loaded via a namespace (and not attached):
  [1] RcppEigen_0.3.3.3.0 clisymbols_1.2.0    reshape2_1.4.2     
