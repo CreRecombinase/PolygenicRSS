@@ -306,7 +306,7 @@ filter(dest_df_large,method=="Confound") %>% ggplot(aes(x=tbias,y=a_hat))+geom_p
 
 
 ```{r bias_by_pve_direct}
-filter(dest_df_large,method=="Confound") %>% rename(pve_est=pve) %>% rename(pve=tpve) %>%  ggplot(aes(x=tbias/pve,y=a_hat/pve))+geom_point()+geom_abline(intercept=0,slope=1)+geom_smooth(method="lm")+ggtitle("Confounding is Consistently Underestimated","When True PVE is low")+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(hat(c),PVE)))+facet_wrap(~pve,labeller = label_both)
+filter(dest_df_large,method=="Confound") %>% rename(pve_est=pve) %>% rename(pve=tpve) %>%  ggplot(aes(x=tbias/pve,y=a_hat/pve))+geom_point()+geom_abline(intercept=0,slope=1)+geom_smooth(method="lm")+ggtitle("Estimate of Counfounding is Close to Ideal","Under direct simulation")+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(hat(c),PVE)))+facet_wrap(~pve,labeller = label_both)
 
 ```
 
