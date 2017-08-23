@@ -92,7 +92,7 @@ library(RSSp)
 library(tidyverse)
 ```
 
-```{r filenames,echo=F,message=F,warning=F}
+```{r small_sim,echo=F,message=F,warning=F}
 small_genof <- "/home/nwknoblauch/Dropbox/eqtl_estimation/data/RSS_examples/genotype2.mat"
 small_evdf <- "../data/polygenic_sim_genotype2/small_evd.h5"
 small_dirf <- "../data/polygenic_sim_genotype2/"
@@ -147,9 +147,14 @@ ggplot(est_df,aes(x=abs(pve-tpve)/tpve,y=factor(tbias/tpve),col=method,fill=meth
 
 
 ```{r plot_confound_small}
-filter(est_df,method=="Confound") %>% ggplot(aes(x=tbias,y=a_hat))+geom_point()+geom_abline(intercept=0,slope=1)+geom_smooth(method="lm")+ggtitle("Confounding is Consistently Underestimated")+xlab("True Confounding")+ylab("Estimate of Confounding")
+filter(est_df,method=="Confound") %>% ggplot(aes(x=tbias,y=a_hat))+geom_point()+geom_abline(intercept=0,slope=1)+geom_smooth(method="lm")+ggtitle("Confounding is Consistently Underestimated")+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(hat(c),PVE)))
 ```
 
+```{r bias_by_pve_small}
+
+filter(est_df,method=="Confound") %>% rename(pve_est=pve) %>% rename(pve=tpve) %>%  ggplot(aes(x=tbias/pve,y=a_hat/pve))+geom_point()+geom_abline(intercept=0,slope=1)+geom_smooth(method="lm")+ggtitle("Confounding is Consistently Underestimated","When True PVE is low")+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(hat(c),PVE)))+facet_wrap(~pve,labeller = label_both)
+
+```
 
 
 Here we see that when estimating parameters in log-space,the confounding estimate is actually *more* likely to get "stuck" near zero. This might be due to the unconstrained optimizer choosing very large negative values for the log of the confounding.
@@ -218,6 +223,10 @@ For the larger dataset, the two-parameter model doesn't seem to be appreciably b
 ```{r plot_confound_large}
 filter(est_df_large,method=="Confound") %>% ggplot(aes(x=tbias,y=a_hat))+geom_point()+geom_abline(intercept=0,slope=1)+geom_smooth(method="lm")+ggtitle("Confounding is Consistently Underestimated")+xlab("True Confounding")+ylab("Estimate of Confounding")
 
+```
+
+```{r bias_by_pve_large}
+filter(est_df_large,method=="Confound") %>% rename(pve_est=pve) %>% rename(pve=tpve) %>%  ggplot(aes(x=tbias/pve,y=a_hat/pve))+geom_point()+geom_abline(intercept=0,slope=1)+geom_smooth(method="lm")+ggtitle("Confounding is Consistently Underestimated","When True PVE is low")+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(hat(c),PVE)))+facet_wrap(~pve,labeller = label_both)
 ```
 
 
@@ -295,6 +304,11 @@ ggplot(dest_df_large,aes(x=abs(pve-tpve)/tpve,y=factor(tbias/tpve),col=method,fi
 filter(dest_df_large,method=="Confound") %>% ggplot(aes(x=tbias,y=a_hat))+geom_point()+geom_abline(intercept=0,slope=1)+geom_smooth(method="lm")+ggtitle("Estimate of Counfounding is Close to Ideal","Under direct simulation")+xlab("True Confounding")+ylab("Estimate of Confounding")
 ```
 
+
+```{r bias_by_pve_direct}
+filter(dest_df_large,method=="Confound") %>% rename(pve_est=pve) %>% rename(pve=tpve) %>%  ggplot(aes(x=tbias/pve,y=a_hat/pve))+geom_point()+geom_abline(intercept=0,slope=1)+geom_smooth(method="lm")+ggtitle("Confounding is Consistently Underestimated","When True PVE is low")+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(hat(c),PVE)))+facet_wrap(~pve,labeller = label_both)
+
+```
 
 ## Session information
 
