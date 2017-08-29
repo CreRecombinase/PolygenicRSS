@@ -76,16 +76,6 @@ $$\Sigma_u = S \sigma^2_u \text{diag}([2f_i(1-f_i)]^\alpha)S$$
 $$L(\hat{u})=\frac{-1}{2} |R S^{-1} \Sigma_u S^{-1} R + R + cI | -\frac{1}{2} \hat{u}^T(R S^{-1} \Sigma_u S^{-1} R + R + cI)^{-1}\hat{u}$$
 
 
-# Results
-
-[Read more about the large and small simulations](simulation.html)
-
-In the first plot, I show the estimate of PVE ($\hat{PVE}$) vs the true PVE. Remember that $\hat{PVE}=\frac{p}{n}\hat{\sigma^2_u}$.  This is without confounding.  In the second plot, I show the $\text{RMSE}(PVE)$ of the model that takes confounding into account (`Confound`) vs the model that doesn't take confounding into account (`No_Confound`), with increasing levels of counfounding `c = 0,0.1,0.2`
-
-
-## Smaller Dataset
-
-
 ```{r libs,echo=F,message=F,warning=F}
 library(RcppEigenH5)
 library(RSSp)
@@ -108,7 +98,7 @@ pve <- as.numeric(seq(0.01,0.3,length.out = 3))
 bias <- as.numeric(seq(0.0,0.5,length.out = 5))
 nreps <- 10
 SNP <- scale(t(RcppEigenH5::read_2d_mat_h5(small_genof,"/","C")),center=T,scale=F)
-#asimf <- gen_sim(SNP,pve,bias,nreps =nreps,outdir = small_dirf)
+# asimf <- gen_sim(SNP,pve,bias,nreps =nreps,outdir = small_dirf)
 asimf <- "../data/polygenic_sim_genotype2/simulation14.RDS"
 p <- ncol(SNP)
 est_df <- estimate_RSSp_files(small_evdf,asimf,small_genof,chunksize = p,R_dataname = "shrink_R",doNoConfound = T,doLog=F,result_dir=result_dir) %>% mutate(doLog=F)
@@ -116,39 +106,52 @@ saveRDS(est_df,"../output/small_polygenic_sim.RDS")
 # est_df_l <- estimate_RSSp_files(small_evdf,asimf,small_genof,chunksize = p,R_dataname = "shrink_R",doNoConfound = T,doLog=T) %>% mutate(doLog=T)
 # est_df <- bind_rows(est_df_nl,est_df_l)
 ```
+# Results
+
+There are three sets of simulations.  In the first, based on Xiang's `example2` there are `r p` SNPs and `r nrow(SNP)` individuals. 
+The SNPS all come from one gene, so the average pairwise linkage is high.  
+
+The second example is based on Xiang's `example`, where we have `r get_rownum_h5(large_genof,"/","C")` SNPs (and the same number of individuals).  These SNPs come from chromosome 16.
+
+The final example is also based on Xiang's `example`, but instead of simulating GWAS data, data is sampled directly from the multivariate normal distribution specified by $\sigma_u$, $c$, and $R$.
+
+
+[Read more about the details of simulation here](simulation.html)
 
 
 
+In the first plot, I show the estimate of PVE ($\hat{PVE}$) vs the true PVE. Remember that $\hat{PVE}=\frac{p}{n}\hat{\sigma^2_u}$.  This is without confounding.  In the second plot, I show the $\text{RMSE}(PVE)$ of the model that takes confounding into account (`Confound`) vs the model that doesn't take confounding into account (`No_Confound`), with increasing levels of counfounding `r bias`.  
+
+## Smaller Dataset
 
 ```{r plot_pve_nc_small}
 est_df <- readRDS("../output/small_polygenic_sim.RDS")
 filter(est_df,method=="NoConfound",tbias==0) %>% ggplot(aes(x=tpve,y=pve))+geom_point()+geom_smooth(method="lm")+xlab(expression(paste("PVE")))+ylab(expression(hat("PVE")))+ggtitle("PVE Estimates in the Absence of Confounding")+geom_abline(intercept=0,slope=1)
 ```
 
-
+This plot shows what estimates of PVE look like when there is no confounding in the data and no confounding in the model.  The black line is a slope 1 line through the origin, and the blue line is an OLS fit (the grey area represents standard error).
 
 
 
 ```{r plot_pve_inflation_small}
-filter(est_df) %>% ggplot(aes(x=tpve,y=pve,col=tbias/tpve))+geom_point()+geom_smooth(method="lm")+xlab(expression(paste("PVE")))+ylab(expression(hat("PVE")))+ggtitle("Not accounting for confounding inflates PVE estimates")+geom_abline(intercept=0,slope=1)+facet_wrap(~method,labeller=label_both)
+filter(est_df) %>% ggplot(aes(x=tpve,y=pve,col=tbias/tpve))+geom_point()+geom_smooth(method="lm")+xlab(expression(paste("PVE")))+ylab(expression(hat("PVE")))+ggtitle("Not accounting for confounding inflates PVE estimates")+geom_abline(intercept=0,slope=1)+facet_wrap(~method,labeller=label_both)+guides(col=guide_legend(title=bquote(frac(c,PVE))))
 ```
 
-
+This plot shows how confounding can inflate PVE estimates when there is no term for confounding in the model. On the left is the two-parameter model that has a term for confounding, and on the right is the one-parameter model that does not.  The color in this plot represents the ratio of amount of confounding to true PVE. 
 ```{r plot_pve_rmse_small}
 library(ggjoy)
-filter(est_df) %>% ggplot(aes(x=tbias/tpve,y=abs(pve-tpve)/tpve,col=method))+geom_point()+geom_smooth()+ggtitle("Accounting for confounding improves PVE estimates","when confounding is high relative to PVE")+xlab("Confounding (Prop of PVE)")+ylab("RMSE(PVE)/PVE")
+filter(est_df) %>% rename(PVE=tpve) %>% ggplot(aes(x=tbias/PVE,y=abs(pve-PVE)/PVE,col=method))+geom_point()+geom_smooth()+ggtitle("Accounting for confounding improves PVE estimates","when confounding is high relative to PVE, and when PVE is high")+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(RMSE[PVE],PVE)))+facet_wrap(~PVE,labeller=label_both)
 ```
+
+This plot shows how when the true PVE is relatively low, the two-parameter model and one-parameter model perform about equally.  As the true PVE increases, the performance of the two models diverges as a function of the level of confounding.  At high (and moderate) PVE, the two parameter model's performance is relatively consistent, while the one-parameter model's performance degrades as the amount of confounding increases.  
+
 
 ```{r plot_rmse_joy_small}
 library(ggjoy)
-ggplot(est_df,aes(x=abs(pve-tpve)/tpve,y=factor(tbias/tpve),col=method,fill=method))+geom_joy(panel_scaling=F)+ggtitle("Accounting for confounding improves PVE estimates","when confounding is high relative to PVE")+xlab("RMSE(PVE)/PVE")+ylab("Confound/PVE")+scale_x_log10()
+rename(est_df,PVE=tpve) %>% ggplot(aes(x=abs(pve-PVE)/PVE,y=factor(tbias/PVE),col=method,fill=method))+geom_joy(panel_scaling=T)+ggtitle("Accounting for confounding improves PVE estimates","when confounding is high relative to PVE")+ylab(bquote(frac(c,PVE)))+xlab(bquote(frac(RMSE[PVE],PVE)))+scale_x_log10()+facet_wrap(~PVE,labeller=label_both)
 ```
 
-
-
-```{r plot_confound_small}
-filter(est_df,method=="Confound") %>% ggplot(aes(x=tbias,y=a_hat))+geom_point()+geom_abline(intercept=0,slope=1)+geom_smooth(method="lm")+ggtitle("Confounding is Consistently Underestimated")+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(hat(c),PVE)))
-```
+This is another visualization of the same data. Note the log10 scale along the x-axis.
 
 ```{r bias_by_pve_small}
 
@@ -157,7 +160,7 @@ filter(est_df,method=="Confound") %>% rename(pve_est=pve) %>% rename(pve=tpve) %
 ```
 
 
-Here we see that when estimating parameters in log-space,the confounding estimate is actually *more* likely to get "stuck" near zero. This might be due to the unconstrained optimizer choosing very large negative values for the log of the confounding.
+Switching now only to the two-parameter model, we see that at low PVE, the level of confounding (as a proportion of total PVE) is badly underestimated.  At moderate to high PVE, the performance improves, but there does seem to be a consistent underestimation of the level of confounding.
 
 # Larger Dataset
 
@@ -198,37 +201,36 @@ est_df_large <- readRDS("../output/polygenic_sim_large.RDS")
 filter(est_df_large,method=="NoConfound",tbias==0) %>% ggplot(aes(x=tpve,y=pve))+geom_point()+geom_smooth(method="lm")+xlab(expression(paste("PVE")))+ylab(expression(hat("PVE")))+ggtitle("PVE Estimates in the Absence of Confounding")+geom_abline(intercept=0,slope=1)
 ```
 
+This plot shows what estimates of PVE look like when there is no confounding in the data and no confounding in the model.  The black line is a slope 1 line through the origin, and the blue line is an OLS fit (the grey area represents standard error). 
+
 
 ```{r plot_pve_inflation_large}
-filter(est_df_large) %>% ggplot(aes(x=tpve,y=pve,col=tbias/tpve))+geom_point()+geom_smooth(method="lm")+xlab(expression(paste("PVE")))+ylab(expression(hat("PVE")))+ggtitle("Not accounting for confounding inflates PVE estimates")+geom_abline(intercept=0,slope=1)+facet_wrap(~method,labeller=label_both)
+filter(est_df_large) %>% ggplot(aes(x=tpve,y=pve,col=tbias/tpve))+geom_point()+geom_smooth(method="lm")+xlab(expression(paste("PVE")))+ylab(expression(hat("PVE")))+ggtitle("Not accounting for confounding inflates PVE estimates")+geom_abline(intercept=0,slope=1)+facet_wrap(~method,labeller=label_both)+guides(col=guide_legend(title=bquote(frac(c,PVE))))
 ```
 
 
 ```{r plot_pve_rmse_large}
-filter(est_df_large) %>% ggplot(aes(x=tbias/tpve,y=abs(pve-tpve)/tpve,col=method))+geom_point()+geom_smooth()+ggtitle("Accounting for confounding marginally improves PVE estimates","when confounding is high relative to PVE")+xlab("Confounding (Prop of PVE)")+ylab("RMSE(PVE)/PVE")
-# library(ggjoy)
+filter(est_df_large) %>% rename(PVE=tpve) %>% ggplot(aes(x=tbias/PVE,y=abs(pve-PVE)/PVE,col=method))+geom_point()+geom_smooth()+ggtitle("Accounting for confounding improves PVE estimates","when confounding is high relative to PVE, and when PVE is high")+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(RMSE[PVE],PVE)))+facet_wrap(~PVE,labeller=label_both)
+
+
 
 # filter(est_df_large) %>% ggplot(aes(x=tbias,y=abs(pve-tpve),col=method))+geom_point()+geom_smooth()+ggtitle("RMSE(PVE) with increasing Levels of confounding","Linear space vs Log space")+xlab("Confounding")+ylab("RMSE(PVE)")+facet_wrap(~doLog,labeller=label_both)
 ```
 
 ```{r plot_rmse_joy_large}
-ggplot(est_df_large,aes(x=abs(pve-tpve)/tpve,y=factor(tbias/tpve),col=method,fill=method))+geom_joy(panel_scaling=F)+ggtitle("Accounting for confounding improves PVE estimates","when confounding is high relative to PVE")+xlab("RMSE(PVE)/PVE")+ylab("Confound/PVE")+scale_x_log10()+geom_vline(xintercept=1)
+library(ggjoy)
+rename(est_df_large,PVE=tpve) %>% ggplot(aes(x=abs(pve-PVE)/PVE,y=factor(tbias/PVE),col=method,fill=method))+geom_joy(panel_scaling=T)+ggtitle("Accounting for confounding improves PVE estimates","when confounding is high relative to PVE")+ylab(bquote(frac(c,PVE)))+xlab(bquote(frac(RMSE[PVE],PVE)))+scale_x_log10()+facet_wrap(~PVE,labeller=label_both)
 ```
 
-
-
-For the larger dataset, the two-parameter model doesn't seem to be appreciably better at the levels of confounding I used.
 
 
 ```{r plot_confound_large}
-filter(est_df_large,method=="Confound") %>% ggplot(aes(x=tbias,y=a_hat))+geom_point()+geom_abline(intercept=0,slope=1)+geom_smooth(method="lm")+ggtitle("Confounding is Consistently Underestimated")+xlab("True Confounding")+ylab("Estimate of Confounding")
-
-```
-
-```{r bias_by_pve_large}
 filter(est_df_large,method=="Confound") %>% rename(pve_est=pve) %>% rename(pve=tpve) %>%  ggplot(aes(x=tbias/pve,y=a_hat/pve))+geom_point()+geom_abline(intercept=0,slope=1)+geom_smooth(method="lm")+ggtitle("Confounding is Consistently Underestimated","When True PVE is low")+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(hat(c),PVE)))+facet_wrap(~pve,labeller = label_both)
-```
 
+
+
+
+```
 
 # "Direct" simulation
 
@@ -284,31 +286,35 @@ filter(dest_df_large,method=="NoConfound",tbias==0) %>% ggplot(aes(x=tpve,y=pve)
 
 
 ```{r plot_pve_inflation_direct}
-filter(dest_df_large) %>% ggplot(aes(x=tpve,y=pve,col=tbias/tpve))+geom_point()+geom_smooth(method="lm")+xlab(expression(paste("PVE")))+ylab(expression(hat("PVE")))+ggtitle("Not accounting for confounding inflates PVE estimates","Direct Simulation")+geom_abline(intercept=0,slope=1)+facet_wrap(~method,labeller=label_both)
+filter(dest_df_large) %>% ggplot(aes(x=tpve,y=pve,col=tbias/tpve))+geom_point()+geom_smooth(method="lm")+xlab(expression(paste("PVE")))+ylab(expression(hat("PVE")))+ggtitle("Not accounting for confounding inflates PVE estimates")+geom_abline(intercept=0,slope=1)+facet_wrap(~method,labeller=label_both)+guides(col=guide_legend(title=bquote(frac(c,PVE))))
 ```
 
 
 
 ```{r plot_pve_rmse_direct}
-filter(dest_df_large) %>% ggplot(aes(x=tbias/(tbias+tpve),y=abs(pve-tpve),col=method))+geom_point()+geom_smooth()+ggtitle("RMSE(PVE)/PVE with increasing Levels of confounding","'Direct' Simulation")+xlab("Confounding (as a proportion of PVE)")+ylab("RMSE(PVE)/PVE")
+library(ggjoy)
+filter(dest_df_large) %>% rename(PVE=tpve) %>% ggplot(aes(x=tbias/PVE,y=abs(pve-PVE)/PVE,col=method))+geom_point()+geom_smooth()+ggtitle("Accounting for confounding improves PVE estimates","when confounding is high relative to PVE, and when PVE is high")+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(RMSE[PVE],PVE)))+facet_wrap(~PVE,labeller=label_both)
 ```
 
 
 ```{r plot_rmse_joy_direct}
-ggplot(dest_df_large,aes(x=abs(pve-tpve)/tpve,y=factor(tbias/tpve),col=method,fill=method))+geom_joy(panel_scaling=F)+ggtitle("Accounting for confounding improves PVE estimates","when confounding is high relative to PVE")+xlab("RMSE(PVE)/PVE")+ylab("Confound/PVE")+scale_x_log10()+geom_vline(xintercept=1)
+library(ggjoy)
+rename(dest_df_large,PVE=tpve) %>% ggplot(aes(x=abs(pve-PVE)/PVE,y=factor(tbias/PVE),col=method,fill=method))+geom_joy(panel_scaling=T)+ggtitle("Accounting for confounding improves PVE estimates","when confounding is high relative to PVE")+ylab(bquote(frac(c,PVE)))+xlab(bquote(frac(RMSE[PVE],PVE)))+scale_x_log10()+facet_wrap(~PVE,labeller=label_both)
+
 ```
 
 
 
 ```{r plot_counfound_direct}
-filter(dest_df_large,method=="Confound") %>% ggplot(aes(x=tbias,y=a_hat))+geom_point()+geom_abline(intercept=0,slope=1)+geom_smooth(method="lm")+ggtitle("Estimate of Counfounding is Close to Ideal","Under direct simulation")+xlab("True Confounding")+ylab("Estimate of Confounding")
-```
-
-
-```{r bias_by_pve_direct}
-filter(dest_df_large,method=="Confound") %>% rename(pve_est=pve) %>% rename(pve=tpve) %>%  ggplot(aes(x=tbias/pve,y=a_hat/pve))+geom_point()+geom_abline(intercept=0,slope=1)+geom_smooth(method="lm")+ggtitle("Estimate of Counfounding is Close to Ideal","Under direct simulation")+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(hat(c),PVE)))+facet_wrap(~pve,labeller = label_both)
+filter(dest_df_large,method=="Confound") %>% rename(pve_est=pve) %>% rename(pve=tpve) %>%  ggplot(aes(x=tbias/pve,y=a_hat/pve))+geom_point()+geom_abline(intercept=0,slope=1)+geom_smooth(method="lm")+ggtitle("Confounding is Consistently Underestimated","When True PVE is low")+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(hat(c),PVE)))+facet_wrap(~pve,labeller = label_both)
 
 ```
+
+For the direct simulation, although the low PVE scenario seems to be noiser, the estimates are always centered around the true value.
+
+
+
+
 
 ## Session information
 
