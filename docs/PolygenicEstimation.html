@@ -313,10 +313,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-08-23</p>
+<p><strong>Last updated:</strong> 2017-08-29</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 54476ee</p>
+<p><strong>Code version:</strong> 6cff6f9</p>
 <!-- Add your analysis here -->
 <!-- # Background -->
 <!-- ##General properties of compound normal -->
@@ -346,28 +346,32 @@ shared across the workflowr files. -->
 </div>
 <div id="results" class="section level1">
 <h1>Results</h1>
-<p><a href="simulation.html">Read more about the large and small simulations</a></p>
-<p>In the first plot, I show the estimate of PVE (<span class="math inline">\(\hat{PVE}\)</span>) vs the true PVE. Remember that <span class="math inline">\(\hat{PVE}=\frac{p}{n}\hat{\sigma^2_u}\)</span>. This is without confounding. In the second plot, I show the <span class="math inline">\(\text{RMSE}(PVE)\)</span> of the model that takes confounding into account (<code>Confound</code>) vs the model that doesn’t take confounding into account (<code>No_Confound</code>), with increasing levels of counfounding <code>c = 0,0.1,0.2</code></p>
+<p>There are three sets of simulations. In the first, based on Xiang’s <code>example2</code> there are 982 SNPs and 1458 individuals. The SNPS all come from one gene, so the average pairwise linkage is high.</p>
+<p>The second example is based on Xiang’s <code>example</code>, where we have 12758 SNPs (and the same number of individuals). These SNPs come from chromosome 16.</p>
+<p>The final example is also based on Xiang’s <code>example</code>, but instead of simulating GWAS data, data is sampled directly from the multivariate normal distribution specified by <span class="math inline">\(\sigma_u\)</span>, <span class="math inline">\(c\)</span>, and <span class="math inline">\(R\)</span>.</p>
+<p><a href="simulation.html">Read more about the details of simulation here</a></p>
+<p>In the first plot, I show the estimate of PVE (<span class="math inline">\(\hat{PVE}\)</span>) vs the true PVE. Remember that <span class="math inline">\(\hat{PVE}=\frac{p}{n}\hat{\sigma^2_u}\)</span>. This is without confounding. In the second plot, I show the <span class="math inline">\(\text{RMSE}(PVE)\)</span> of the model that takes confounding into account (<code>Confound</code>) vs the model that doesn’t take confounding into account (<code>No_Confound</code>), with increasing levels of counfounding 0, 0.125, 0.25, 0.375, 0.5.</p>
 <div id="smaller-dataset" class="section level2">
 <h2>Smaller Dataset</h2>
 <p><img src="figure/PolygenicEstimation.Rmd/plot_pve_nc_small-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This plot shows what estimates of PVE look like when there is no confounding in the data and no confounding in the model. The black line is a slope 1 line through the origin, and the blue line is an OLS fit (the grey area represents standard error).</p>
 <p><img src="figure/PolygenicEstimation.Rmd/plot_pve_inflation_small-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p><img src="figure/PolygenicEstimation.Rmd/plot_pve_rmse_small-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This plot shows how confounding can inflate PVE estimates when there is no term for confounding in the model. On the left is the two-parameter model that has a term for confounding, and on the right is the one-parameter model that does not. The color in this plot represents the ratio of amount of confounding to true PVE. <img src="figure/PolygenicEstimation.Rmd/plot_pve_rmse_small-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This plot shows how when the true PVE is relatively low, the two-parameter model and one-parameter model perform about equally. As the true PVE increases, the performance of the two models diverges as a function of the level of confounding. At high (and moderate) PVE, the two parameter model’s performance is relatively consistent, while the one-parameter model’s performance degrades as the amount of confounding increases.</p>
 <p><img src="figure/PolygenicEstimation.Rmd/plot_rmse_joy_small-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p><img src="figure/PolygenicEstimation.Rmd/plot_confound_small-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This is another visualization of the same data. Note the log10 scale along the x-axis.</p>
 <p><img src="figure/PolygenicEstimation.Rmd/bias_by_pve_small-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Here we see that when estimating parameters in log-space,the confounding estimate is actually <em>more</em> likely to get “stuck” near zero. This might be due to the unconstrained optimizer choosing very large negative values for the log of the confounding.</p>
+<p>Switching now only to the two-parameter model, we see that at low PVE, the level of confounding (as a proportion of total PVE) is badly underestimated. At moderate to high PVE, the performance improves, but there does seem to be a consistent underestimation of the level of confounding.</p>
 </div>
 </div>
 <div id="larger-dataset" class="section level1">
 <h1>Larger Dataset</h1>
 <p><img src="figure/PolygenicEstimation.Rmd/plot_pve_nc_large-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This plot shows what estimates of PVE look like when there is no confounding in the data and no confounding in the model. The black line is a slope 1 line through the origin, and the blue line is an OLS fit (the grey area represents standard error).</p>
 <p><img src="figure/PolygenicEstimation.Rmd/plot_pve_inflation_large-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p><img src="figure/PolygenicEstimation.Rmd/plot_pve_rmse_large-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p><img src="figure/PolygenicEstimation.Rmd/plot_rmse_joy_large-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>For the larger dataset, the two-parameter model doesn’t seem to be appreciably better at the levels of confounding I used.</p>
 <p><img src="figure/PolygenicEstimation.Rmd/plot_confound_large-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p><img src="figure/PolygenicEstimation.Rmd/bias_by_pve_large-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="direct-simulation" class="section level1">
 <h1>“Direct” simulation</h1>
@@ -377,7 +381,7 @@ shared across the workflowr files. -->
 <p><img src="figure/PolygenicEstimation.Rmd/plot_pve_rmse_direct-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p><img src="figure/PolygenicEstimation.Rmd/plot_rmse_joy_direct-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p><img src="figure/PolygenicEstimation.Rmd/plot_counfound_direct-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p><img src="figure/PolygenicEstimation.Rmd/bias_by_pve_direct-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>For the direct simulation, although the low PVE scenario seems to be noiser, the estimates are always centered around the true value.</p>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
