@@ -9,9 +9,11 @@
 <meta name="generator" content="pandoc" />
 
 
+<meta name="author" content="Nicholas Knoblauch" />
 
+<meta name="date" content="2017-08-07" />
 
-<title>Results</title>
+<title>Comparing RSS-p to ldsc</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -300,17 +302,103 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Results</h1>
+<h1 class="title toc-ignore">Comparing RSS-p to ldsc</h1>
+<h4 class="author"><em>Nicholas Knoblauch</em></h4>
+<h4 class="date"><em>2017-08-07</em></h4>
 
 </div>
 
 
-<ul>
-<li><a href="simulation.html">Standardized Effect Size Simulation</a></li>
-<li><a href="PolygenicEstimation.html">Polygenic Estimation With and Without Confounding</a></li>
-<li><a href="chr_2.html">Comparing RSS-p to ldsc</a> <!-- * [Genome-Wide Simulation](GenomeWideSimulation.html) --> <!-- * [Diagonal Approximation of LD matrix](IndependenceCheck.html) --></li>
-</ul>
-<!-- * [Getting up and running with LDetect](Running_ldetect.html) -->
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2017-09-14</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 20ec8ba</p>
+<!-- Add your analysis here -->
+<div id="setup" class="section level1">
+<h1>Setup:</h1>
+<p>As a larger test of RSSp, I’ve simulated GWAS data using 1000 genomes EUR individuals (<span class="math inline">\(N=503\)</span>). I’m using the same individuals for the LD panel, which is used by both <code>RSSp</code> and <code>LDSC</code>. As RSSp is still a little slow, I’m only using SNPs from chromosome 2 in this simulation. That works out to 499373 SNPs in total. I am also using the Wen and Stephens estimator (as implemented in <code>LDshrink</code>) to calculate LD (and LD scores). I simulated traits with levels of <span class="math inline">\(PVE\)</span> ranging from 0.01 to 0.9, and confounding (as a proportion of <span class="math inline">\(PVE\)</span>) ranging from 0to 0.09. With 4 replicates of each scenario, there were 108 traits in total.</p>
+<div id="estimating-varu" class="section level2">
+<h2>Estimating <span class="math inline">\(Var(U)\)</span></h2>
+<p><code>ldsc</code>’s version of <span class="math inline">\(Var(U)\)</span> (<span class="math inline">\(\sigma^2_u\)</span>), is <span class="math inline">\(h^2/p\)</span>. <code>RSSp</code> reports <span class="math inline">\(sigma^2_u\)</span> directly</p>
+<p><img src="figure/chr_2.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><code>ldsc's</code> estimates are relatively well correlated with <span class="math inline">\(\sigma_u\)</span>, but are all dramatic underestiamtes. Also note that at low <span class="math inline">\(\sigma_u\)</span>, some of <code>ldsc</code>’s estimates are negative.</p>
+<p><img src="figure/chr_2.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><code>RSSp</code> seems to slightly overestimate <span class="math inline">\(\sigma^2_u\)</span>, but does a much better job overall.</p>
+</div>
+<div id="estimating-confounding-interceptinflation" class="section level2">
+<h2>Estimating confounding (intercept/inflation)</h2>
+<p>Both methods are able to estimate confounding/inflation. <code>ldsc</code> estimates an intercept, which can be positive or negative. <code>RSSp</code> (as currently implemented) estimates a confounding factor <code>c</code> which is (arbitrarily) bounded between <code>0</code> and <code>1</code></p>
+<p><img src="figure/chr_2.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><code>ldsc</code> has a hard time estimating confounding when <span class="math inline">\(c\)</span> is low, but does ok as the level of confounding increases.</p>
+<p><img src="figure/chr_2.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><code>RSSp</code> consistently understimates the level of confounding, but is much better on average then <code>ldsc</code></p>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre><code>R version 3.4.0 (2017-04-21)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 16.04.3 LTS
+
+Matrix products: default
+BLAS/LAPACK: /opt/intel/compilers_and_libraries_2018.0.061/linux/mkl/lib/intel64_lin/libmkl_intel_lp64.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] bindrcpp_0.2      RcppEigenH5_0.1.0 SeqArray_1.17.4  
+ [4] gdsfmt_1.12.0     reshape2_1.4.2    dplyr_0.7.2      
+ [7] purrr_0.2.3       readr_1.1.1       tidyr_0.7.0      
+[10] tibble_1.3.4      ggplot2_2.2.1     tidyverse_1.1.1  
+[13] RSSp_1.0          LDshrink_1.0     
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.12            lubridate_1.6.0        
+ [3] lattice_0.20-35         Biostrings_2.44.2      
+ [5] assertthat_0.2.0        rprojroot_1.2          
+ [7] digest_0.6.12           psych_1.7.5            
+ [9] R6_2.2.2                GenomeInfoDb_1.12.2    
+[11] cellranger_1.1.0        plyr_1.8.4             
+[13] backports_1.1.0         stats4_3.4.0           
+[15] evaluate_0.10.1         httr_1.3.0             
+[17] zlibbioc_1.22.0         rlang_0.1.2            
+[19] lazyeval_0.2.0          readxl_1.0.0           
+[21] S4Vectors_0.14.3        Matrix_1.2-11          
+[23] rmarkdown_1.6           labeling_0.3           
+[25] stringr_1.2.0           foreign_0.8-69         
+[27] RcppEigen_0.3.3.3.0     RCurl_1.95-4.8         
+[29] munsell_0.4.3           broom_0.4.2            
+[31] compiler_3.4.0          modelr_0.1.1           
+[33] pkgconfig_2.0.1         BiocGenerics_0.22.0    
+[35] mnormt_1.5-5            htmltools_0.3.6        
+[37] GenomeInfoDbData_0.99.0 IRanges_2.10.3         
+[39] bitops_1.0-6            grid_3.4.0             
+[41] nlme_3.1-131            jsonlite_1.5           
+[43] gtable_0.2.0            git2r_0.19.0           
+[45] magrittr_1.5            scales_0.5.0           
+[47] RcppParallel_4.3.20     stringi_1.1.5          
+[49] XVector_0.16.0          xml2_1.1.1             
+[51] tools_3.4.0             forcats_0.2.0          
+[53] glue_1.1.1              hms_0.3                
+[55] parallel_3.4.0          yaml_2.1.14            
+[57] colorspace_1.3-2        GenomicRanges_1.28.4   
+[59] rvest_0.3.2             knitr_1.17             
+[61] bindr_0.1               haven_1.1.0            </code></pre>
+</div>
+</div>
 
 <hr>
 <p>
