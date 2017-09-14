@@ -24,17 +24,17 @@ knitr::read_chunk("chunks.R")
 ```{r code-version, echo=FALSE, results='asis'}
 ```
 
-# GWAS Simulation Strategy
 
-## Overview
 
-The main idea is that we have a parameter we want to estimate ($PVE$) from data $\hat{u}=\frac{\hat{\beta}}{\text{se}(\hat{\beta})}$
+# Simulating from genotype
 
-The path from $PVE$ to $\hat{u}$ looks like this:
+The main idea is that we have two parameters we want to estimate ($PVE,c$) from data $\hat{u}=\frac{\hat{\beta}}{\text{se}(\hat{\beta})}$
+
+The path from $PVE$ and $c$  to $\hat{u}$ looks like this:
 
 Start with an $n$x$p$ matrix of column-centered genotypes ($X$).
 
-For a chosen value of $PVE$, define $\sigma_u$ as :
+For a chosen value of $PVE$, define $\sigma_u$ as:
 
 $$\sigma_u=\sqrt{\frac{n}{p}PVE}$$
 
@@ -51,56 +51,35 @@ $$\epsilon \sim N(0,\tau^{-1}I_n)$$
 
 
 $$ y= X \beta + \epsilon $$
-$y$ is centered to have a mean of $0$. $\hat{\beta_i}$ and $\text{se}(\hat{\beta_i})$ Are obtained by univariate ordinary least squares (fit without an intercept term). If there is confounding in the simulation, it's added to $\hat{\beta}$ as $\hat{u}_{\text{confound}}=\hat{u}+N(0,a I_p)$
-
-## Simulations on small and medium datasets
-
-For this simulation I'll use Xiang's small  and medium sized example datasets (`genotype2.mat` and `genotype.mat`)
+$y$ is centered to have a mean of $0$. $\hat{\beta_i}$ and $\text{se}(\hat{\beta_i})$ Are obtained by univariate ordinary least squares (fit without an intercept term). If there is confounding in the simulation, it's added to $\hat{\beta}$ as $\hat{u}_{\text{confound}}=\hat{u}+N(0,c I_p)$
 
 
-```{r echo=F,message=F}
-library(RcppEigenH5)
-library(RSSReQTL)
-library(tidyverse)
-large_genof <- "/home/nwknoblauch/Downloads/genotype.mat"
-small_genof <- "/home/nwknoblauch/Downloads/genotype2.mat"
-small_p <- get_rownum_h5(small_genof,"/","C")
-large_p <- get_rownum_h5(large_genof,"/","C")
-pve <- as.numeric(seq(0.01,0.9,length.out = 10))
-bias <- as.numeric(seq(0.0,0.1,length.out = 5))
-nreps <- 7
-```
+# Simulating "directly" from LD
+
+A simpler simulation strategy is to simply sample $\hat{u}$ directly from a multivariate normal distribution, specified by $R$ $\sigma_u$, and $c$.
 
 
-Let's start with a simulation on `r small_p` loci.  There will be several true values of PVE (`r pve`), and bias (`r bias`), and `r nreps` replication of each combination, for a total of `r length(pve)*length(bias)*nreps` simulations. Then we will move up to `r large_p` loci
+$$\hat{u}_{\text{confound}} \sim N(0,\sigma_u^2R^2+R+c I_p)$$
 
+To (greatly) accelerate the generation of samples from the multivariate normal distribution, we can use the eigenvalue decomposition of $R$:
 
+First remember that we can write the variance of $\hat{u}_{\text{confound}}$ as 
 
-```{r echo=F,eval=F}
-library(RcppEigenH5)
-SNP  <- scale(t(read_2d_mat_h5(small_genof,"/","C")),center=T,scale=F)
-outdir <- "../data/polygenic_sim_genotype2_test"
-mprof <- profvis({
-gen_sim(SNP,pve,bias,nreps =nreps,outdir = outdir,collapse_all = T)
-})
-```
+$$V(\sigma_u,c)=Q(\sigma^2_uD^2+D+c I_p)Q^{T}$$
 
+for convenience, let's define $D^\star$ to be 
 
-```{r eval=F}
+$$D^{\star}=(\sigma_uD^2+D+c I_p)$$
+Let's also define $R^\star$ to be 
+$$R^\star=Q D^{\star}Q^{T}$$
 
-SNP  <- scale(t(read_2d_mat_h5(large_genof,"/","C")),center=T,scale=F)
-outdir <- "../data/polygenic_sim_genotype_larger"
-gen_sim(SNP,pve,bias,nreps =nreps,outdir = outdir,collapse_all = T)
-```
+A useful trick when trying to draw samples from a multivariate normal distribution
+is to use the matrix $A=QD^{1/2}$ and  draw $p$ samples from a standard normal distribution, (i.e $z_i \sim N(0,1)$).  $\hat{u}_{\text{confound}}=Az$ now has the desired distrubtion.
 
-
-## Simulating from the model "directly"
-
-A simpler simulation strategy is to simply sample $\hat{u}$ directly from a multivariate normal distribution. This  
 <!-- Add your analysis here -->
 
-## Session information
+<!-- ## Session information -->
 
-<!-- Insert the session information into the document -->
-```{r session-info}
-```
+<!-- <!-- Insert the session information into the document --> -->
+<!-- ```{r session-info} -->
+<!-- ``` -->
