@@ -24,6 +24,41 @@ knitr::read_chunk("chunks.R")
 ```{r code-version, echo=FALSE, results='asis'}
 ```
 
+# Background
+
+
+## The GWAS summary statistic
+
+Under an additive model
+
+$$ y= X \beta + \epsilon$$
+
+Where $X$ is genotype ($n$ by $p$), $\beta$ is a vector (length $p$) of fixed effects and $\epsilon$ is noise/error.
+
+Because in general $p >>n$, we can't directly estimate the distribution of $\beta_i$.  Instead we have univariate summary statistics:
+
+$$ \hat{\beta_j} := (X_j^TX_j)^{-1}X_j^Ty $$
+
+$$ \hat{\sigma_j^2} := (nX_j^TX_j)^{-1}(y-X_j\hat{\beta_j})^T(y-X_j\hat{\beta_j}) $$
+
+## RSS
+
+RSS relates univariate statistics to their multivariate counterparts by using the LD matrix:
+
+$$ \hat{\beta} \sim N(\hat{S}\hat{R}\hat{S}^{-1},\hat{S}\hat{R}\hat{S}) $$
+
+The original implementation of RSS uses a sparse prior on $\beta$, and involves lots of MCMC / variational inference to get a posterior on $\beta$
+
+<!-- ### RSS with a normal prior -->
+
+<!-- With a normal prior on $\beta$ ($\beta \sim N(0,\sigma_\beta)$), if we're only interested in $\sigma_\beta$, we can  -->
+
+<!-- $$ \hat{\beta} | \beta \sim N(SRS^{-1}\beta,SRS) $$ -->
+
+
+
+
+
 
 
 # Simulating from genotype
