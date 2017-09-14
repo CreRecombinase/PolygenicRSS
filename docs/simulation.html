@@ -316,7 +316,28 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-09-14</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> e573d6f</p>
+<p><strong>Code version:</strong> 6d6b000</p>
+<div id="background" class="section level1">
+<h1>Background</h1>
+<div id="the-gwas-summary-statistic" class="section level2">
+<h2>The GWAS summary statistic</h2>
+<p>Under an additive model</p>
+<p><span class="math display">\[ y= X \beta + \epsilon\]</span></p>
+<p>Where <span class="math inline">\(X\)</span> is genotype (<span class="math inline">\(n\)</span> by <span class="math inline">\(p\)</span>), <span class="math inline">\(\beta\)</span> is a vector (length <span class="math inline">\(p\)</span>) of fixed effects and <span class="math inline">\(\epsilon\)</span> is noise/error.</p>
+<p>Because in general <span class="math inline">\(p &gt;&gt;n\)</span>, we can’t directly estimate the distribution of <span class="math inline">\(\beta_i\)</span>. Instead we have univariate summary statistics:</p>
+<p><span class="math display">\[ \hat{\beta_j} := (X_j^TX_j)^{-1}X_j^Ty \]</span></p>
+<p><span class="math display">\[ \hat{\sigma_j^2} := (nX_j^TX_j)^{-1}(y-X_j\hat{\beta_j})^T(y-X_j\hat{\beta_j}) \]</span></p>
+</div>
+<div id="rss" class="section level2">
+<h2>RSS</h2>
+<p>RSS relates univariate statistics to their multivariate counterparts by using the LD matrix:</p>
+<p><span class="math display">\[ \hat{\beta} \sim N(\hat{S}\hat{R}\hat{S}^{-1},\hat{S}\hat{R}\hat{S}) \]</span></p>
+<p>The original implementation of RSS uses a sparse prior on <span class="math inline">\(\beta\)</span>, and involves lots of MCMC / variational inference to get a posterior on <span class="math inline">\(\beta\)</span></p>
+<!-- ### RSS with a normal prior -->
+<!-- With a normal prior on $\beta$ ($\beta \sim N(0,\sigma_\beta)$), if we're only interested in $\sigma_\beta$, we can  -->
+<!-- $$ \hat{\beta} | \beta \sim N(SRS^{-1}\beta,SRS) $$ -->
+</div>
+</div>
 <div id="simulating-from-genotype" class="section level1">
 <h1>Simulating from genotype</h1>
 <p>The main idea is that we have two parameters we want to estimate (<span class="math inline">\(PVE,c\)</span>) from data <span class="math inline">\(\hat{u}=\frac{\hat{\beta}}{\text{se}(\hat{\beta})}\)</span></p>
