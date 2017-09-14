@@ -1,0 +1,112 @@
+---
+title: "Comparing RSS-p to ldsc"
+author: "Nicholas Knoblauch"
+date: 2017-08-07
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+
+```{r,eval=T,echo=F,warning=F,message=F}
+library(LDshrink)
+library(RSSp)
+library(tidyverse)
+library(reshape2)
+library(SeqArray)
+library(RcppEigenH5)
+
+# tdata <- read_delim("/media/nwknoblauch/Data/1kg/ldsc_sim_gwas_16/sim_1.sumstats.gz",delim="\t")
+# N <- tdata$N[1]
+# p <- nrow(tdata)
+RSS_res_gwas <- readRDS("/media/nwknoblauch/Data/1kg/RSSp_est_gwas_2/sim_results.RDS") %>% filter(method=="Confound",!log_params) %>% rename(pve_RSSp=pve,intercept_RSSp=a_hat,sigu_RSSp=sigu) %>% mutate(varu_RSSp=sigu_RSSp^2)
+RSS_est_solo <- select(RSS_res_gwas,fgeneid,pve_RSSp,intercept_RSSp,varu_RSSp)
+ldsc_res_gwas <- read_delim("/media/nwknoblauch/Data/1kg/ldsc_est_gwas_2/sim_results.tsv",delim="\t") %>% mutate(fgeneid=as.character(fgeneid)) %>% mutate(varu_ldsc=Total_Observed_scale_h2/p)
+ldsc_est_solo <- select(ldsc_res_gwas,fgeneid,varu_ldsc,intercept_ldsc=Intercept) 
+tparam_df <- select(ldsc_res_gwas,fgeneid,tbias,tpve,tsigu,n,p) %>% mutate(tvaru=tsigu^2)
+p <- tparam_df$p[1]
+N <- tparam_df$n[1]
+est_m <- inner_join(ldsc_est_solo,RSS_est_solo) %>% inner_join(tparam_df)
+#ggplot(est_m,aes(x=varu_RSSp,y=varu_ldsc))+geom_point()+geom_smooth(method="lm")
+
+
+b_res <- inner_join(RSS_res_gwas,ldsc_res_gwas)
+
+
+```
+
+
+
+#Setup:
+
+As a larger test of RSSp, I've simulated GWAS data using 1000 genomes EUR individuals ($N=503$). I'm using the same individuals for the LD panel, which is used by both `RSSp` and `LDSC`.  As RSSp is still a little slow, I'm only using SNPs from chromosome 2 in this simulation. That works out to `r p` SNPs in total. I am also using the Wen and Stephens estimator (as implemented in `LDshrink`) to calculate LD (and LD scores).  I simulated traits with levels of $PVE$ ranging from `r min(tparam_df$tpve)` to `r max(tparam_df$tpve)`, and confounding (as a proportion of $PVE$) ranging from `r min(tparam_df$tbias)`to `r max(tparam_df$tbias)`.  With 4 replicates of each scenario, there were 108 traits in total.
+
+
+## Estimating $Var(U)$
+
+`ldsc`'s version of $Var(U)$ ($\sigma^2_u$), is $h^2/p$. `RSSp` reports $sigma^2_u$ directly
+
+
+```{r}
+ggplot(est_m,aes(x=tvaru,y=varu_ldsc))+geom_point()+geom_abline(slope=1,intercept=0)+ggtitle(bquote(Estimating~Var(U)),paste0("ldsc, N=",N," p=",p))+xlab(bquote(sigma[u]^2))+ylab(bquote(hat(sigma[u])^2))+geom_smooth(method="lm")
+
+```
+
+`ldsc's` estimates are relatively well correlated with $\sigma_u$, but are all dramatic underestiamtes.  Also note that at low $\sigma_u$, some of `ldsc`'s estimates are negative.
+
+
+```{r}
+ggplot(est_m,aes(x=tvaru,y=varu_RSSp))+geom_point()+geom_abline(slope=1,intercept=0)+ggtitle(bquote(Estimating~Var(U)),paste0("RSSp, N=",N," p=",p))+xlab(bquote(sigma[u]^2))+ylab(bquote(hat(sigma[u])^2))+geom_smooth(method="lm")
+```
+
+`RSSp` seems to slightly overestimate $\sigma^2_u$, but does a much better job overall.
+
+## Estimating confounding (intercept/inflation)
+
+Both methods are able to estimate confounding/inflation.  `ldsc` estimates an intercept, which can be positive or negative. `RSSp` (as currently implemented) estimates a confounding factor `c` which is (arbitrarily) bounded between `0` and `1`
+
+
+```{r}
+ggplot(est_m,aes(x=tbias,y=(intercept_ldsc-1)))+geom_point()+geom_abline(slope=1,intercept=0)+ggtitle("Estimating Confounding","ldsc")+xlab(bquote(c))+ylab(bquote(hat(c)))+geom_smooth(method="lm")
+
+```
+
+`ldsc` has a hard time estimating confounding when $c$ is low, but does ok as the level of confounding increases.
+
+
+```{r}
+ggplot(est_m,aes(x=tbias,y=intercept_RSSp))+geom_point()+geom_abline(slope=1,intercept=0)+ggtitle("Estimating Confounding","RSSp")+xlab(bquote(c))+ylab(bquote(hat(c)))+geom_smooth(method="lm")
+```
+
+`RSSp` consistently understimates the level of confounding, but is much better on average then `ldsc`
+
+
+
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+sessionInfo()
+```

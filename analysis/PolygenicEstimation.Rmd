@@ -134,13 +134,13 @@ This plot shows what estimates of PVE look like when there is no confounding in 
 
 
 ```{r plot_pve_inflation_small}
-filter(est_df) %>% ggplot(aes(x=tpve,y=pve,col=tbias/tpve))+geom_point()+geom_smooth(method="lm")+xlab(expression(paste("PVE")))+ylab(expression(hat("PVE")))+ggtitle("Not accounting for confounding inflates PVE estimates")+geom_abline(intercept=0,slope=1)+facet_wrap(~method,labeller=label_both)+guides(col=guide_legend(title=bquote(frac(c,PVE))))
+filter(est_df) %>% ggplot(aes(x=tpve,y=pve,col=tbias/tpve))+geom_point()+xlab(expression(paste("PVE")))+ylab(expression(hat("PVE")))+ggtitle("Not accounting for confounding inflates PVE estimates")+geom_abline(intercept=0,slope=1)+facet_wrap(~method,labeller=label_both)+guides(col=guide_legend(title=bquote(frac(c,PVE))))
 ```
 
 This plot shows how confounding can inflate PVE estimates when there is no term for confounding in the model. On the left is the two-parameter model that has a term for confounding, and on the right is the one-parameter model that does not.  The color in this plot represents the ratio of amount of confounding to true PVE. 
 ```{r plot_pve_rmse_small}
 library(ggjoy)
-filter(est_df) %>% rename(PVE=tpve) %>% ggplot(aes(x=tbias/PVE,y=abs(pve-PVE)/PVE,col=method))+geom_point()+geom_smooth()+ggtitle("Accounting for confounding improves PVE estimates","when confounding is high relative to PVE, and when PVE is high")+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(RMSE[PVE],PVE)))+facet_wrap(~PVE,labeller=label_both)
+filter(est_df) %>% rename(PVE=tpve) %>% mutate(isConfound=(method=="Confound")) %>% ggplot(aes(x=tbias/PVE,y=abs(pve-PVE)/PVE,col=isConfound))+geom_point()+geom_jitter()+ggtitle("Accounting for confounding improves PVE estimates","when confounding is high relative to PVE, and when PVE is high")+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(RMSE[PVE],PVE)))+facet_wrap(~PVE,labeller=label_both)+guides(col=guide_legend(title="Accounting\nfor confounding"))
 ```
 
 This plot shows how when the true PVE is relatively low, the two-parameter model and one-parameter model perform about equally.  As the true PVE increases, the performance of the two models diverges as a function of the level of confounding.  At high (and moderate) PVE, the two parameter model's performance is relatively consistent, while the one-parameter model's performance degrades as the amount of confounding increases.  
@@ -148,7 +148,7 @@ This plot shows how when the true PVE is relatively low, the two-parameter model
 
 ```{r plot_rmse_joy_small}
 library(ggjoy)
-rename(est_df,PVE=tpve) %>% ggplot(aes(x=abs(pve-PVE)/PVE,y=factor(tbias/PVE),col=method,fill=method))+geom_joy(panel_scaling=T)+ggtitle("Accounting for confounding improves PVE estimates","when confounding is high relative to PVE")+ylab(bquote(frac(c,PVE)))+xlab(bquote(frac(RMSE[PVE],PVE)))+scale_x_log10()+facet_wrap(~PVE,labeller=label_both)
+rename(est_df,PVE=tpve) %>% mutate(isConfound=(method=="Confound")) %>% ggplot(aes(x=abs(pve-PVE)/PVE,y=factor(tbias/PVE),col=isConfound,fill=isConfound))+geom_joy(panel_scaling=T)+ggtitle("Accounting for confounding improves PVE estimates","when confounding is high relative to PVE")+ylab(bquote(frac(c,PVE)))+xlab(bquote(frac(RMSE[PVE],PVE)))+scale_x_log10()+facet_wrap(~PVE,labeller=label_both)+guides(col=guide_legend(title="Accounting\nfor confounding"),fill=guide_legend(title="Accounting\nfor confounding"))
 ```
 
 This is another visualization of the same data. Note the log10 scale along the x-axis.
@@ -205,12 +205,13 @@ This plot shows what estimates of PVE look like when there is no confounding in 
 
 
 ```{r plot_pve_inflation_large}
-filter(est_df_large) %>% ggplot(aes(x=tpve,y=pve,col=tbias/tpve))+geom_point()+geom_smooth(method="lm")+xlab(expression(paste("PVE")))+ylab(expression(hat("PVE")))+ggtitle("Not accounting for confounding inflates PVE estimates")+geom_abline(intercept=0,slope=1)+facet_wrap(~method,labeller=label_both)+guides(col=guide_legend(title=bquote(frac(c,PVE))))
+filter(est_df_large) %>% ggplot(aes(x=tpve,y=pve,col=tbias/tpve))+geom_point()+xlab(expression(paste("PVE")))+ylab(expression(hat("PVE")))+ggtitle("Not accounting for confounding inflates PVE estimates")+geom_abline(intercept=0,slope=1)+facet_wrap(~method,labeller=label_both)+guides(col=guide_legend(title=bquote(frac(c,PVE))))
+
 ```
 
 
 ```{r plot_pve_rmse_large}
-filter(est_df_large) %>% rename(PVE=tpve) %>% ggplot(aes(x=tbias/PVE,y=abs(pve-PVE)/PVE,col=method))+geom_point()+geom_smooth()+ggtitle("Accounting for confounding improves PVE estimates","when confounding is high relative to PVE, and when PVE is high")+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(RMSE[PVE],PVE)))+facet_wrap(~PVE,labeller=label_both)
+filter(est_df_large) %>% rename(PVE=tpve) %>% mutate(isConfound=(method=="Confound")) %>% ggplot(aes(x=tbias/PVE,y=abs(pve-PVE)/PVE,col=isConfound))+geom_point()+geom_jitter()+ggtitle("Accounting for confounding improves PVE estimates","when confounding is high relative to PVE, and when PVE is high")+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(RMSE[PVE],PVE)))+facet_wrap(~PVE,labeller=label_both)+guides(col=guide_legend(title="Accounting\nfor confounding"))
 
 
 
@@ -219,15 +220,13 @@ filter(est_df_large) %>% rename(PVE=tpve) %>% ggplot(aes(x=tbias/PVE,y=abs(pve-P
 
 ```{r plot_rmse_joy_large}
 library(ggjoy)
-rename(est_df_large,PVE=tpve) %>% ggplot(aes(x=abs(pve-PVE)/PVE,y=factor(tbias/PVE),col=method,fill=method))+geom_joy(panel_scaling=T)+ggtitle("Accounting for confounding improves PVE estimates","when confounding is high relative to PVE")+ylab(bquote(frac(c,PVE)))+xlab(bquote(frac(RMSE[PVE],PVE)))+scale_x_log10()+facet_wrap(~PVE,labeller=label_both)
+rename(est_df_large,PVE=tpve)  %>% mutate(isConfound=(method=="Confound")) %>% ggplot(aes(x=abs(pve-PVE)/PVE,y=factor(tbias/PVE),col=isConfound,fill=isConfound))+geom_joy(panel_scaling=T)+ggtitle("Accounting for confounding improves PVE estimates","when confounding is high relative to PVE")+ylab(bquote(frac(c,PVE)))+xlab(bquote(frac(RMSE[PVE],PVE)))+scale_x_log10()+facet_wrap(~PVE,labeller=label_both)+guides(col=guide_legend(title="Accounting\nfor confounding"),fill=guide_legend(title="Accounting\nfor confounding"))
 ```
 
 
 
 ```{r plot_confound_large}
-filter(est_df_large,method=="Confound") %>% rename(pve_est=pve) %>% rename(pve=tpve) %>%  ggplot(aes(x=tbias/pve,y=a_hat/pve))+geom_point()+geom_abline(intercept=0,slope=1)+geom_smooth(method="lm")+ggtitle("Confounding is Consistently Underestimated","When True PVE is low")+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(hat(c),PVE)))+facet_wrap(~pve,labeller = label_both)
-
-
+filter(est_df_large,method=="Confound")  %>% rename(pve_est=pve) %>% rename(pve=tpve) %>%  ggplot(aes(x=tbias/pve,y=a_hat/pve))+geom_point()+geom_abline(intercept=0,slope=1)+geom_smooth(method="lm")+ggtitle("Confounding is Consistently Underestimated","When True PVE is low")+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(hat(c),PVE)))+facet_wrap(~pve,labeller = label_both)
 
 
 ```

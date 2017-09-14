@@ -4,7 +4,15 @@ output: html_document
 ---
 
 
-* [Comparing RSS-p to ldsc](chr_16.html)
-* [Diagonal Approximation of LD matrix](IndependenceCheck.html)
-* [Polygenic Estimation With and Without Confounding](PolygenicEstimation.html)
+
+
+
+
 * [Standardized Effect Size Simulation](simulation.html)
+* [Polygenic Estimation With and Without Confounding](PolygenicEstimation.html)
+* [Comparing RSS-p to ldsc](chr_2.html)
+<!-- * [Genome-Wide Simulation](GenomeWideSimulation.html) -->
+<!-- * [Diagonal Approximation of LD matrix](IndependenceCheck.html) -->
+
+<!-- * [Getting up and running with LDetect](Running_ldetect.html) -->
+
