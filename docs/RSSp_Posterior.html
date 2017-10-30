@@ -316,18 +316,16 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-10-30</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 140a008</p>
+<p><strong>Code version:</strong> f01c1f7</p>
 <!-- Add your analysis here -->
 <div id="deriving-the-rssp-posterior" class="section level2">
 <h2>Deriving the RSSp Posterior</h2>
 <p><span class="math display">\[ U \sim N(0,I_p\sigma^2_u)\]</span> <span class="math display">\[\hat{U}|U \sim N(RU,R+cI_p)\]</span> From Bishop’s, <em>Pattern Recognotion and Machine Learning</em> we get <span class="math display">\[ \hat{U} \sim N(0,\sigma^2R^2+R+cI_p)\]</span></p>
 <p>as well as the posterior</p>
 <p><span class="math display">\[ U \sim N(\Sigma R  (R+cI_p)^{-1}\hat{U},\Sigma)\]</span> Where <span class="math display">\[\Sigma = (\frac{1}{\sigma^2_u} I_p +R (R+cI_p)^{-1}R)^{-1}\]</span></p>
-<p>Given the EVD of R, <span class="math inline">\(R=QDQ^{T}\)</span>, Let’s denote <span class="math inline">\(D^\dagger=D+cI_p\)</span>, this means that <span class="math inline">\((R+cI_p)^{-1}= (QDQ^{T}+cIp)^{-1}=QD^{\dagger^{-1}}Q^{T}\)</span>. We can repeat this trick to simplify <span class="math inline">\(\Sigma\)</span> further, ending up with <span class="math display">\[\Sigma=QD^{\dagger\dagger^{-1}}Q^{T}\]</span> where <span class="math display">\[D^{\dagger\dagger}=\frac{1}{\sigma_u^2}I_p+ D^{\dagger^{-1}}=\sigma^2I_p+\text{diag}(\frac{1}{\lambda+c})\]</span> Simplifying further:</p>
+<p>Given the EVD of R, <span class="math inline">\(R=QDQ^{T}\)</span>, Let’s denote <span class="math inline">\(D^\dagger=D+cI_p\)</span>, this means that <span class="math inline">\((R+cI_p)^{-1}= (QDQ^{T}+cIp)^{-1}=QD^{\dagger^{-1}}Q^{T}\)</span>. We can repeat this trick to simplify <span class="math inline">\(\Sigma\)</span> further, ending up with <span class="math display">\[\Sigma=QD^{\dagger\dagger^{-1}}Q^{T}\]</span> where <span class="math display">\[D^{\dagger\dagger}=\frac{1}{\sigma_u^2}I_p+ D^{\dagger^{-1}}=\text{diag}(\frac{1}{\lambda+c}+\frac{1}{\sigma^2})\]</span> Simplifying further:</p>
 <p><span class="math display">\[U \sim N(Q D^{\dagger \dagger^{-1}} Q^{T}QDQ^{T}QD^{\dagger^{-1}}Q^{T}\hat{U},QD^{\dagger \dagger^{-1}}Q^{T})\]</span> <span class="math display">\[ \Rightarrow N(QD^{\dagger \dagger^{-1}} D D^{\dagger^{-1}}Q^{T},QD^{\dagger\dagger^{-1}}Q^{T})  \]</span> <span class="math display">\[\Rightarrow N(QD^{\dagger \dagger \dagger}Q^{T}\hat{U},QD^{\dagger \dagger^{-1}}Q^{T})\]</span></p>
-<p>with <span class="math display">\[D^{\dagger \dagger \dagger} = D^{\dagger \dagger^{-1}} D D^{\dagger^{-1}} =\text{diag}(\frac{\lambda}{c\sigma_u^2+\lambda \sigma_u^2+1})\]</span></p>
-<p>Multiplying <span class="math inline">\(U\)</span> on the left by <span class="math inline">\(Q^{T}\)</span> yields a posterior density that can be computed in linear time:</p>
-<p><span class="math display">\[Q^{T} U \sim N(D^{\dagger \dagger \dagger} Q^{T}\hat{U},D^{\dagger \dagger ^{-1}})\]</span></p>
+<p>with <span class="math display">\[D^{\dagger \dagger \dagger} = D^{\dagger \dagger^{-1}} D D^{\dagger^{-1}} =\text{diag}(\frac{\sigma_u^2(c+\lambda)}{c+\lambda+ \sigma_u^2} \times \lambda \times \frac{1}{\lambda+c}) = \text{diag}(\frac{\lambda \sigma^2_u}{c+\lambda+\sigma_u^2})\]</span></p>
 </div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
