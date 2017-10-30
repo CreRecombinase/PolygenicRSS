@@ -41,18 +41,15 @@ Where $$\Sigma = (\frac{1}{\sigma^2_u} I_p +R (R+cI_p)^{-1}R)^{-1}$$
 
 Given the EVD of R, $R=QDQ^{T}$, Let's denote $D^\dagger=D+cI_p$, this means that $(R+cI_p)^{-1}= (QDQ^{T}+cIp)^{-1}=QD^{\dagger^{-1}}Q^{T}$.  We can repeat this trick to simplify $\Sigma$ further, ending up with 
 $$\Sigma=QD^{\dagger\dagger^{-1}}Q^{T}$$ where
-$$D^{\dagger\dagger}=\frac{1}{\sigma_u^2}I_p+ D^{\dagger^{-1}}=\sigma^2I_p+\text{diag}(\frac{1}{\lambda+c})$$
+$$D^{\dagger\dagger}=\frac{1}{\sigma_u^2}I_p+ D^{\dagger^{-1}}=\text{diag}(\frac{1}{\lambda+c}+\frac{1}{\sigma^2})$$
 Simplifying further:
 
 $$U \sim N(Q D^{\dagger \dagger^{-1}} Q^{T}QDQ^{T}QD^{\dagger^{-1}}Q^{T}\hat{U},QD^{\dagger \dagger^{-1}}Q^{T})$$
 $$ \Rightarrow N(QD^{\dagger \dagger^{-1}} D D^{\dagger^{-1}}Q^{T},QD^{\dagger\dagger^{-1}}Q^{T})  $$
 $$\Rightarrow N(QD^{\dagger \dagger \dagger}Q^{T}\hat{U},QD^{\dagger \dagger^{-1}}Q^{T})$$
 
-with $$D^{\dagger \dagger \dagger} = D^{\dagger \dagger^{-1}} D D^{\dagger^{-1}} =\text{diag}(\frac{\lambda}{c\sigma_u^2+\lambda \sigma_u^2+1})$$
+with $$D^{\dagger \dagger \dagger} = D^{\dagger \dagger^{-1}} D D^{\dagger^{-1}} =\text{diag}(\frac{\sigma_u^2(c+\lambda)}{c+\lambda+ \sigma_u^2} \times \lambda \times \frac{1}{\lambda+c}) = \text{diag}(\frac{\lambda \sigma^2_u}{c+\lambda+\sigma_u^2})$$
 
-Multiplying $U$ on the left by $Q^{T}$ yields a posterior density that can be computed in linear time:
-
-$$Q^{T} U \sim N(D^{\dagger \dagger \dagger} Q^{T}\hat{U},D^{\dagger \dagger ^{-1}})$$
 
 
 
