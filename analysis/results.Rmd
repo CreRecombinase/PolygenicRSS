@@ -11,6 +11,7 @@ output: html_document
 * [Standardized Effect Size Simulation](simulation.html)
 * [Polygenic Estimation With and Without Confounding](PolygenicEstimation.html)
 * [Comparing RSS-p to ldsc](chr_2.html)
+* [Deriving the Posterior for RSSp](RSSp_Posterior.html)
 <!-- * [Genome-Wide Simulation](GenomeWideSimulation.html) -->
 <!-- * [Diagonal Approximation of LD matrix](IndependenceCheck.html) -->
 
