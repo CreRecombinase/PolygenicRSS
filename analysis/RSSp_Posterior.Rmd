@@ -28,25 +28,25 @@ knitr::read_chunk("chunks.R")
 
 ## Deriving the RSSp Posterior ##
 
-$$ U \sim N(0,I_p\sigma^2_u)$$
-$$\hat{U}|U \sim N(RU,R+cI_p)$$
+$$ \textbf{u} \sim N(0,I_p\sigma^2_u)$$
+$$\hat{\textbf{u}}|\textbf{u} \sim N(R\textbf{u},R+cI_p)$$
 From Bishop's, _Pattern Recognotion and Machine Learning_ we get
-$$ \hat{U} \sim N(0,\sigma^2R^2+R+cI_p)$$
+$$ \hat{\textbf{u}} \sim N(0,\sigma_u^2R^2+R+cI_p)$$
 
 as well as the posterior
 
-$$ U \sim N(\Sigma R  (R+cI_p)^{-1}\hat{U},\Sigma)$$
+$$ \textbf{u} \sim N(\Sigma R  (R+cI_p)^{-1}\hat{\textbf{u}},\Sigma)$$
 Where $$\Sigma = (\frac{1}{\sigma^2_u} I_p +R (R+cI_p)^{-1}R)^{-1}$$
 
 
 Given the EVD of R, $R=QDQ^{T}$, Let's denote $D^\dagger=D+cI_p$, this means that $(R+cI_p)^{-1}= (QDQ^{T}+cIp)^{-1}=QD^{\dagger^{-1}}Q^{T}$.  We can repeat this trick to simplify $\Sigma$ further, ending up with 
 $$\Sigma=QD^{\dagger\dagger^{-1}}Q^{T}$$ where
-$$D^{\dagger\dagger}=\frac{1}{\sigma_u^2}I_p+ D^{\dagger^{-1}}=\text{diag}(\frac{1}{\lambda+c}+\frac{1}{\sigma^2})$$
+$$D^{\dagger\dagger}=\frac{1}{\sigma_u^2}I_p+ D^{\dagger^{-1}}=\text{diag}(\frac{1}{\lambda+c}+\frac{1}{\sigma_u^2})$$
 Simplifying further:
 
-$$U \sim N(Q D^{\dagger \dagger^{-1}} Q^{T}QDQ^{T}QD^{\dagger^{-1}}Q^{T}\hat{U},QD^{\dagger \dagger^{-1}}Q^{T})$$
+$$\textbf{u} \sim N(Q D^{\dagger \dagger^{-1}} Q^{T}QDQ^{T}QD^{\dagger^{-1}}Q^{T}\hat{\textbf{u}},QD^{\dagger \dagger^{-1}}Q^{T})$$
 $$ \Rightarrow N(QD^{\dagger \dagger^{-1}} D D^{\dagger^{-1}}Q^{T},QD^{\dagger\dagger^{-1}}Q^{T})  $$
-$$\Rightarrow N(QD^{\dagger \dagger \dagger}Q^{T}\hat{U},QD^{\dagger \dagger^{-1}}Q^{T})$$
+$$\Rightarrow N(QD^{\dagger \dagger \dagger}Q^{T}\hat{\textbf{u}},QD^{\dagger \dagger^{-1}}Q^{T})$$
 
 with $$D^{\dagger \dagger \dagger} = D^{\dagger \dagger^{-1}} D D^{\dagger^{-1}} =\text{diag}(\frac{\sigma_u^2(c+\lambda)}{c+\lambda+ \sigma_u^2} \times \lambda \times \frac{1}{\lambda+c}) = \text{diag}(\frac{\lambda \sigma^2_u}{c+\lambda+\sigma_u^2})$$
 
