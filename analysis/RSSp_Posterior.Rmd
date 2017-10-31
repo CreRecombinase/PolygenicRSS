@@ -28,6 +28,7 @@ knitr::read_chunk("chunks.R")
 
 ## Deriving the RSSp Posterior ##
 
+
 $$ \textbf{u} \sim N(0,I_p\sigma^2_u)$$
 $$\hat{\textbf{u}}|\textbf{u} \sim N(R\textbf{u},R+cI_p)$$
 From Bishop's, _Pattern Recognotion and Machine Learning_ we get
@@ -39,19 +40,26 @@ $$ \textbf{u} \sim N(\Sigma R  (R+cI_p)^{-1}\hat{\textbf{u}},\Sigma)$$
 Where $$\Sigma = (\frac{1}{\sigma^2_u} I_p +R (R+cI_p)^{-1}R)^{-1}$$
 
 
-Given the EVD of R, $R=QDQ^{T}$, Let's denote $D^\dagger=D+cI_p$, this means that $(R+cI_p)^{-1}= (QDQ^{T}+cIp)^{-1}=QD^{\dagger^{-1}}Q^{T}$.  We can repeat this trick to simplify $\Sigma$ further, ending up with 
-$$\Sigma=QD^{\dagger\dagger^{-1}}Q^{T}$$ where
-$$D^{\dagger\dagger}=\frac{1}{\sigma_u^2}I_p+ D^{\dagger^{-1}}=\text{diag}(\frac{1}{\lambda+c}+\frac{1}{\sigma_u^2})$$
+Given the EVD of R, $R=QDQ^{T}$, Let's denote $D^\ast=D+cI_p=\text{diag}(\lambda_i+c)$, this means that $(R+cI_p)^{-1}= (QDQ^{T}+cIp)^{-1}=QD^{\ast^{-1}}Q^{T}=Q \text{diag}(\frac{1}{\lambda_j+c})Q^{T}$.  
+$$\Sigma= (\frac{1}{\sigma^2_u} I_p+QDQ^{T}QD^{\ast^{-1}}Q^{T}QDQ^{T})^{-1}=(\frac{1}{\sigma^2_u} I_p+QDD^{\ast^{-1}}DQ^{T})^{-1}=\frac{1}{\sigma_u^2}I_p + Q\text{diag}(\frac{\lambda_j^2}{\lambda_j+c})Q^{T})^{-1}$$
+We can repeat the same trick as before to  simplify $\Sigma$ further:
+
+$$\Sigma=QD^{\ast\ast^{-1}}Q^{T}$$ where
+
+
+$$D^{\ast\ast}=\frac{1}{\sigma_u^2}I_p+ D^2D^{\ast^{-1}}=\text{diag}(\frac{1}{\sigma_u^2}+\frac{\lambda_j^2}{\lambda_j+c})=\text{diag}(\frac{\sigma_u^2(c+\lambda_j)}{c+\lambda_j^2\sigma_u^2+\lambda_j})^{-1}$$
+
 Simplifying further:
 
-$$\textbf{u} \sim N(Q D^{\dagger \dagger^{-1}} Q^{T}QDQ^{T}QD^{\dagger^{-1}}Q^{T}\hat{\textbf{u}},QD^{\dagger \dagger^{-1}}Q^{T})$$
-$$ \Rightarrow N(QD^{\dagger \dagger^{-1}} D D^{\dagger^{-1}}Q^{T},QD^{\dagger\dagger^{-1}}Q^{T})  $$
-$$\Rightarrow N(QD^{\dagger \dagger \dagger}Q^{T}\hat{\textbf{u}},QD^{\dagger \dagger^{-1}}Q^{T})$$
+$$\textbf{u}|\hat{\textbf{u}} \sim N(Q D^{\ast \ast^{-1}} Q^{T}QDQ^{T}QD^{\ast^{-1}}Q^{T}\hat{\textbf{u}},QD^{\ast \ast^{-1}}Q^{T})$$
 
-with $$D^{\dagger \dagger \dagger} = D^{\dagger \dagger^{-1}} D D^{\dagger^{-1}} =\text{diag}(\frac{\sigma_u^2(c+\lambda)}{c+\lambda+ \sigma_u^2} \times \lambda \times \frac{1}{\lambda+c}) = \text{diag}(\frac{\lambda \sigma^2_u}{c+\lambda+\sigma_u^2})$$
+$$ \Rightarrow N(QD^{\ast \ast^{-1}} D D^{\ast^{-1}}Q^{T},QD^{\ast\ast^{-1}}Q^{T})  $$
+
+$$\Rightarrow N(QD^{\ast \ast \ast}Q^{T}\hat{\textbf{u}},QD^{\ast \ast^{-1}}Q^{T})$$
 
 
-
+with 
+$$D^{\ast \ast \ast} = D^{\ast \ast^{-1}} D D^{\ast^{-1}} =\text{diag}(\frac{\sigma_u^2(c+\lambda_j)}{c+\lambda_j^2\sigma_u^2+ \lambda_j} \times \lambda_j \times \frac{1}{\lambda+c}) = \text{diag}(\frac{\lambda_j \sigma^2_u}{c+\lambda_j^2\sigma_u^2+\lambda_j})$$
 
 
 
