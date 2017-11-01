@@ -36,7 +36,7 @@ $$ \hat{\textbf{u}} \sim N(0,\sigma_u^2R^2+R+cI_p)$$
 
 as well as the posterior
 
-$$ \textbf{u} \sim N(\Sigma R  (R+cI_p)^{-1}\hat{\textbf{u}},\Sigma)$$
+$$ \textbf{u}|\hat{\textbf{u}} \sim N(\Sigma R  (R+cI_p)^{-1}\hat{\textbf{u}},\Sigma)$$
 Where $$\Sigma = (\frac{1}{\sigma^2_u} I_p +R (R+cI_p)^{-1}R)^{-1}$$
 
 
