@@ -1,0 +1,141 @@
+---
+title: "Chunk-Wise Report"
+author:
+    - "Nicholas Knoblauch"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+params:
+   rmd: "gen_results_report.Rmd"
+output:
+  html_document:
+  highlight: tango
+  number_sections: no
+  theme: default
+  toc: yes
+  toc_depth: 3
+  toc_float:
+    collapsed: no
+    smooth_scroll: yes
+---
+
+## RSSp results
+
+```{r load_data,echo=F,message=F}
+
+setwd("~/Dropbox/PolygenicRSS/code/snakemake_files/")
+library(tidyverse)
+library(RSSp)
+library(SeqSupport)
+
+
+LDchunks <- as.character(snakemake@params[["LDchunk"]])
+LDchunkests <- snakemake@input[["chunk_est"]]
+rss_rdsf<- snakemake@input[["rdsf"]]
+rss_gwas_resf <- snakemake@input[["resf"]]
+# orss_gwas_resf <- snakemake@input[["oresf"]]
+
+D <- read_vec(rss_rdsf,"D")
+tparam_df <- read_df_h5(rss_rdsf,"tparam_df") %>% group_by(tbias,tsigu)
+snp_info <- read_df_h5(rss_rdsf,"snp_info")
+
+snp_info <- mutate(snp_info,D=D)
+region_size <- group_by(snp_info,region_id) %>% summarise(region_size=n(),log_det=sum(log(D)),min_D=min(D),max_D=max(D),cond_num=max_D/min_D)
+quh_mat <- read_2d_mat_h5(rss_rdsf,"/","quh")
+
+
+chunk_res_report <- map2_df(LDchunkests,LDchunks,function(inf,LDchunk){
+return(read_delim(inf,delim="\t") %>% mutate(region_id=LDchunk))
+})
+chunk_res_report <- inner_join(chunk_res_report,region_size)
+
+chunk_res_report <- filter(chunk_res_report,!log_params) %>% select(-useGradient,-log_params)
+chunk_res_report <- mutate(chunk_res_report,
+                           rel_bias=round(tbias/tpve,3))
+chunk_res_report <- group_by(chunk_res_report,tpve,tbias,region_id) %>% 
+  do(mutate(.,replicate=as.character(ntile(fgeneid,n_distinct(fgeneid))))) %>% 
+  ungroup()
+
+
+n_chunks <- length(LDchunks)
+n_traits <- tparam_df %>% nrow()
+```
+The following report describes the results of running `RSSp` on each of the `r n_chunks` LD regions, for each of the `r n_traits` traits
+
+```{r, message=FALSE, warning=FALSE}
+filter(chunk_res_report,method=="Confound") %>% ggplot(aes(x=pve,fill=method,..density..))+
+  geom_histogram(bins=50)+scale_x_log10()+
+  geom_vline(aes(xintercept=tpve))+
+  facet_wrap(tpve~rel_bias,scales = "free_x",labeller = label_both)+ggtitle("Estimate of PVE across LD chunks","2 parameter model")+xlab(bquote(hat(PVE)))
+```
+
+
+
+```{r, message=FALSE, warning=FALSE}
+filter(chunk_res_report,method=="Confound",pve>1e-5) %>% ggplot(aes(x=pve,fill=method,..density..))+
+  geom_histogram(bins=50)+scale_x_log10()+
+  geom_vline(aes(xintercept=tpve))+
+  facet_wrap(tpve~rel_bias,scales = "free_x",labeller = label_both)+ggtitle("Estimate of PVE across LD chunks","2 parameter model. Zooming in on high-density region")+xlab(bquote(hat(PVE)))
+```
+
+
+
+
+
+```{r, message=FALSE, warning=FALSE}
+filter(chunk_res_report,method!="Confound") %>% ggplot(aes(x=pve,fill=method,..density..))+
+  geom_histogram(bins=50)+scale_x_log10()+
+  geom_vline(aes(xintercept=tpve))+
+  facet_wrap(tpve~rel_bias,scales = "free_x",labeller = label_both)+ggtitle("Estimate of PVE across LD chunks","1 parameter model")+xlab(bquote(hat(PVE)))
+```
+
+
+
+
+What if we average over all replicates in a LD region?  
+
+For each $PVE$,bias pair, 10 traits were simulated. Do some regions perform better than others?
+```{r}
+region_sum <- group_by(chunk_res_report,tsigu,tbias,tpve,method,region_id) %>% summarise(mean_sigu=mean(sigu),
+                                                       mean_sigu_var=mean(sigu_var),
+                                                       mean_pve=mean(pve),
+                                                       sd_pve=sd(pve),
+                                                       rel_bias=rel_bias[1],
+                                                       sigu_var_mean=sum(sigu_var)/(n()^2),
+                                                       sd_sigu=sd(sigu),
+                                                       sd_sigu_var=sd(sigu_var)) %>% ungroup() %>% 
+  inner_join(region_size)
+
+```
+
+
+
+```{r, message=FALSE, warning=FALSE}
+filter(region_sum,method=="Confound") %>% ggplot(aes(x=mean_pve,fill=method,..density..))+
+  geom_histogram(bins=50)+scale_x_log10()+
+  geom_vline(aes(xintercept=tpve))+
+  facet_wrap(tpve~rel_bias,scales = "free_x",labeller = label_both)+ggtitle("Estimate of PVE across LD chunks","2 parameter model")+xlab(bquote(hat(PVE)))
+```
+
+
+
+```{r, message=FALSE, warning=FALSE}
+filter(region_sum,method!="Confound") %>% ggplot(aes(x=mean_pve,fill=method,..density..))+
+  geom_histogram(bins=50)+scale_x_log10()+
+  geom_vline(aes(xintercept=tpve))+
+  facet_wrap(tpve~rel_bias,scales = "free_x",labeller = label_both)+ggtitle("mean PVE estimate across replicates","Per chunk, 1 parameter model")+xlab(bquote(SD(hat(PVE))))
+```
+
+```{r}
+filter(region_sum,method!="Confound") %>% ggplot(aes(x=sd_pve,fill=method,..density..))+
+  geom_histogram(bins=50)+scale_x_log10()+
+  facet_wrap(tpve~rel_bias,labeller = label_both)+ggtitle("SD of PVE estimates across replicates","Per chunk, 1 parameter model")+xlab(bquote(SD(hat(PVE))))
+```
+```{r}
+filter(region_sum,method=="Confound") %>% ggplot(aes(x=sd_pve,fill=method,..density..))+
+  geom_histogram(bins=50)+scale_x_log10()+
+  facet_wrap(tpve~rel_bias,labeller = label_both)+ggtitle("SD of PVE estimates across replicates","Per chunk, 2 parameter model")+xlab(bquote(SD(hat(PVE))))
+```
+
+
+
+
+
