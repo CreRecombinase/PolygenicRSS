@@ -1,0 +1,78 @@
+import os
+gardner_dir="../../../../../../../../group/xhe-lab/1KG/"
+if os.path.exists(gardner_dir):
+    configpath="../workflow_params_gardner.json"
+else:
+    configpath="../workflow_params.json"
+    
+configfile:
+    configpath
+
+#Directory that will serve as base directory for this project (good idea to use scratch storage)
+KG_dir="../"+config["KG_DIRECTORY"]
+
+#Directory that holds "raw" 1000 genomes vcf files (I think this already exists in the `compbio` folder in the `RSS` folder)
+VCF_DIR="../"+config["VCF_DIR"]
+
+#Directory that holds the haplotype and genotype `.gds` which are population specific (i.e EUR), and have had an allele frequency cutoff applied (i.e 0.05)
+GDS_DIR="../"+config["GDS_DIR"]
+HDF5_DIR="../"+config["HDF5_DIR"]
+
+#Directory that holds the 1000 genomes genetic map files (you can get these off github, google 1000 genomes genetic maps)
+KG_MAPDIR="../"+config["KG_MAPDIR"]
+
+
+# File that has the LDetect LD breakpoints
+#URL for that file is here #LD_break_file_url="https://bitbucket.org/nygcresearch/ldetect-data/raw/ac125e47bf7ff3e90be31f278a7b6a61daaba0dc/EUR/fourier_ls-all.bed"
+LD_break_file="../"+config["LDETECT_BREAK_FILE"]
+
+
+
+TRAIT=["sub2"]
+
+
+rule all:
+    input:
+         expand("../{trait}_snpinfo.txt.gz",trait=TRAIT),
+         expand("../{trait}_LD_regions.txt",trait=TRAIT),
+         expand("data_reports/{trait}_report.html",trait=TRAIT)
+
+       
+        
+
+            
+rule trait_subset_gds:
+    input:
+        haplo_gdsf=GDS_DIR+"ALL_seq_hapmap.gds",
+        geno_gdsf=GDS_DIR+"ALL_seq_hapmap_geno.gds",
+        traitf="../{trait}_ldsc_ex.txt"
+    output:
+        haplo_gdsf=GDS_DIR+"{trait}_seq_hapmap.gds",
+        geno_gdsf=GDS_DIR+"{trait}_seq_hapmap_geno.gds",
+        haplo_hdf5=HDF5_DIR+"{trait}_seq_hapmap_haplo.hdf5",
+        geno_hdf5=HDF5_DIR+"{trait}_seq_hapmap_geno.hdf5",
+        snpif="../{trait}_snpinfo.RDS",
+        snptxtf="../{trait}_snpinfo.txt.gz"
+    script:
+        "../../scripts/trait_subset.R"
+        
+rule trait_LD_regions:
+    input:
+        gdsf=GDS_DIR+"{trait}_seq_hapmap.gds"
+    output:
+        unique_f="../{trait}_LD_regions.txt"
+    script:
+        "../../scripts/LD_regions.R"
+
+rule subset_report:
+    input:
+        haplo_gdsf=GDS_DIR+"{trait}_seq_hapmap.gds",
+        geno_gdsf=GDS_DIR+"{trait}_seq_hapmap_geno.gds",
+        snpif="../{trait}_snpinfo.RDS"
+    params:
+        traitn="{trait}"
+    output:
+        reportf="data_reports/{trait}_report.html"
+    script:
+        "../../scripts/gen_report.Rmd"
+        

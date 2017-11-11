@@ -29,6 +29,8 @@ if(is.null(snakemake@params[["LDchunk"]])){
 colnames(quh_mat) <- as.character(tparam_df$fgeneid)
 
 
+
+
 n <-unique(tparam_df$n)
 stopifnot(length(n)==1)
 

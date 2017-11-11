@@ -19,8 +19,15 @@ snp_info<- map2_df(inf,LDchunk,function(file,LDc){
 write_df_h5(snp_info,"snp_info",outf,deflate_level=4L)
 write_df_h5(tparam_df,"tparam_df",outf)
 quh_mat <- RcppEigenH5::concat_mat_chunks(inf, LDchunk,
-                             rep("quh", length(LDchunk)))
+                                          rep("quh", length(LDchunk)))
+
 write_mat_h5(h5file=outf,dataname="quh",data=quh_mat,deflate_level=1L,doTranspose=T)
+rm(quh_mat)
+gc()
+se_mat <- RcppEigenH5::concat_mat_chunks(inf, LDchunk,
+                                         rep("se", length(LDchunk)))
+
+write_mat_h5(h5file=outf,dataname="se",data=se_mat,deflate_level=1L,doTranspose=T)
 
 write_vec(outf,dataname="D",data=D,deflate_level=1L)
-stopifnot(all.equal(sum(D),nrow(quh_mat)))
+

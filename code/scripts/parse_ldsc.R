@@ -16,3 +16,4 @@ res_df <- map2_dfr(inf,fgeneid,function(filen,genen){
 ) %>% spread(Variable,Est)
 
 write_delim(res_df, path = outf, delim = "\t")
+#warnings()
