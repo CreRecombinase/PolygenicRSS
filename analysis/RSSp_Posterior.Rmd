@@ -26,40 +26,208 @@ knitr::read_chunk("chunks.R")
 
 <!-- Add your analysis here -->
 
+## Some stats background
+
+### A useful fact about marginal and conditional gaussians
+
+From Bishop's, _Pattern Recognotion and Machine Learning_ (Section 2.3) we have this useful property:
+
+Given a marginal Gaussian distribution for $\textbf{x}$ and a conditional Gaussian distribution for $\textbf{y}$ given $\textbf{x}$ in the form:
+$$p(\textbf{x}) = N(\textbf{x}|\boldsymbol{\mu},\Lambda^{-1})$$
+
+$$p(\textbf{y}|\textbf{x}) = N(\textbf{y}|A\textbf{x}+\textbf{b},L^{-1})$$
+the marginal distribution of $\textbf{y}$ and the conditional distribution of $\textbf{x}$ given $\textbf{y}$ arge given by 
+
+$$ p(\textbf{y}) = N(\textbf{y}|A\boldsymbol{\mu}+\textbf{b},L^{-1}+A\Lambda^{-1}A^{T})$$
+$$p(\textbf{x}|\textbf{y}) = N(\textbf{x}| \Sigma \left\{ A^{T} L ( \textbf{y} - \textbf{b} ) + \Lambda \boldsymbol{\mu} \right\} , \Sigma)$$
+
+where :
+$$\Sigma = (\Lambda + A^{T}LA)^{-1}$$
+
+
+
+
+
 ## Deriving the RSSp Posterior ##
 
+Given this result, we can derive he posterior for $\textbf{u}$
 
+
+Our prior for $\textbf{u}$ is 
 $$ \textbf{u} \sim N(0,I_p\sigma^2_u)$$
+Which means that the distribution for $\hat{\textbf{u}}$ can be written
 $$\hat{\textbf{u}}|\textbf{u} \sim N(R\textbf{u},R+cI_p)$$
-From Bishop's, _Pattern Recognotion and Machine Learning_ we get
+Right away, we see that we can replace $\textbf{u}$ with $\textbf{x}$, and $\hat{\textbf{u}}$ with $\textbf{y}$ if we make the following substitutions:
+
+|Symbol            | Replacement   |
+|------------------|---------------|
+| $\boldsymbol{\mu}$| $0$           |
+| $b$              |  $0$          |
+| $\Lambda^{-1}$   | $I_p \sigma^2$|
+| $A$              | $R$           |
+| $L^{-1}$         | $R+cI_p$      |
+
+We then see that the marginalized form of $\hat{\textbf{u}}$ is:
+
 $$ \hat{\textbf{u}} \sim N(0,\sigma_u^2R^2+R+cI_p)$$
 
-as well as the posterior
+and that the posterior is 
 
 $$ \textbf{u}|\hat{\textbf{u}} \sim N(\Sigma R  (R+cI_p)^{-1}\hat{\textbf{u}},\Sigma)$$
 Where $$\Sigma = (\frac{1}{\sigma^2_u} I_p +R (R+cI_p)^{-1}R)^{-1}$$
 
 
-Given the EVD of R, $R=QDQ^{T}$, Let's denote $D^\ast=D+cI_p=\text{diag}(\lambda_i+c)$, this means that $(R+cI_p)^{-1}= (QDQ^{T}+cIp)^{-1}=QD^{\ast^{-1}}Q^{T}=Q \text{diag}(\frac{1}{\lambda_j+c})Q^{T}$.  
-$$\Sigma= (\frac{1}{\sigma^2_u} I_p+QDQ^{T}QD^{\ast^{-1}}Q^{T}QDQ^{T})^{-1}=(\frac{1}{\sigma^2_u} I_p+QDD^{\ast^{-1}}DQ^{T})^{-1}=\frac{1}{\sigma_u^2}I_p + Q\text{diag}(\frac{\lambda_j^2}{\lambda_j+c})Q^{T})^{-1}$$
-We can repeat the same trick as before to  simplify $\Sigma$ further:
+Given the EVD of R, $R=QD_{R}Q^{T}=Q \text{diag}\left(\lambda_j\right)Q^{T}$, we can rewrite the matrix 
+$$L^{-1}=(QD_RQ^{T}+cI_p)^{-1}=(QD_{L^{-1}}Q)^{-1}$$ where $D_{L^{-1}}^{-1}=\text{diag}\left( \lambda_j+c \right)^{-1}$ and $D_L=D_{L^{-1}}^{-1}=\text{diag}\left(\frac{1}{\lambda_j+c} \right)$
 
-$$\Sigma=QD^{\ast\ast^{-1}}Q^{T}$$ where
+Plugging that in to the equation for $\Sigma$: 
+
+$$\Sigma= \left(\frac{1}{\sigma^2_u} I_p+(QD_RQ^{T})(QD_LQ^{T})(QD_RQ^{T})\right)^{-1}$$
+$$=(\frac{1}{\sigma^2_u} I_p+QDD_LDQ^{T})^{-1}= \left( \text{diag}\left(\frac{1}{\sigma_u^2}\right) + Q\text{diag}\left(\frac{\lambda_j^2}{\lambda_j+c}\right)Q^{T} \right)^{-1} = \left(Q \text{diag}\left( \frac{1}{\sigma_u^2}+\frac{\lambda_j^2}{\lambda_j+c}\right)Q^{T}\right)^{-1}$$
+$$=\left(Q \text{diag}\left( \frac{(\lambda_j+c)}{(\lambda_j+c)\sigma_u^2}+\frac{\lambda_j^2\sigma_u^2}{(\lambda_j+c)\sigma_u^2}\right)Q^{T}\right)^{-1}=Q \text{diag}\left(\frac{(\lambda_j+c)\sigma_u^2}{(\lambda_j+c)+\lambda_j^2\sigma_u^2} \right)Q^{T}$$
 
 
-$$D^{\ast\ast}=\frac{1}{\sigma_u^2}I_p+ D^2D^{\ast^{-1}}=\text{diag}(\frac{1}{\sigma_u^2}+\frac{\lambda_j^2}{\lambda_j+c})=\text{diag}(\frac{\sigma_u^2(c+\lambda_j)}{c+\lambda_j^2\sigma_u^2+\lambda_j})^{-1}$$
+We'll call the diagonal matrix $D_\Sigma$
 
 Simplifying further:
 
-$$\textbf{u}|\hat{\textbf{u}} \sim N(Q D^{\ast \ast^{-1}} Q^{T}QDQ^{T}QD^{\ast^{-1}}Q^{T}\hat{\textbf{u}},QD^{\ast \ast^{-1}}Q^{T})$$
+$$\textbf{u}|\hat{\textbf{u}} \sim N(\underbrace{Q D_\Sigma Q^{T}}_\Sigma \underbrace{QD_{R}Q^{T}}_R \underbrace{QD_LQ^{T}}_{(R+cI_p)^{-1}}\hat{\textbf{u}},\underbrace{QD_\Sigma Q^{T}}_\Sigma)$$
 
-$$ \Rightarrow N(QD^{\ast \ast^{-1}} D D^{\ast^{-1}}Q^{T},QD^{\ast\ast^{-1}}Q^{T})  $$
+$$= N(QD_\Sigma D_R D_LQ^{T},QD_\Sigma Q^{T})$$
 
-$$\Rightarrow N(QD^{\ast \ast \ast}Q^{T}\hat{\textbf{u}},QD^{\ast \ast^{-1}}Q^{T})$$
+$$= N\left( Q \text{diag}\left( \frac{(\lambda_j+c)\sigma_u^2}{(\lambda_j+c)+\lambda_j^2\sigma_u^2} \times \frac{\lambda_j}{1} \times \frac{1}{\lambda_j+c} \right)Q^{T}\hat{\textbf{u}},Q \text{diag}\left(\frac{(\lambda_j+c)\sigma_u^2}{(\lambda_j+c)+\lambda_j^2\sigma_u^2} \right)Q^{T} \right)$$
+
+$$= N\left( Q \text{diag}\left( \frac{\sigma_u^2 \lambda_j}{(\lambda_j+c)+\lambda_j^2\sigma_u^2}  \right)Q^{T}\hat{\textbf{u}},Q \text{diag}\left(\frac{(\lambda_j+c)\sigma_u^2}{(\lambda_j+c)+\lambda_j^2\sigma_u^2} \right)Q^{T} \right)$$
+For brevity, we'll simply write:
+
+$$\textbf{u}|\hat{\textbf{u}} \sim N \left(Q D_{\textbf{u}}Q^{T}\hat{\textbf{u}},QD_{\Sigma}Q^{T}\right)$$
+
+<!-- A couple things to note: -->
+
+<!-- If we define $\textbf{q}=Q^{T}\textbf{u}$ and $\hat{\textbf{q}}=Q^{T}\hat{\textbf{u}}$, then  -->
+
+<!-- $$\textbf{q}|\hat{\textbf{q}} \sim N(D_\textbf{u}) -->
 
 
-with 
-$$D^{\ast \ast \ast} = D^{\ast \ast^{-1}} D D^{\ast^{-1}} =\text{diag}(\frac{\sigma_u^2(c+\lambda_j)}{c+\lambda_j^2\sigma_u^2+ \lambda_j} \times \lambda_j \times \frac{1}{\lambda+c}) = \text{diag}(\frac{\lambda_j \sigma^2_u}{c+\lambda_j^2\sigma_u^2+\lambda_j})$$
+
+## Prediction 
+
+Remember that $\boldsymbol{\beta}=S\textbf{u}$ This means that 
+$$\boldsymbol{\beta} \sim N( SQD_{\textbf{u}}Q^{T}\hat{\textbf{u}},SQD_\Sigma Q^{T}S^{T})$$
+
+It also means that given a new vector of genotypes $\tilde{\textbf{x}}$,
+
+$$E[\tilde{\textbf{x}}\boldsymbol{\beta}]=\tilde{\textbf{x}}SQD_\textbf{u}Q^{T}\hat{\textbf{u}}$$
+
+And that 
+
+$$\text{Var}(\tilde{\textbf{x}}\boldsymbol{\beta})=\tilde{\textbf{x}}SQD_\Sigma Q^{T}S^{T}\tilde{\textbf{x}}^{T}$$
+
+
+
+## Checking the math with simulation
+
+
+In (one of) the most boring of scenarios, $\sigma_u^2 = 1$, $c=0$, $R$ is the identity matrix,
+
+```{r R_identity, echo=F,message=F,warning=F}
+library(tidyverse)
+library(RSSp)
+p <- 100
+R <- diag(p)
+reps <- 10
+sigma_u <- 1
+
+u_data <- rnorm(p,mean=0,sd=sigma_u)
+u_hat <- t(mvtnorm::rmvnorm(n=reps,mean=R%*%u_data,sigma=R)) %>%   array_branch(2) %>% 
+  imap_dfr(~data_frame(rep=.y,beta_hat=.x,beta=u_data))
+
+
+gbdf <- group_by(u_hat,rep) %>% do(mutate(.,beta_post=posterior_mean_beta(sigu = 1,confound = 0,dvec = rep(1,p),se = rep(1,p),quh = beta_hat,Q = R))) %>% ungroup()
+
+
+
+ggplot(gbdf,aes(x=beta,y=beta_post))+geom_point()+geom_smooth(method="lm")+xlim(-3,3)+ylim(-3,3)+xlab(bquote(beta[true]))+ylab(bquote(beta[posterior]))+geom_abline(slope=1,intercept=0)
+```
+```{r Id_b_bh}
+ggplot(gbdf,aes(x=beta,y=beta_hat))+geom_point()+geom_abline(slope=1,intercept=0)+geom_smooth(method="lm")+xlim(-3,3)+ylim(-3,3)+xlab(bquote(beta[true]))+ylab(bquote(hat(beta)))
+```
+
+```{r Id_bp_bh}
+ggplot(gbdf,aes(x=beta_post,y=beta_hat))+geom_point()+geom_abline(slope=1,intercept=0)+xlim(-3,3)+ylim(-3,3)+xlab(bquote(beta[posterior]))+ylab(bquote(hat(beta)))
+```
+
+
+
+
+
+<!-- ```{r} -->
+
+<!-- p <- 10000 -->
+<!-- R <- diag(p) -->
+<!-- reps <- 10 -->
+<!-- sigma_u <- 1 -->
+<!-- confound <- 0.001 -->
+
+<!-- u_data <- rnorm(p,mean=0,sd=sigma_u) -->
+<!-- u_hat <- replicate(reps,rnorm(n = p,mean = u_data,sd = 1+confound)) -->
+
+<!-- u_guess <- posterior_mean_beta(sigu = 1,confound = 0,dvec = rep(1,p),se = rep(1,p),quh = u_hat,Q = R) -->
+
+
+<!-- gbdf <- array_branch(u_guess,2) %>% imap_dfr(~data_frame(rep=.y,posterior_beta=.x,beta=u_data)) -->
+
+<!-- plot(rowMeans(u_guess),u_data) -->
+
+<!-- ggplot(gbdf,aes(x=beta,y=posterior_beta))+geom_point()+geom_smooth()+facet_wrap(~rep,labeller = label_both) -->
+<!-- ``` -->
+
+
+Now let's add a non-diagonal LD matrix
+```{r R_sim}
+n <- p*10
+R <- cor(matrix(rnorm(n*p),n,p))
+evdR <- eigen(R)
+evdQ <- evdR$vectors
+D <- evdR$values
+reps <- 500
+sigma_u <- 1
+
+u_data <- rnorm(p,mean=0,sd=sigma_u)
+
+```
+
+Using the 1 parameter (no confounding) model, are our estimates centered around the true value?
+
+```{r R_sim_uh}
+
+u_hat <- mvtnorm::rmvnorm(n=reps,mean=R%*%u_data,sigma=R) %>%   array_branch(1) %>% 
+  imap_dfr(~data_frame(fgeneid=as.character(.y),beta_hat=.x,beta=u_data,quh=c(crossprod(evdQ,beta_hat)),D=D,p_n=.5))
+
+rssp_est <- group_by(u_hat,fgeneid) %>% do(RSSp_estimate(.,doConfound=F)) %>% ungroup() %>% arrange(as.integer(fgeneid))
+
+big_rssp_est <- inner_join(rssp_est,u_hat) %>% group_by(fgeneid) %>% do(
+  mutate(.,
+         beta_post=posterior_mean_beta(sigu=sigu[1],
+           confound=0,
+           dvec=D,
+           se=rep(1,length(D)),
+           Q=evdQ,
+           quh=quh))) %>% ungroup()
+
+
+# pmBeta <- posterior_mean_Beta(sigu = rssp_est$sigu,confound = rssp_est$bias,dvec = D,quh = )
+
+
+
+ggplot(rssp_est,aes(x=sigu))+geom_histogram(bins = 50)+geom_vline(xintercept = 1)+xlab(bquote(hat(sigma[u])))
+# ggplot(gbdf,aes(x=beta,y=beta_post))+geom_point()+geom_smooth(method="lm")+facet_wrap(~rep,labeller = label_both)
+```
+```{r}
+ggplot(big_rssp_est,aes(x=beta,y=beta_post))+geom_point()
+group_by(big_rssp_est,fgeneid) %>% summarise(beta_hat=sum(beta-beta_hat)^2,beta_posterior=sum(beta-beta_post)^2) %>% ungroup() %>% gather(method,error,-fgeneid) %>% ggplot(aes(x=method,y=error))+geom_boxplot()+ylab("Sum of Squared Error")+ggtitle("Relative performance of beta_posterior and beta_hat","in estimating Beta")
+```
+
 
 
 
