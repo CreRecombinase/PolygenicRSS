@@ -1,0 +1,179 @@
+---
+title: "Prediction with RSSp"
+author: "Nicholas Knoblauch"
+date: 2017-11-14
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+# Prediction with RSSp
+
+Simulation was performed using ~700k SNPs across the genome. LD was computed block-wise, with blocks identified by LDetect.  Prediction is on held-out samples (from the same LD reference panel, but that were not used in calculation of LD)
+
+
+```{r}
+library(rhdf5)
+library(purrr)
+library(RcppEigenH5)
+library(tidyverse)
+
+est_f <- "/home/nwknoblauch/Dropbox/PolygenicRSS/output/RSSp_snakemake/sim_scz2_gwas_RSSp_res_ALL.txt.gz"
+est_df <- read_delim(est_f,delim="\t") %>% mutate(fgeneid=as.character(fgeneid),
+                                                  rel_bias=round(tbias/tpve,3),
+                                                  true_pve=round(tpve,3)) %>% arrange(as.integer(fgeneid)) %>% 
+  filter(log_params==F,
+         useGradient==T,
+         method=="Confound") %>%
+  select(-log_params,-useGradient,-method)
+tbetaf <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_sim_gwas_beta/scz2_beta.h5"
+ymat_estf <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_sim_gwas_all_beta_est/cv_scz2_1.0_0.00031622776601683794_sim_beta.h5"
+xmat_test <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/h5/scz2_seq_test_hapmap_geno.h5"
+tpdf <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_sim_gwas_pheno/scz2_trait.h5"
+tparam_df <- est_df
+beta_est <- read_2d_mat_h5(ymat_estf,"/","beta_est")
+est_y <- read_2d_mat_h5(ymat_estf,"/","y_est")
+oracle_y <- read_2d_mat_h5(ymat_estf,"/","y_oracle")
+
+beta_oracle <- read_2d_mat_h5(ymat_estf,"/","beta_oracle")
+beta_true <- t(read_2d_mat_h5(tbetaf,"/","beta"))
+test_X <- scale(t(read_2d_mat_h5(xmat_test,"/","dosage")),center=T,scale=F)
+# se_files <- dir("/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_genome_gwas_uh_chunk",full.names = T,pattern="scz2")
+# LDchunk <- as.integer(gsub(".+scz2_([0-9]+)_sim.h5","\\1",se_files))
+# se_df <- data_frame(se_file=se_files,LDchunk=LDchunk) %>% arrange(LDchunk)
+# se_files <- se_files
+# all_se <- concat_mat_chunks(h5files = se_df$se_file,
+#                             groupnames=as.character(se_df$LDchunk),datanames = rep("se",nrow(se_df)))
+
+
+
+t_S <- read_vec(tbetaf,"S")
+true_y <- test_X%*%beta_true
+pheno_errors <- colMeans((est_y-true_y)^2)
+true_beta_sigu <- apply(beta_true/t_S,2,sd)
+oracle_beta_sigu <- apply(beta_oracle/t_S,2,sd)
+est_beta_sigu <- apply(beta_est/t_S,2,sd)
+
+
+adf <- array(c(true_y,est_y,oracle_y),dim = c(dim(true_y),3),dimnames=list(sample=as.character(1:nrow(true_y)),
+                                                                           fgeneid=as.character(1:ncol(true_y)),
+                                                                           method=as.character(c("true","est","oracle"))))
+
+tblc <- as.tbl_cube(adf)
+y_df <- as_data_frame(tblc) %>% mutate(fgeneid=as.character(fgeneid),method=paste0("y_",method)) %>% spread(key = method,value = adf) %>% inner_join(tparam_df)
+
+# plot(pheno_errors,tparam_df$tpve)
+errors <- colMeans((beta_est-beta_true)^2)
+# errors <- colMeans((beta_est-beta_true)^2)
+
+cor_beta_est_true <- map2_dbl(array_branch(beta_est,2),array_branch(beta_true,2),cor)
+cor_beta_oracle_est <- map2_dbl(array_branch(beta_est,2),array_branch(beta_oracle,2),cor)
+cor_beta_oracle_true <- map2_dbl(array_branch(beta_true,2),array_branch(beta_oracle,2),cor)
+
+cor_y_est_true <- map2_dbl(array_branch(est_y,2),array_branch(true_y,2),cor)
+cor_y_oracle_est <- map2_dbl(array_branch(oracle_y,2),array_branch(est_y,2),cor)
+cor_y_oracle_true <- map2_dbl(array_branch(oracle_y,2),array_branch(true_y,2),cor)
+
+result_df <- data_frame(beta_errors=errors,
+                    pheno_errors=pheno_errors,
+                    cor_beta_est_true=cor_beta_est_true,
+                    cor_beta_oracle_est=cor_beta_oracle_est,
+                    cor_beta_oracle_true=cor_beta_oracle_true,
+                    cor_y_oracle_est=cor_y_oracle_est,
+                    cor_y_oracle_true=cor_y_oracle_true,
+                    cor_y_est_true=cor_y_est_true,
+                    true_sigu=round(true_beta_sigu,3),
+                    oracle_sigu=oracle_beta_sigu,
+                    est_sigu=est_beta_sigu) %>% mutate(fgeneid=as.character(1:n()))
+
+tparam_df <- inner_join(tparam_df,result_df)
+
+```
+
+```{r y_true_y_est,echo=F}
+ggplot(tparam_df,aes(x=factor(true_pve),y=cor_y_est_true))+geom_boxplot()+facet_grid(.~rel_bias,labeller = partial(label_both,sep=":\n"))+xlab(bquote(PVE))+ylab(bquote(rho(y[true]~','~y[posterior])))+ggtitle(bquote(Correlation~between~tilde(x)~bar(beta)[posterior]~and~tilde(x)~beta[true]))
+```
+```{r}
+ggplot(y_df,aes(x=y_true,y_est))+geom_point()+facet_grid(true_pve~rel_bias,labeller=partial(label_both,sep=":\n"))+geom_smooth(method="lm")+xlab(bquote(y[true]))+ylab(bquote(y[posterior]))+ggtitle(bquote(Correlation~between~tilde(x)~beta[posterior]~and~tilde(x)~beta[true]))
+```
+
+```{r}
+ggplot(tparam_df,aes(x=factor(true_pve),y=cor_y_oracle_true))+geom_boxplot()+facet_grid(.~rel_bias,labeller = partial(label_both,sep=":\n"))+xlab(bquote(PVE))+ylab(bquote(rho(y[true]~','~y[oracle])))+ggtitle(bquote(Correlation~between~tilde(x)~bar(beta)[oracle]~and~tilde(x)~beta[true]))
+```
+```{r}
+ggplot(y_df,aes(x=y_true,y_oracle))+geom_point()+facet_grid(true_pve~rel_bias,labeller=partial(label_both,sep=":\n"))+geom_smooth(method="lm")+xlab(bquote(y[true]))+ylab(bquote(y[oracle]))
+```
+
+
+```{r}
+ggplot(tparam_df,aes(x=factor(true_pve),y=cor_y_oracle_est))+geom_boxplot()+facet_grid(.~rel_bias,labeller = partial(label_both,sep=":\n"))+xlab(bquote(PVE))+ylab(bquote(rho(y[oracle]~','~y[posterior])))+ggtitle(bquote(Correlation~between~tilde(x)~bar(beta)[oracle]~and~tilde(x)~bar(beta)[posterior]))
+```
+
+```{r}
+ggplot(tparam_df,aes(x=sigu,y=est_sigu))+geom_point()+xlab(bquote(sigma[u][MLE]))+ylab(bquote(SD(bar(u)[posterior])))+geom_abline(slope=1,intercept=0)+ggtitle("E[Var(u)]!=Var(E[u])","But they're highly correlated")+scale_x_log10()+scale_y_log10()
+
+```
+
+
+```{r}
+ggplot(tparam_df,aes(x=tsigu,y=oracle_sigu))+
+  geom_point()+
+  xlab(bquote(sigma[u][True]))+
+  ylab(bquote(SD(beta[Oracle])))+
+  geom_abline(slope=1,intercept=0)+scale_x_log10(limits=c(1e-5,2e-2))+scale_y_log10(limits=c(1e-5,1e-2))
+```
+
+
+
+
+```{r}
+ggplot(tparam_df,aes(x=tsigu,y=true_sigu))+geom_point()+xlab(bquote(sigma[u][True]))+ylab(bquote(SD(beta[True])))+geom_abline(slope=1,intercept=0)+ggtitle("E[Var(B)]==Var(E[B])","When the  ")+scale_x_log10()+scale_y_log10()
+```
+
+```{r y_true_y_oracle,echo=F}
+ggplot(y_df,aes(x=y_true,y=y_oracle))+geom_point()+geom_smooth(method="lm")+facet_grid(true_pve~rel_bias,labeller = partial(label_both,sep=":\n"))+geom_abline(slope=1,intercept=0)+xlab(bquote(X~beta[true]))+ylab(bquote(X~beta[oracle]))+ggtitle("RSSp prediction","Using true parameters for PVE and confounding")
+```
+
+```{r}
+ggplot(tparam_df,aes(x=factor(true_pve),y=cor_beta_est_true))+geom_boxplot()+facet_grid(.~rel_bias,labeller = partial(label_both,sep=":\n"))+xlab(bquote(PVE))+ylab(bquote(rho(bar(beta)[posterior]~','~beta[true])))+ggtitle(bquote(Correlation~between~bar(beta)[posterior]~and~beta[true]))
+```
+```{r}
+ggplot(tparam_df,aes(x=factor(true_pve),y=cor_beta_oracle_true))+geom_boxplot()+facet_grid(.~rel_bias,labeller = partial(label_both,sep=":\n"))+xlab(bquote(PVE))+ylab(bquote(rho(bar(beta)[oracle]~','~beta[true])))+ggtitle(bquote(Correlation~between~bar(beta)[oracle]~and~beta[true]))
+```
+```{r}
+ggplot(tparam_df,aes(x=factor(true_pve),y=cor_beta_oracle_est))+geom_boxplot()+facet_grid(.~rel_bias,labeller = partial(label_both,sep=":\n"))+xlab(bquote(PVE))+ylab(bquote(rho(bar(beta)[oracle]~','~bar(beta)[posterior])))+ggtitle(bquote(Correlation~between~bar(beta)[posterior]~and~beta[oracle]))
+```
+
+
+
+```{r}
+ggplot(y_df,aes(x=tsigu,y=sigu))+geom_point()+geom_abline(slope=1,intercept=0)+xlab(bquote(sigma[u]))+ylab(bquote(hat(sigma)[u]))+geom_smooth(method="lm")+facet_wrap(~rel_bias,labeller = partial(label_both,sep=":\n"))
+```
+
+
+
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
