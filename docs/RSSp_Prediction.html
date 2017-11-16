@@ -315,22 +315,39 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-11-15</p>
+<p><strong>Last updated:</strong> 2017-11-16</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 0e692e7</p>
+<p><strong>Code version:</strong> 976274d</p>
 <div id="prediction-with-rssp" class="section level1">
 <h1>Prediction with RSSp</h1>
-<p>Simulation was performed using ~700k SNPs across the genome. LD was computed block-wise, with blocks identified by LDetect. Prediction is on held-out samples (from the same LD reference panel, but that were not used in calculation of LD)</p>
-<p><img src="figure/RSSp_Prediction.Rmd/y_true_y_est-1.png" width="672" style="display: block; margin: auto;" /> <img src="figure/RSSp_Prediction.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Simulation was performed using ~700k SNPs across the genome. LD was computed block-wise, with blocks identified by LDetect. Prediction is on held-out samples (from the same LD reference panel, but that were not used in calculation of LD).</p>
+<div id="prediction-results-using-estimated-pve-and-c-confounding." class="section level2">
+<h2>Prediction results using estimated <span class="math inline">\(PVE\)</span> and <span class="math inline">\(c\)</span> (confounding).</h2>
+<p>Overall,</p>
+<p><img src="figure/RSSp_Prediction.Rmd/y_true_y_est-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/RSSp_Prediction.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="prediction-results-using-true-pve-and-c-confounding." class="section level2">
+<h2>Prediction results using <em>true</em> <span class="math inline">\(PVE\)</span> and <span class="math inline">\(c\)</span> (confounding).</h2>
 <p><img src="figure/RSSp_Prediction.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /> <img src="figure/RSSp_Prediction.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p><img src="figure/RSSp_Prediction.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="miscellaneous-observations" class="section level1">
+<h1>Miscellaneous observations</h1>
+<ol style="list-style-type: decimal">
+<li>The variance of the posterior mean of <span class="math inline">\(\textbf{u}\)</span> (conditioned on the <em>MLE</em> of <span class="math inline">\(\sigma^2_u\)</span> ) is much lower than the MLE of <span class="math inline">\(\sigma_u^2\)</span>.</li>
+</ol>
 <p><img src="figure/RSSp_Prediction.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<ol start="2" style="list-style-type: decimal">
+<li>The variance of the posterior mean of <span class="math inline">\(\textbf{u}\)</span> (conditioned on the <em>true value</em> of <span class="math inline">\(\hat{\sigma^2_u}\)</span> ) is much lower than the <em>true value</em> of <span class="math inline">\(\sigma_u^2\)</span>.</li>
+</ol>
 <p><img src="figure/RSSp_Prediction.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p><img src="figure/RSSp_Prediction.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p><img src="figure/RSSp_Prediction.Rmd/y_true_y_oracle-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p><img src="figure/RSSp_Prediction.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /> <img src="figure/RSSp_Prediction.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /> <img src="figure/RSSp_Prediction.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p><img src="figure/RSSp_Prediction.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/RSSp_Prediction.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/RSSp_Prediction.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/RSSp_Prediction.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
