@@ -82,7 +82,7 @@ tpvev <- unique(comp_est_df$tpve)
 
 mutate(comp_est_df,tgrp=paste0(tpve,method),relative_bias=round(tbias/tpve,4)) %>% mutate(true_pve=round(tpve,3)) %>% filter(tbias==0,tpve<0.5) %>%  ggplot(aes(x=tpve,y=abs(pve-true_pve),group=tgrp,fill=method))+
   geom_boxplot()+
-  ylab(bquote(RMSE[PVE]))+xlab(bquote(PVE))+ggtitle("RMSE of PVE")
+  ylab(bquote(RMSE[PVE]))+xlab(bquote(PVE))+ggtitle("RMSE of PVE","No Confounding")
 ```
 ```{r joy_bias_pve}
 library(ggjoy)
@@ -120,9 +120,9 @@ mutate(comp_est_df,t_rel_bias=round(tbias/tpve,3),true_pve=round(tpve,3)) %>%fil
 
 
 ```{r est_pve_tpve_zoom}
-filter(comp_est_df,method!="RSSp_NoConfound") %>% mutate(t_rel_bias=round(tbias/tpve,3)) %>% ggplot(aes(x=tpve,y=pve,color=method))+
+filter(comp_est_df,method!="RSSp_NoConfound") %>% mutate(relative_bias=round(tbias/tpve,3)) %>% ggplot(aes(x=tpve,y=pve,color=method))+
   geom_point()+geom_smooth(method="lm")+
-  facet_grid(method~t_rel_bias,labeller="label_both")+
+  facet_grid(method~relative_bias,labeller="label_both")+
   geom_abline(slope=1,intercept=0)+xlab(bquote(PVE))+ylab(bquote(hat(PVE)))+ggtitle("Estimated PVE vs True PVE")
 ```
 
@@ -130,7 +130,7 @@ filter(comp_est_df,method!="RSSp_NoConfound") %>% mutate(t_rel_bias=round(tbias/
 filter(comp_est_df,method!="RSSp_NoConfound") %>% mutate(t_rel_bias=round(tbias/tpve,3),true_pve=round(tpve,3)) %>% ggplot(aes(x=tbias/tpve,y=bias/tpve,color=method))+
   geom_point()+geom_smooth(method="lm")+
   facet_grid(true_pve~method,labeller=partial(label_both,sep=":\n"),scales = "free_y")+
-  geom_abline(slope=1,intercept=0)+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(hat(c),PVE)))+ggtitle("Estimated PVE vs True PVE","As a ratio of true PVE")
+  geom_abline(slope=1,intercept=0)+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(hat(c),PVE)))+ggtitle("Estimated Relative Confounding")
 ```
 
 
