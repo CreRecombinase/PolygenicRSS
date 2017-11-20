@@ -13,6 +13,7 @@ output: html_document
 * [Comparing RSS-p to ldsc on a genome-wide scale](RSSp_ldsc.html)
 * [Deriving the Posterior for RSSp](RSSp_Posterior.html)
 * [Prediction using RSSp](RSSp_Prediction.html)
+* [Deriving the asymptotic standard error](RSSp_standard_error.html)
 
 <!-- * [Genome-Wide Simulation](GenomeWideSimulation.html) -->
 <!-- * [Diagonal Approximation of LD matrix](IndependenceCheck.html) -->
