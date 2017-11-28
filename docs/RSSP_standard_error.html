@@ -318,7 +318,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-11-28</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 35b57ab</p>
+<p><strong>Code version:</strong> d79995a</p>
 <div id="background" class="section level1">
 <h1>Background</h1>
 <div id="fishers-approximation-in-the-i.i.d-case" class="section level2">
@@ -367,8 +367,9 @@ shared across the workflowr files. -->
 <p>Now let’s add a non-diagonal LD matrix</p>
 <p><img src="figure/RSSP_standard_error.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Are our estimates centered around the true value? How well does the asymptotic normality assumption work with ~100 SNPs?</p>
-<p>In this plot, each point is the MLE of <span class="math inline">\(\sigma_u^2,c\)</span> from a random draw from <span class="math inline">\(\hat{\textbf{u}}|\textbf{u},c,R\)</span>. The vertical bars represent the asymptotic estimate of variance in <span class="math inline">\(c\)</span>, the horizontal bars represent the asymptotic estimate of variance in <span class="math inline">\(\sigma_u^2\)</span>, and the diagonal bar represents the asymptotic estimate of covariance between <span class="math inline">\(c\)</span> and <span class="math inline">\(\sigma_u^2\)</span>. The gold colored lines indicate the true value of <span class="math inline">\(\sigma_u^2\)</span> and <span class="math inline">\(c\)</span></p>
+<p>In this plot, each point is the MLE of <span class="math inline">\(\sigma_u^2,c\)</span> from a random draw from <span class="math inline">\(\hat{\textbf{u}}|\textbf{u},c,R\)</span>. The vertical bars represent the asymptotic estimate of variance in <span class="math inline">\(c\)</span>, the horizontal bars represent the asymptotic estimate of variance in <span class="math inline">\(\sigma_u^2\)</span>, and the diagonal bar represents the estimate of covariance between <span class="math inline">\(c\)</span> and <span class="math inline">\(\sigma_u^2\)</span>. The gold colored lines indicate the true value of <span class="math inline">\(\sigma_u^2\)</span> and <span class="math inline">\(c\)</span></p>
 <p><img src="figure/RSSP_standard_error.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Here we see that the estimated variance of the confounding parameter is highly correlated to the estimated variance of <span class="math inline">\(\sigma^2_\textbf{u}\)</span></p>
 <p><img src="figure/RSSP_standard_error.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
 <!-- <!-- Insert the session information into the document -->
 <!-- ```{r session-info} -->
