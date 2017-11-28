@@ -171,23 +171,24 @@ ggplot(rssp_est,aes(x=fisher_det))+geom_histogram(bins=50)+xlab(bquote(group("|"
 Are our estimates centered around the true value? How well does the asymptotic normality assumption work with ~100 SNPs?
 
 
-In this plot, each point is the MLE of $\sigma_u^2,c$ from a random draw from $\hat{\textbf{u}}|\textbf{u},c,R$.  The vertical bars represent the asymptotic estimate of variance in $c$, the horizontal bars represent the asymptotic estimate of  variance in $\sigma_u^2$, and the diagonal bar represents the asymptotic estimate of covariance between $c$ and $\sigma_u^2$.  The gold colored lines indicate the true value of $\sigma_u^2$ and $c$
+In this plot, each point is the MLE of $\sigma_u^2,c$ from a random draw from $\hat{\textbf{u}}|\textbf{u},c,R$.  The vertical bars represent the asymptotic estimate of variance in $c$, the horizontal bars represent the asymptotic estimate of  variance in $\sigma_u^2$, and the diagonal bar represents the estimate of covariance between $c$ and $\sigma_u^2$.  The gold colored lines indicate the true value of $\sigma_u^2$ and $c$
 
 ```{r}
-ggplot(rssp_est,aes(x=sigu^2,y=bias))+geom_point()+geom_errorbar(aes(ymin=(bias-bias_var),ymax=(bias+bias_var))) +
+filter(rssp_est,abs(sigu_bias_cov)<1) %>% 
+ggplot(aes(x=sigu^2,y=bias))+geom_point()+geom_errorbar(aes(ymin=(bias-bias_var),ymax=(bias+bias_var))) +
   geom_errorbarh(aes(xmin=sigu^2-sigu_var,xmax=sigu^2+sigu_var)) +
-  geom_spoke(aes(angle=pi/4,radius=-sigu_bias_cov)) +
-    geom_spoke(aes(angle=pi/4,radius=sigu_bias_cov)) +
+  geom_spoke(aes(angle=pi/4,radius=sigu_bias_cov)) +
   geom_hline(yintercept = a,col="gold",size=2,alpha=0.5) +
   geom_vline(xintercept=sigma_u^2,col="gold",size=2,alpha=0.5)+xlab(bquote(hat(sigma)[u]^2))+ylab(bquote(hat(c)))
 ```
 
 
 
+Here we see that the estimated variance of the confounding parameter is highly correlated to the estimated variance of $\sigma^2_\textbf{u}$
 
 
 ```{r}
-ggplot(rssp_est,aes(x=sigu_var,y=bias_var))+geom_point()+xlab(bquote(Var(hat(sigma)[u]^2)))+ylab(bquote(Var(hat(c))))
+filter(rssp_est,sigu_var<15) %>% ggplot(aes(x=sigu_var,y=bias_var))+geom_point()+xlab(bquote(Var(hat(sigma)[u]^2)))+ylab(bquote(Var(hat(c))))+geom_abline(slope=1,intercept=0)+geom_smooth(method="lm")
 
 ```
 
