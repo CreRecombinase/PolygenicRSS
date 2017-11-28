@@ -95,9 +95,9 @@ Loci for this simulation were chosen by taking the intersection of:
 
 This ended up being `844501` SNPs in total.
 
-```{r}
-select(comp_est_df,True_PVE=tpve,True_Confound=tbias) %>% distinct(True_PVE,True_Confound) %>% mutate(Relative_Confounding=True_Confound/True_PVE) %>% arrange(True_PVE,True_Confound)
-```
+<!-- ```{r} -->
+<!-- select(comp_est_df,True_PVE=tpve,True_Confound=tbias) %>% distinct(True_PVE,True_Confound) %>% mutate(Relative_Confounding=True_Confound/True_PVE) %>% arrange(True_PVE,True_Confound) -->
+<!-- ``` -->
 
 ## Methods
 
