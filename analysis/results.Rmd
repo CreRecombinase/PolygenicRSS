@@ -10,8 +10,12 @@ output: html_document
 
 * [Standardized Effect Size Simulation](simulation.html)
 * [Polygenic Estimation With and Without Confounding](PolygenicEstimation.html)
-* [Comparing RSS-p to ldsc](chr_2.html)
+* [Comparing RSS-p to ldsc on a genome-wide scale](RSSp_ldsc.html)
 * [Deriving the Posterior for RSSp](RSSp_Posterior.html)
+* [Prediction using RSSp](RSSp_Prediction.html)
+* [RSSp vs ldsc in a high PVE setting](RSSp_ldsc_highPVE.html)
+* [Deriving the asymptotic standard error](RSSP_standard_error.html)
+
 <!-- * [Genome-Wide Simulation](GenomeWideSimulation.html) -->
 <!-- * [Diagonal Approximation of LD matrix](IndependenceCheck.html) -->
 

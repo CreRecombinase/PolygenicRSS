@@ -25,8 +25,8 @@
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
-<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -36,10 +36,12 @@
   }
 </style>
 <script type="text/javascript">
-if (window.hljs && document.readyState && document.readyState === "complete") {
-   window.setTimeout(function() {
-      hljs.initHighlighting();
-   }, 0);
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlightingOnLoad(); }, 0);
+  }
 }
 </script>
 
@@ -313,30 +315,109 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-11-01</p>
+<p><strong>Last updated:</strong> 2017-11-28</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 86b6198</p>
+<p><strong>Code version:</strong> de2ca0b</p>
 <!-- Add your analysis here -->
+<div id="some-stats-background" class="section level2">
+<h2>Some stats background</h2>
+<div id="a-useful-fact-about-marginal-and-conditional-gaussians" class="section level3">
+<h3>A useful fact about marginal and conditional gaussians</h3>
+<p>From Bishop’s, <em>Pattern Recognotion and Machine Learning</em> (Section 2.3) we have this useful property:</p>
+<p>Given a marginal Gaussian distribution for <span class="math inline">\(\textbf{x}\)</span> and a conditional Gaussian distribution for <span class="math inline">\(\textbf{y}\)</span> given <span class="math inline">\(\textbf{x}\)</span> in the form: <span class="math display">\[p(\textbf{x}) = N(\textbf{x}|\boldsymbol{\mu},\Lambda^{-1})\]</span></p>
+<p><span class="math display">\[p(\textbf{y}|\textbf{x}) = N(\textbf{y}|A\textbf{x}+\textbf{b},L^{-1})\]</span> the marginal distribution of <span class="math inline">\(\textbf{y}\)</span> and the conditional distribution of <span class="math inline">\(\textbf{x}\)</span> given <span class="math inline">\(\textbf{y}\)</span> arge given by</p>
+<p><span class="math display">\[ p(\textbf{y}) = N(\textbf{y}|A\boldsymbol{\mu}+\textbf{b},L^{-1}+A\Lambda^{-1}A^{T})\]</span> <span class="math display">\[p(\textbf{x}|\textbf{y}) = N(\textbf{x}| \Sigma \left\{ A^{T} L ( \textbf{y} - \textbf{b} ) + \Lambda \boldsymbol{\mu} \right\} , \Sigma)\]</span></p>
+<p>where : <span class="math display">\[\Sigma = (\Lambda + A^{T}LA)^{-1}\]</span></p>
+</div>
+</div>
 <div id="deriving-the-rssp-posterior" class="section level2">
 <h2>Deriving the RSSp Posterior</h2>
-<p><span class="math display">\[ \textbf{u} \sim N(0,I_p\sigma^2_u)\]</span> <span class="math display">\[\hat{\textbf{u}}|\textbf{u} \sim N(R\textbf{u},R+cI_p)\]</span> From Bishop’s, <em>Pattern Recognotion and Machine Learning</em> we get <span class="math display">\[ \hat{\textbf{u}} \sim N(0,\sigma_u^2R^2+R+cI_p)\]</span></p>
-<p>as well as the posterior</p>
+<p>Given this result, we can derive he posterior for <span class="math inline">\(\textbf{u}\)</span></p>
+<p>Our prior for <span class="math inline">\(\textbf{u}\)</span> is <span class="math display">\[ \textbf{u} \sim N(0,I_p\sigma^2_u)\]</span> Which means that the distribution for <span class="math inline">\(\hat{\textbf{u}}\)</span> can be written <span class="math display">\[\hat{\textbf{u}}|\textbf{u} \sim N(R\textbf{u},R+cI_p)\]</span> Right away, we see that we can replace <span class="math inline">\(\textbf{u}\)</span> with <span class="math inline">\(\textbf{x}\)</span>, and <span class="math inline">\(\hat{\textbf{u}}\)</span> with <span class="math inline">\(\textbf{y}\)</span> if we make the following substitutions:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Symbol</th>
+<th>Replacement</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\boldsymbol{\mu}\)</span></td>
+<td><span class="math inline">\(0\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(b\)</span></td>
+<td><span class="math inline">\(0\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\Lambda^{-1}\)</span></td>
+<td><span class="math inline">\(I_p \sigma^2\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(A\)</span></td>
+<td><span class="math inline">\(R\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(L^{-1}\)</span></td>
+<td><span class="math inline">\(R+cI_p\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>We then see that the marginalized form of <span class="math inline">\(\hat{\textbf{u}}\)</span> is:</p>
+<p><span class="math display">\[ \hat{\textbf{u}} \sim N(0,\sigma_u^2R^2+R+cI_p)\]</span></p>
+<p>and that the posterior is</p>
 <p><span class="math display">\[ \textbf{u}|\hat{\textbf{u}} \sim N(\Sigma R  (R+cI_p)^{-1}\hat{\textbf{u}},\Sigma)\]</span> Where <span class="math display">\[\Sigma = (\frac{1}{\sigma^2_u} I_p +R (R+cI_p)^{-1}R)^{-1}\]</span></p>
-<p>Given the EVD of R, <span class="math inline">\(R=QDQ^{T}\)</span>, Let’s denote <span class="math inline">\(D^\ast=D+cI_p=\text{diag}(\lambda_i+c)\)</span>, this means that <span class="math inline">\((R+cI_p)^{-1}= (QDQ^{T}+cIp)^{-1}=QD^{\ast^{-1}}Q^{T}=Q \text{diag}(\frac{1}{\lambda_j+c})Q^{T}\)</span>.<br />
-<span class="math display">\[\Sigma= (\frac{1}{\sigma^2_u} I_p+QDQ^{T}QD^{\ast^{-1}}Q^{T}QDQ^{T})^{-1}=(\frac{1}{\sigma^2_u} I_p+QDD^{\ast^{-1}}DQ^{T})^{-1}=\frac{1}{\sigma_u^2}I_p + Q\text{diag}(\frac{\lambda_j^2}{\lambda_j+c})Q^{T})^{-1}\]</span> We can repeat the same trick as before to simplify <span class="math inline">\(\Sigma\)</span> further:</p>
-<p><span class="math display">\[\Sigma=QD^{\ast\ast^{-1}}Q^{T}\]</span> where</p>
-<p><span class="math display">\[D^{\ast\ast}=\frac{1}{\sigma_u^2}I_p+ D^2D^{\ast^{-1}}=\text{diag}(\frac{1}{\sigma_u^2}+\frac{\lambda_j^2}{\lambda_j+c})=\text{diag}(\frac{\sigma_u^2(c+\lambda_j)}{c+\lambda_j^2\sigma_u^2+\lambda_j})^{-1}\]</span></p>
+<p>Given the EVD of R, <span class="math inline">\(R=QD_{R}Q^{T}=Q \text{diag}\left(\lambda_j\right)Q^{T}\)</span>, we can rewrite the matrix <span class="math display">\[L^{-1}=(QD_RQ^{T}+cI_p)^{-1}=(QD_{L^{-1}}Q)^{-1}\]</span> where <span class="math inline">\(D_{L^{-1}}^{-1}=\text{diag}\left( \lambda_j+c \right)^{-1}\)</span> and <span class="math inline">\(D_L=D_{L^{-1}}^{-1}=\text{diag}\left(\frac{1}{\lambda_j+c} \right)\)</span></p>
+<p>Plugging that in to the equation for <span class="math inline">\(\Sigma\)</span>:</p>
+<p><span class="math display">\[\Sigma= \left(\frac{1}{\sigma^2_u} I_p+(QD_RQ^{T})(QD_LQ^{T})(QD_RQ^{T})\right)^{-1}\]</span> <span class="math display">\[=(\frac{1}{\sigma^2_u} I_p+QDD_LDQ^{T})^{-1}= \left( \text{diag}\left(\frac{1}{\sigma_u^2}\right) + Q\text{diag}\left(\frac{\lambda_j^2}{\lambda_j+c}\right)Q^{T} \right)^{-1} = \left(Q \text{diag}\left( \frac{1}{\sigma_u^2}+\frac{\lambda_j^2}{\lambda_j+c}\right)Q^{T}\right)^{-1}\]</span> <span class="math display">\[=\left(Q \text{diag}\left( \frac{(\lambda_j+c)}{(\lambda_j+c)\sigma_u^2}+\frac{\lambda_j^2\sigma_u^2}{(\lambda_j+c)\sigma_u^2}\right)Q^{T}\right)^{-1}=Q \text{diag}\left(\frac{(\lambda_j+c)\sigma_u^2}{(\lambda_j+c)+\lambda_j^2\sigma_u^2} \right)Q^{T}\]</span></p>
+<p>We’ll call the diagonal matrix <span class="math inline">\(D_\Sigma\)</span></p>
 <p>Simplifying further:</p>
-<p><span class="math display">\[\textbf{u}|\hat{\textbf{u}} \sim N(Q D^{\ast \ast^{-1}} Q^{T}QDQ^{T}QD^{\ast^{-1}}Q^{T}\hat{\textbf{u}},QD^{\ast \ast^{-1}}Q^{T})\]</span></p>
-<p><span class="math display">\[ \Rightarrow N(QD^{\ast \ast^{-1}} D D^{\ast^{-1}}Q^{T},QD^{\ast\ast^{-1}}Q^{T})  \]</span></p>
-<p><span class="math display">\[\Rightarrow N(QD^{\ast \ast \ast}Q^{T}\hat{\textbf{u}},QD^{\ast \ast^{-1}}Q^{T})\]</span></p>
-<p>with <span class="math display">\[D^{\ast \ast \ast} = D^{\ast \ast^{-1}} D D^{\ast^{-1}} =\text{diag}(\frac{\sigma_u^2(c+\lambda_j)}{c+\lambda_j^2\sigma_u^2+ \lambda_j} \times \lambda_j \times \frac{1}{\lambda+c}) = \text{diag}(\frac{\lambda_j \sigma^2_u}{c+\lambda_j^2\sigma_u^2+\lambda_j})\]</span></p>
+<p><span class="math display">\[\textbf{u}|\hat{\textbf{u}} \sim N(\underbrace{Q D_\Sigma Q^{T}}_\Sigma \underbrace{QD_{R}Q^{T}}_R \underbrace{QD_LQ^{T}}_{(R+cI_p)^{-1}}\hat{\textbf{u}},\underbrace{QD_\Sigma Q^{T}}_\Sigma)\]</span></p>
+<p><span class="math display">\[= N(QD_\Sigma D_R D_LQ^{T},QD_\Sigma Q^{T})\]</span></p>
+<p><span class="math display">\[= N\left( Q \text{diag}\left( \frac{(\lambda_j+c)\sigma_u^2}{(\lambda_j+c)+\lambda_j^2\sigma_u^2} \times \frac{\lambda_j}{1} \times \frac{1}{\lambda_j+c} \right)Q^{T}\hat{\textbf{u}},Q \text{diag}\left(\frac{(\lambda_j+c)\sigma_u^2}{(\lambda_j+c)+\lambda_j^2\sigma_u^2} \right)Q^{T} \right)\]</span></p>
+<p><span class="math display">\[= N\left( Q \text{diag}\left( \frac{\sigma_u^2 \lambda_j}{(\lambda_j+c)+\lambda_j^2\sigma_u^2}  \right)Q^{T}\hat{\textbf{u}},Q \text{diag}\left(\frac{(\lambda_j+c)\sigma_u^2}{(\lambda_j+c)+\lambda_j^2\sigma_u^2} \right)Q^{T} \right)\]</span> For brevity, we’ll simply write:</p>
+<p><span class="math display">\[\textbf{u}|\hat{\textbf{u}} \sim N \left(Q D_{\textbf{u}}Q^{T}\hat{\textbf{u}},QD_{\Sigma}Q^{T}\right)\]</span></p>
+<!-- A couple things to note: -->
+<!-- If we define $\textbf{q}=Q^{T}\textbf{u}$ and $\hat{\textbf{q}}=Q^{T}\hat{\textbf{u}}$, then  -->
+<!-- $$\textbf{q}|\hat{\textbf{q}} \sim N(D_\textbf{u}) -->
+</div>
+<div id="prediction" class="section level2">
+<h2>Prediction</h2>
+<p>Remember that <span class="math inline">\(\boldsymbol{\beta}=S\textbf{u}\)</span> This means that <span class="math display">\[\boldsymbol{\beta} \sim N( SQD_{\textbf{u}}Q^{T}\hat{\textbf{u}},SQD_\Sigma Q^{T}S^{T})\]</span></p>
+<p>It also means that given a new vector of genotypes <span class="math inline">\(\tilde{\textbf{x}}\)</span>,</p>
+<p><span class="math display">\[E[\tilde{\textbf{x}}\boldsymbol{\beta}]=\tilde{\textbf{x}}SQD_\textbf{u}Q^{T}\hat{\textbf{u}}\]</span></p>
+<p>And that</p>
+<p><span class="math display">\[\text{Var}(\tilde{\textbf{x}}\boldsymbol{\beta})=\tilde{\textbf{x}}SQD_\Sigma Q^{T}S^{T}\tilde{\textbf{x}}^{T}\]</span></p>
+</div>
+<div id="checking-the-math-with-simulation" class="section level2">
+<h2>Checking the math with simulation</h2>
+<p>In (one of) the most boring of scenarios, <span class="math inline">\(\sigma_u^2 = 1\)</span>, <span class="math inline">\(c=0\)</span>, <span class="math inline">\(R\)</span> is the identity matrix,</p>
+<p><img src="figure/RSSp_Posterior.Rmd/R_identity-1.png" width="672" style="display: block; margin: auto;" /> <img src="figure/RSSp_Posterior.Rmd/Id_b_bh-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/RSSp_Posterior.Rmd/Id_bp_bh-1.png" width="672" style="display: block; margin: auto;" /></p>
+<!-- ```{r} -->
+<!-- p <- 10000 -->
+<!-- R <- diag(p) -->
+<!-- reps <- 10 -->
+<!-- sigma_u <- 1 -->
+<!-- confound <- 0.001 -->
+<!-- u_data <- rnorm(p,mean=0,sd=sigma_u) -->
+<!-- u_hat <- replicate(reps,rnorm(n = p,mean = u_data,sd = 1+confound)) -->
+<!-- u_guess <- posterior_mean_beta(sigu = 1,confound = 0,dvec = rep(1,p),se = rep(1,p),quh = u_hat,Q = R) -->
+<!-- gbdf <- array_branch(u_guess,2) %>% imap_dfr(~data_frame(rep=.y,posterior_beta=.x,beta=u_data)) -->
+<!-- plot(rowMeans(u_guess),u_data) -->
+<!-- ggplot(gbdf,aes(x=beta,y=posterior_beta))+geom_point()+geom_smooth()+facet_wrap(~rep,labeller = label_both) -->
+<!-- ``` -->
+<p>Now let’s add a non-diagonal LD matrix</p>
+<p>Using the 1 parameter (no confounding) model, are our estimates centered around the true value?</p>
+<p><img src="figure/RSSp_Posterior.Rmd/R_sim_uh-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/RSSp_Posterior.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/RSSp_Posterior.Rmd/unnamed-chunk-1-2.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
-<pre><code>R version 3.4.0 (2017-04-21)
+<pre><code>R version 3.4.2 (2017-09-28)
 Platform: x86_64-pc-linux-gnu (64-bit)
 Running under: Ubuntu 16.04.3 LTS
 
@@ -355,31 +436,29 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] future_1.6.0     workflowr_0.7.0  rmarkdown_1.6    ggjoy_0.3.0     
- [5] rhdf5_2.20.0     hexbin_1.27.1    bindrcpp_0.2     RSSp_0.9        
- [9] dplyr_0.7.2      purrr_0.2.3      readr_1.1.1      tidyr_0.7.0     
-[13] tibble_1.3.4     ggplot2_2.2.1    tidyverse_1.1.1  SeqSupport_0.1.0
+[1] bindrcpp_0.2    RSSp_0.9        dplyr_0.7.4     purrr_0.2.4    
+[5] readr_1.1.1     tidyr_0.7.2     tibble_1.3.4    ggplot2_2.2.1  
+[9] tidyverse_1.1.1
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.13        lubridate_1.6.0     lattice_0.20-35    
- [4] listenv_0.6.0       assertthat_0.2.0    rprojroot_1.2      
- [7] digest_0.6.12       psych_1.7.5         R6_2.2.2           
-[10] cellranger_1.1.0    plyr_1.8.4          backports_1.1.0    
-[13] evaluate_0.10.1     httr_1.3.1          zlibbioc_1.22.0    
-[16] rlang_0.1.2         lazyeval_0.2.0      readxl_1.0.0       
-[19] Matrix_1.2-11       labeling_0.3        stringr_1.2.0      
-[22] foreign_0.8-69      RcppEigen_0.3.3.3.0 munsell_0.4.3      
-[25] broom_0.4.2         compiler_3.4.0      modelr_0.1.1       
-[28] pkgconfig_2.0.1     mnormt_1.5-5        globals_0.10.2     
-[31] htmltools_0.3.6     tidyselect_0.1.1    codetools_0.2-15   
-[34] grid_3.4.0          nlme_3.1-131        jsonlite_1.5       
-[37] gtable_0.2.0        git2r_0.19.0        magrittr_1.5       
-[40] scales_0.5.0        stringi_1.1.5       reshape2_1.4.2     
-[43] xml2_1.1.9000       tools_3.4.0         forcats_0.2.0      
-[46] glue_1.1.1          hms_0.3             parallel_3.4.0     
-[49] yaml_2.1.14         colorspace_1.3-2    rvest_0.3.2        
-[52] pbdZMQ_0.2-6        knitr_1.17          bindr_0.1          
-[55] haven_1.1.0        </code></pre>
+ [1] RcppEigen_0.3.3.3.0 tidyselect_0.2.3    reshape2_1.4.2     
+ [4] haven_1.1.0         lattice_0.20-35     colorspace_1.3-2   
+ [7] htmltools_0.3.6     yaml_2.1.14         rlang_0.1.4        
+[10] foreign_0.8-69      glue_1.2.0          modelr_0.1.1       
+[13] readxl_1.0.0        bindr_0.1           plyr_1.8.4         
+[16] stringr_1.2.0       munsell_0.4.3       gtable_0.2.0       
+[19] cellranger_1.1.0    rvest_0.3.2         mvtnorm_1.0-6      
+[22] psych_1.7.5         evaluate_0.10.1     labeling_0.3       
+[25] knitr_1.17          forcats_0.2.0       parallel_3.4.2     
+[28] broom_0.4.2         Rcpp_0.12.13        scales_0.5.0       
+[31] backports_1.1.0     jsonlite_1.5        mnormt_1.5-5       
+[34] hms_0.3             digest_0.6.12       stringi_1.1.5      
+[37] grid_3.4.2          rprojroot_1.2       tools_3.4.2        
+[40] magrittr_1.5        lazyeval_0.2.1      pkgconfig_2.0.1    
+[43] Matrix_1.2-11       xml2_1.1.9000       lubridate_1.6.0    
+[46] assertthat_0.2.0    rmarkdown_1.7       httr_1.3.1         
+[49] R6_2.2.2            nlme_3.1-131        git2r_0.19.0       
+[52] compiler_3.4.2     </code></pre>
 </div>
 
 <hr>
