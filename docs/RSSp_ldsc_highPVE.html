@@ -318,7 +318,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-11-28</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 9ba070a</p>
+<p><strong>Code version:</strong> cd8ca01</p>
 <!-- Add your analysis here -->
 <div id="simulation" class="section level1">
 <h1>Simulation</h1>
@@ -335,20 +335,9 @@ shared across the workflowr files. -->
 <h2>Loci</h2>
 <p>Loci for this simulation were chosen by taking the intersection of: * Loci typed (or imputed) from the 1kg reference panel * Loci for which there was a genetic map value * Loci that fell within <code>ldetect</code> break points * Loci included in the LD score regression example GWAS data</p>
 <p>This ended up being <code>844501</code> SNPs in total.</p>
-<pre><code># A tibble: 27 x 3
-    True_PVE True_Confound Relative_Confounding
-       &lt;dbl&gt;         &lt;dbl&gt;                &lt;dbl&gt;
- 1 0.0999900   0.000000000                 0.00
- 2 0.0999900   0.004999500                 0.05
- 3 0.0999900   0.009999000                 0.10
- 4 0.1333388   0.000000000                 0.00
- 5 0.1333388   0.006666940                 0.05
- 6 0.1333388   0.013333881                 0.10
- 7 0.1778102   0.000000000                 0.00
- 8 0.1778102   0.008890508                 0.05
- 9 0.1778102   0.017781016                 0.10
-10 0.2371137   0.000000000                 0.00
-# ... with 17 more rows</code></pre>
+<!-- ```{r} -->
+<!-- select(comp_est_df,True_PVE=tpve,True_Confound=tbias) %>% distinct(True_PVE,True_Confound) %>% mutate(Relative_Confounding=True_Confound/True_PVE) %>% arrange(True_PVE,True_Confound) -->
+<!-- ``` -->
 </div>
 <div id="methods" class="section level2">
 <h2>Methods</h2>
@@ -359,7 +348,7 @@ shared across the workflowr files. -->
 </ul>
 <p>The first result I want to highlight is just the relative performance of the three methods: <code>LDSC</code>, <code>RSSp</code> with a confounding parameter (<code>RSSp_Confound</code>), and <code>RSSp</code> without a confounding parameter (<code>RSSp_NoConfound</code>). “Performance” here means the RMSE of PVE <code>abs(pve-true_pve)</code> In these simulations there is no confounding. <strong>NB:</strong> Because <code>RSSp</code> bounds PVE between 0 and 1, <strong>I have bounded <code>LDSC</code> estimates between 0 and 1</strong> for the purpose of comparing RMSE between methods.</p>
 <p><img src="figure/RSSp_ldsc_highPVE.Rmd/rmse_pve-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Next we see the simulation results that had a confounding parameter. Here I’ve split up the results using the variable <code>rel_confounding</code>, which is the level of true confounding divided by the true <span class="math inline">\(PVE\)</span>. <img src="figure/RSSp_ldsc_highPVE.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Next we see the simulation results that had a confounding parameter. Here I’ve split up the results using the variable <code>rel_confounding</code>, which is the level of true confounding divided by the true <span class="math inline">\(PVE\)</span>. <img src="figure/RSSp_ldsc_highPVE.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The next several plots show the same data as the box plots, (RMSE of PVE across methods,levels of counfounding, and true PVE), but are rearranged in several different ways, to make particular comparisons easier. (e.g how does the <code>RSSp_Confound</code> method perform as confounding increases at a given <code>PVE</code>). If it looks like RMSE is less than 0 or greater than one, that is simply an artifact of the plotting</p>
 <p><img src="figure/RSSp_ldsc_highPVE.Rmd/joy_bias_pve-1.png" width="672" style="display: block; margin: auto;" /> <img src="figure/RSSp_ldsc_highPVE.Rmd/joy_pve_bias-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p><img src="figure/RSSp_ldsc_highPVE.Rmd/joy_bias_pve_rmse-1.png" width="672" style="display: block; margin: auto;" /></p>
@@ -368,7 +357,7 @@ shared across the workflowr files. -->
 <p><img src="figure/RSSp_ldsc_highPVE.Rmd/pve_tpve_bound-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p><img src="figure/RSSp_ldsc_highPVE.Rmd/pve_tpve_bound_zoom-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p><img src="figure/RSSp_ldsc_highPVE.Rmd/est_confound_method-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p><img src="figure/RSSp_ldsc_highPVE.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/RSSp_ldsc_highPVE.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p><img src="figure/RSSp_ldsc_highPVE.Rmd/est_pve_tpve_method-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="session-information" class="section level2">
