@@ -1,4 +1,5 @@
-#Rprof(filename=snakemake@output[["proff"]],append=F)
+                                        #Rprof(filename=snakemake@output[["proff"]],append=F)
+library(dplyr)
 outf <- snakemake@output[["gdsf"]]
 out_genof <- snakemake@output[["geno_gdsf"]]
 mapdf <- readRDS(snakemake@input[["mapf"]])
