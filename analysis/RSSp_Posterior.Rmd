@@ -223,6 +223,8 @@ big_rssp_est <- inner_join(rssp_est,u_hat) %>% group_by(fgeneid) %>% do(
 ggplot(rssp_est,aes(x=sigu))+geom_histogram(bins = 50)+geom_vline(xintercept = 1)+xlab(bquote(hat(sigma[u])))
 # ggplot(gbdf,aes(x=beta,y=beta_post))+geom_point()+geom_smooth(method="lm")+facet_wrap(~rep,labeller = label_both)
 ```
+
+
 ```{r}
 ggplot(big_rssp_est,aes(x=beta,y=beta_post))+geom_point()
 group_by(big_rssp_est,fgeneid) %>% summarise(beta_hat=sum(beta-beta_hat)^2,beta_posterior=sum(beta-beta_post)^2) %>% ungroup() %>% gather(method,error,-fgeneid) %>% ggplot(aes(x=method,y=error))+geom_boxplot()+ylab("Sum of Squared Error")+ggtitle("Relative performance of beta_posterior and beta_hat","in estimating Beta")
