@@ -1,0 +1,172 @@
+---
+title: "RSSp vs ldsc"
+author: "Nicholas Knoblauch"
+date: 2017-11-08
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+
+
+```{r load_data,echo=F,message=F}
+library(tidyverse)
+library(RSSp)
+
+ldsc_gwas_resf <- "~/Dropbox/PolygenicRSS/output/RSSp_snakemake/sim_scz2_gwas_ldsc_res_HighPVE.txt.gz"
+rss_gwas_resf <-  "~/Dropbox/PolygenicRSS/output/RSSp_snakemake/sim_scz2_gwas_RSSp_res_ALL_HighPVE.txt.gz"
+orss_gwas_resf <- "~/Dropbox/PolygenicRSS/output/RSSp_snakemake/sim_scz2_gwas_RSSp_oracle_res_ALL_HighPVE.txt.gz"
+
+
+est_df <- read_delim(rss_gwas_resf,delim="\t") %>% 
+  filter(!log_params,shrinkage==min(shrinkage),pv==max(pv)) %>% 
+  select(-log_params) %>% 
+  mutate(fgeneid=as.character(fgeneid),rel_bias=round(tbias/tpve,2),
+         rel_pve_error=(abs(pve-tpve)/(pve+tpve)),method=paste0("RSSp_",method))
+
+
+tparam_df<- distinct(est_df,fgeneid,tsigu,tbias,p_n,tpve)
+
+comp_est_df <-  select(est_df,fgeneid,sigu,bias,method,p_n,pve) 
+
+ldsc_est_df <- read_delim(ldsc_gwas_resf,delim="\t") %>% mutate(fgeneid=as.character(fgeneid)) %>% inner_join(tparam_df)
+comp_ldsc_est_df <- mutate(
+  ldsc_est_df,
+  sigu=sqrt(Total_Observed_scale_h2/p_n),
+  method="LDSC"
+  ) %>% select(
+    pve=Total_Observed_scale_h2,
+    fgeneid,
+    bias=Intercept,
+    sigu,
+    method,
+    p_n) %>% mutate(bias=bias-1)
+comp_est_df <- rbind(comp_est_df,comp_ldsc_est_df) %>% inner_join(tparam_df)
+comp_est_df <- mutate(
+  comp_est_df,
+  t_rel_bias=round(tbias/tpve,3),
+  est_rel_bias=bias/calc_pve(sigu,p_n),
+  perc_tsigu=ntile(tsigu,3)
+  )
+
+
+```
+
+```{r rmse_pve}
+tpvev <- unique(comp_est_df$tpve)
+
+mutate(comp_est_df,tgrp=paste0(tpve,method),relative_bias=round(tbias/tpve,4),pve=ifelse(pve>1,1,pve)) %>% mutate(true_pve=round(tpve,3),pve=ifelse(pve<0,0,pve)) %>% filter(tbias==0) %>%  ggplot(aes(x=tpve,y=abs(pve-true_pve),group=tgrp,fill=method))+
+  geom_boxplot()+
+  ylab(bquote(RMSE[PVE]))+xlab(bquote(PVE))+ggtitle("RMSE of PVE","No Confounding")
+```
+
+```{r}
+mutate(comp_est_df,tgrp=paste0(tpve,method),relative_bias=round(tbias/tpve,4),pve=ifelse(pve>1,1,pve)) %>% mutate(true_pve=round(tpve,3),pve=ifelse(pve<0,0,pve))  %>%  ggplot(aes(x=tpve,y=abs(pve-true_pve),group=tgrp,fill=method))+
+  geom_boxplot()+facet_grid(relative_bias~.,labeller = label_both)+
+  ylab(bquote(RMSE[PVE]))+xlab(bquote(PVE))+ggtitle("RMSE of PVE","No Confounding (LDSC bounded between 0 and 1)")
+```
+
+
+```{r joy_bias_pve}
+library(ggjoy)
+mutate(comp_est_df,rel_bias=round(tbias/tpve,3),true_pve=round(tpve,3)) %>% filter(true_pve<1) %>%  ggplot(aes(x=abs(pve-true_pve),y=method,fill=method))+geom_joy()+xlab(bquote(RMSE[PVE]))+facet_grid(true_pve~rel_bias,labeller=partial(label_both,sep="\n"))+scale_x_log10()
+```
+```{r joy_pve_bias}
+
+mutate(comp_est_df,rel_bias=round(tbias/tpve,3),true_pve=round(tpve,3)) %>% filter(true_pve<1) %>%  ggplot(aes(x=abs(pve-true_pve),y=factor(true_pve),fill=method))+geom_joy()+xlab(bquote(RMSE[PVE]))+facet_grid(method~rel_bias,labeller=partial(label_both,sep=":\n"))+ylab(bquote(PVE))
+```
+
+
+
+
+
+
+
+
+```{r joy_bias_pve_rmse}
+mutate(comp_est_df,rel_bias=round(tbias/tpve,3),true_pve=round(tpve,3)) %>% filter(true_pve<1) %>%  ggplot(aes(x=abs(pve-true_pve),y=factor(rel_bias),fill=method))+geom_joy()+xlab(bquote(RMSE[PVE]))+facet_grid(true_pve~method,labeller=partial(label_both,sep=":\n"))+ylab(bquote(frac(c,PVE)))
+```
+
+```{r pve_tpve}
+mutate(comp_est_df,relative_bias=round(tbias/tpve,3))  %>% ggplot(aes(x=tpve,y=pve,color=method))+
+  geom_point()+geom_smooth(method="lm")+
+  facet_grid(method~relative_bias,labeller="label_both")+
+  geom_abline(slope=1,intercept=0)+xlab(bquote(PVE))+ylab(bquote(hat(PVE)))+ggtitle("Estimated PVE vs True PVE")
+```
+
+
+
+
+```{r pve_tpve_bound}
+mutate(comp_est_df,relative_bias=round(tbias/tpve,3)) %>%  mutate(true_pve=round(tpve,3),pve=ifelse(pve<0,0,pve)) %>% mutate(pve=ifelse(pve>1,1,pve)) %>% ggplot(aes(x=tpve,y=pve,color=method))+
+  geom_point()+geom_smooth(method="lm")+
+  facet_grid(method~relative_bias,labeller="label_both")+
+  geom_abline(slope=1,intercept=0)+xlab(bquote(PVE))+ylab(bquote(hat(PVE)))+ggtitle("Estimated PVE vs True PVE","Bounding LDSC between 0 and 1")
+```
+
+
+
+
+```{r pve_tpve_bound_zoom}
+mutate(comp_est_df,relative_bias=round(tbias/tpve,3)) %>% filter(method!="RSSp_NoConfound") %>%  mutate(true_pve=round(tpve,3),pve=ifelse(pve<0,0,pve)) %>% mutate(pve=ifelse(pve>1,1,pve)) %>% ggplot(aes(x=tpve,y=pve,color=method))+
+  geom_point()+geom_smooth(method="lm")+
+  facet_grid(method~relative_bias,labeller="label_both")+
+  geom_abline(slope=1,intercept=0)+xlab(bquote(PVE))+ylab(bquote(hat(PVE)))+ggtitle("Estimated PVE vs True PVE","Bounding LDSC between 0 and 1")
+```
+
+
+
+
+```{r est_confound_method}
+filter(comp_est_df,method!="RSSp_NoConfound") %>% mutate(t_rel_bias=round(tbias/tpve,3),true_pve=round(tpve,2)) %>% ggplot(aes(x=tbias/tpve,y=bias/tpve))+
+  geom_point()+geom_smooth(method="lm")+
+  facet_wrap(~method,labeller=partial(label_both,sep=":\n"),scales = "free_y")+
+  geom_abline(slope=1,intercept=0)+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(hat(c),PVE)))+ggtitle("Estimated Relative Confounding")
+```
+
+
+
+```{r}
+tpvev <- unique(comp_est_df$tpve)
+
+mutate(comp_est_df,relative_bias=round(tbias/tpve,4),tgrp=paste0(relative_bias,method),pve=ifelse(pve>1,1,pve)) %>% filter(method!="RSSp_NoConfound") %>% mutate(true_pve=round(tpve,3),pve=ifelse(pve<0,0,pve))  %>%  ggplot(aes(x=relative_bias,y=abs(bias-tbias)/tpve,group=tgrp,fill=method))+
+  geom_boxplot()+
+  ylab(bquote(frac(RMSE(c),PVE)))+xlab(bquote(frac(c,PVE)))+ggtitle("RMSE of Confounding")
+```
+
+```{r est_pve_tpve_method}
+filter(comp_est_df,method!="RSSp_NoConfound") %>% mutate(t_rel_bias=round(tbias/tpve,3),true_pve=round(tpve,2)) %>% ggplot(aes(x=tbias,y=bias))+
+  geom_point()+geom_smooth(method="lm")+
+  facet_wrap(~method,labeller=partial(label_both,sep=":\n"),scales = "free_y")+
+  geom_abline(slope=1,intercept=0)+xlab(bquote(c))+ylab(bquote(hat(c)))+ggtitle("Estimated Confounding vs True Confounding","Across all PVE")
+```
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
+
+
+
+
