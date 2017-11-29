@@ -315,25 +315,32 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-11-28</p>
+<p><strong>Last updated:</strong> 2017-11-29</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> cd8ca01</p>
+<p><strong>Code version:</strong> 998180a</p>
 <!-- Add your analysis here -->
 <div id="simulation" class="section level1">
 <h1>Simulation</h1>
 <div id="gwas-summary-stats" class="section level2">
 <h2>GWAS summary stats</h2>
 <p>The loci used in the simulation consisted of the 844500 SNPs that formed the intersection of</p>
-<p>Genotype data came from ~ 450 Europeans in 1kg (1 thousand genomes). <span class="math inline">\(\hat{\textbf{u}}\)</span> was simulated using the method <a href="simulation.html">outlined here</a>. <span class="math inline">\(PVE\)</span> took on 9 values between from <span class="math inline">\(0.09999\)</span> to <span class="math inline">\(0.9999\)</span>. Confounding was simulated as a proportion of total <span class="math inline">\(PVE\)</span>, and took on one of three values: <span class="math inline">\(0\)</span>,<span class="math inline">\(0.05\)</span>,<span class="math inline">\(0.1\)</span>. Each scenario was replicated 15 times.</p>
+<p>Genotype data came from ~ 450 Europeans in 1kg (1 thousand genomes). <span class="math inline">\(\hat{\textbf{u}}\)</span> was simulated using the method <a href="simulation.html">outlined here</a>. <span class="math inline">\(PVE\)</span> took on 9 values between from <span class="math inline">\(0.09999\)</span> to <span class="math inline">\(0.9999\)</span>. Confounding was simulated as a proportion of total <span class="math inline">\(PVE\)</span>, and took on one of three values: <span class="math inline">\(0\)</span>,<span class="math inline">\(0.05\)</span>,<span class="math inline">\(0.1\)</span>. I will refer to confounding as a proportion of total <span class="math inline">\(PVE\)</span> as <em>relative confounding</em>. For example,if relative confounding is <span class="math inline">\(0.1\)</span>, then for <span class="math inline">\(PVE=0.9\)</span>,actual confounding would be <span class="math inline">\(0.09\)</span>; for <span class="math inline">\(PVE=0.1\)</span>, actual confounding would be <span class="math inline">\(0.01\)</span>. Each scenario was replicated 15 times.</p>
+<p>It should be noted that even at “high” pve, this is still a very hard simulation. when true <span class="math inline">\(PVE\)</span> is <code>0.999</code>, it’s highest value in the simulation, this corresponds to a per SNP variance (<span class="math inline">\(\sigma^2_\textbf{u}\)</span>) of <code>0.0006413561</code>(<code>6.413561e-04</code>). When true <span class="math inline">\(PVE\)</span> is <code>0.09999</code>, <span class="math inline">\(\sigma^2_\textbf{u}\)</span> is <code>0.00006413561</code>(<code>6.413561e-05</code>). This is a very small window.</p>
 </div>
 <div id="ld" class="section level2">
 <h2>LD</h2>
-<p><code>LDshrink</code> was used to estimate <span class="math inline">\(LD\)</span> for the same 450 individuals from 1kg. Haplotypes, rather than genotypes were used, and a genetic map was also used. pre-published <code>ldetect</code> breakpoints were used so that the LD matrix could be approximated as block-diagional (blocks are not of equal size)</p>
+<p><code>LDshrink</code> was used to estimate <span class="math inline">\(LD\)</span> for the same 450 individuals from 1kg. Haplotypes, rather than genotypes were used, and a genetic map was also used. Pre-published <code>ldetect</code> breakpoints were used so that the LD matrix could be approximated as block-diagional (blocks are not of equal size). Block diagonal approximation greatly improves the performance of eigenvalue decomposition, and greatly decreases storage requirements.</p>
 </div>
 <div id="loci" class="section level2">
 <h2>Loci</h2>
-<p>Loci for this simulation were chosen by taking the intersection of: * Loci typed (or imputed) from the 1kg reference panel * Loci for which there was a genetic map value * Loci that fell within <code>ldetect</code> break points * Loci included in the LD score regression example GWAS data</p>
+<p>Loci for this simulation were chosen by taking the intersection of:</p>
+<ul>
+<li>Loci typed (or imputed) from the 1kg reference panel</li>
+<li>Loci for which there was a genetic map value</li>
+<li>Loci that fell within <code>ldetect</code> break points</li>
+<li>Loci included in the LD score regression example GWAS data</li>
+</ul>
 <p>This ended up being <code>844501</code> SNPs in total.</p>
 <!-- ```{r} -->
 <!-- select(comp_est_df,True_PVE=tpve,True_Confound=tbias) %>% distinct(True_PVE,True_Confound) %>% mutate(Relative_Confounding=True_Confound/True_PVE) %>% arrange(True_PVE,True_Confound) -->
@@ -352,12 +359,15 @@ shared across the workflowr files. -->
 <p>The next several plots show the same data as the box plots, (RMSE of PVE across methods,levels of counfounding, and true PVE), but are rearranged in several different ways, to make particular comparisons easier. (e.g how does the <code>RSSp_Confound</code> method perform as confounding increases at a given <code>PVE</code>). If it looks like RMSE is less than 0 or greater than one, that is simply an artifact of the plotting</p>
 <p><img src="figure/RSSp_ldsc_highPVE.Rmd/joy_bias_pve-1.png" width="672" style="display: block; margin: auto;" /> <img src="figure/RSSp_ldsc_highPVE.Rmd/joy_pve_bias-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p><img src="figure/RSSp_ldsc_highPVE.Rmd/joy_bias_pve_rmse-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>This plot shows estimates of <span class="math inline">\(PVE\)</span> vs the true value, In this plot I have not truncated <span class="math inline">\(LDSC\)</span> between 0 and 1.</p>
-<p><img src="figure/RSSp_ldsc_highPVE.Rmd/pve_tpve-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p><img src="figure/RSSp_ldsc_highPVE.Rmd/pve_tpve_bound-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This plot shows estimates of <span class="math inline">\(PVE\)</span> vs the true value, In this plot I <em>have not</em> truncated <code>LDSC</code>’s PVE estimates to be between 0 and 1.</p>
+<p><img src="figure/RSSp_ldsc_highPVE.Rmd/pve_tpve_nt-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Focusing only on the high PVE setting, we see that both RSSp methods quickly jump to a PVE of 1 and stays there, while <code>LDSC</code> is wildly varying:</p>
+<p><img src="figure/RSSp_ldsc_highPVE.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>In this plot I <em>have</em> truncated <code>LDSC</code>’s PVE estimates to be between 0 and 1.<br />
+<img src="figure/RSSp_ldsc_highPVE.Rmd/pve_tpve_bound-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p><img src="figure/RSSp_ldsc_highPVE.Rmd/pve_tpve_bound_zoom-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p><img src="figure/RSSp_ldsc_highPVE.Rmd/est_confound_method-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p><img src="figure/RSSp_ldsc_highPVE.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/RSSp_ldsc_highPVE.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p><img src="figure/RSSp_ldsc_highPVE.Rmd/est_pve_tpve_method-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="session-information" class="section level2">
