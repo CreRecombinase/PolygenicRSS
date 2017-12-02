@@ -38,6 +38,7 @@ INPUT_DIR=config["INPUT_DIR"]
 #URL for that file is here #LD_break_file_url="https://bitbucket.org/nygcresearch/ldetect-data/raw/ac125e47bf7ff3e90be31f278a7b6a61daaba0dc/EUR/fourier_ls-all.bed"
 
 TRAIT="scz2"
+SCEN="NoConfound"
 METH=["gwas"]
 subworkflow gwas_subset_ldsc:
     workdir: "subset_data_pipeline"
@@ -66,9 +67,12 @@ def filter_chrom(df,chrom):
 #(the fact that the variable is  called `simulation_file` doesn't have any significance)
 rule all:
     input:
-        expand(OUTPUT_DIR+"sim_{trait}_{gwas}_RSSp_res_ALL.txt.gz",trait=TRAIT,gwas=METH),
-        expand(OUTPUT_DIR+"sim_{trait}_{gwas}_RSSp_oracle_res_ALL.txt.gz",trait=TRAIT,gwas=METH),
-        expand(KG_dir+"RSSp_sim_{gwas}_all_beta_est/cv_{trait}_{pv}_{shr}_sim_beta.h5",gwas=METH,trait=TRAIT,pv=pvv,shr=shr)
+        expand(OUTPUT_DIR+"sim_{subset}_{gwas}_RSSp_res_ALL_{scen}.txt.gz",subset=TRAIT,gwas=METH,scen=SCEN),
+        expand(OUTPUT_DIR+"sim_{subset}_{gwas}_RSSp_oracle_res_ALL_{scen}.txt.gz",subset=TRAIT,gwas=METH,scen=SCEN),
+        expand(OUTPUT_DIR+"sim_{subset}_{gwas}_ldsc_res_{scen}.txt.gz",subset=TRAIT,gwas=METH,scen=SCEN),
+        expand(KG_dir+"EVD_H5/all_{subset}_hapmap.h5",subset=TRAIT)
+        # expand(KG_dir+"ldpred_sim_{gwas}_genome/{subset}_sim_{fgeneid}_uh.txt",fgeneid=FGENEID,trait=TRAIT,gwas=METH),
+        # expand(GDS_DIR+"../ldpred_res_f/{subset}_train_ALL_LDpred.txt.gz",trait=TRAIT)
 
 
         
@@ -78,7 +82,6 @@ rule all:
         
 wildcard_constraints:
     chrom="\d+",
-    trait=TRAIT,
     pv="[0-9].[0-9]+"
 
 ## Rules for transforming VCFs to gds files
@@ -86,9 +89,9 @@ wildcard_constraints:
 
 rule ld_chunk_chr:
     input:
-        hdff=HDF5_DIR+"{trait}_seq_hapmap_haplo.h5"
+        hdff=HDF5_DIR+"{subset}_seq_hapmap_haplo.h5"
     output:
-        hdff=KG_dir+"EVD_H5_chr/{trait}_seq_{chr}_{shr}.h5"
+        hdff=KG_dir+"EVD_H5_chr/{subset}_seq_{chr}_{shr}.h5"
     params:
         chrom="{chr}",
         cutoff="{shr}"
@@ -99,20 +102,21 @@ rule ld_chunk_chr:
         
 rule ld_chunk_1kg_all:
     input:
-        gdsf=GDS_DIR+"{trait}_seq_hapmap_haplo.gds"
+        gdsf=GDS_DIR+"{subset}_seq_hapmap_haplo.gds"
     output:
-        evdf=KG_dir+"EVD_H5/all_{trait}_hapmap_{LDchunk}.h5"#,        proff=PROF_DIR+"evd_1kg_{trait}_{LDchunk}.prof"
+        evdf=KG_dir+"EVD_H5/all_{subset}_hapmap.h5"
     params:
-        region_id="{LDchunk}"
+        region_id=expand("{LDchunk}",LDchunk=ALL_REGIONS),
+        cutoff=shr
     script:
         "../scripts/evd_1kg.R"
 
 
 rule ld_chunk_1kg_train:
     input:
-        gdsf=GDS_DIR+"{trait}_seq_train_hapmap_haplo.gds"
+        gdsf=GDS_DIR+"{subset}_seq_train_hapmap_haplo.gds"
     output:
-        evdf=temp(KG_dir+"EVD_H5/train_{trait}_hapmap_{LDchunk}_{shr}.h5")#,        proff=PROF_DIR+"evd_1kg_{trait}_{LDchunk}.prof"
+        evdf=KG_dir+"EVD_H5/train_{subset}_hapmap_{LDchunk}_{shr}.h5"#,        proff=PROF_DIR+"evd_1kg_{subset}_{LDchunk}.prof"
     params:
         region_id="{LDchunk}",
         cutoff="{shr}"
@@ -122,15 +126,15 @@ rule ld_chunk_1kg_train:
 
 rule resreport:
     input:
-        rdsf=KG_dir+"RSSp_sim_gwas_genome/{trait}_sim_all_quh.h5",
-        resf=OUTPUT_DIR+"sim_{trait}_gwas_RSSp_res.txt.gz",
-        oresf=OUTPUT_DIR+"sim_{trait}_gwas_RSSp_oracle_res.txt.gz",
-        ldscf=OUTPUT_DIR+"sim_{trait}_gwas_ldsc_res.txt.gz"
+        rdsf=KG_dir+"RSSp_sim_gwas_genome/{subset}_sim_all_quh.h5",
+        resf=OUTPUT_DIR+"sim_{subset}_gwas_RSSp_res.txt.gz",
+        oresf=OUTPUT_DIR+"sim_{subset}_gwas_RSSp_oracle_res.txt.gz",
+        ldscf=OUTPUT_DIR+"sim_{subset}_gwas_ldsc_res.txt.gz"
     params:
-        traitn="{trait}",
+        traitn="{subset}",
         methn="gwas"
     output:
-        reportf="result_reports/{trait}_gwas_ldsc_RSSp_report.html"
+        reportf="result_reports/{subset}_gwas_ldsc_RSSp_report.html"
     script:
         "../scripts/gen_results_report.Rmd"
         
@@ -138,19 +142,44 @@ rule resreport:
 
 rule chunk_resreport:
     input:
-        rdsf=KG_dir+"RSSp_sim_{meth}_genome/{trait}_sim_all_quh.h5",
-        resf="sim_{trait}_{meth}_RSSp_res.txt.gz",        chunk_est=expand(KG_dir+"RSSp_sim_{{meth}}_genome_est/sim_{{trait}}_{{meth}}_{LDchunk}.txt.gz",LDchunk=ALL_REGIONS)
+        rdsf=KG_dir+"RSSp_sim_{meth}_genome/{subset}_sim_all_quh.h5",
+        resf="sim_{subset}_{meth}_RSSp_res.txt.gz",        chunk_est=expand(KG_dir+"RSSp_sim_{{meth}}_genome_est/sim_{{subset}}_{{meth}}_{LDchunk}.txt.gz",LDchunk=ALL_REGIONS)
     params:
-        traitn="{trait}",
+        traitn="{subset}",
         LDchunk=ALL_REGIONS,
         methn="{meth}"
     output:
-        reportf="result_reports/{trait}_{meth}_report.html"
+        reportf="result_reports/{subset}_{meth}_report.html"
     script:
         "../scripts/gen_results_report.Rmd"
         
 
-            
+
+
+        
+rule sim_pheno_w_Beta_RSSp:
+    ''' This rule starts with a gds file (gdsf)
+    and a dataframe with (at least) these  columns :
+    `SNP`: the SNP rsid (character)
+    `beta`: the true effect size (double)
+    `fgeneid`: The trait name (character)
+    And generates an HDF5 file with (among other things)
+    a (scaleed) matrix of trait values. Noise is added to the data to 
+    match the desired PVE specified in the parameter PVE
+    '''
+    input:
+        gdsf=GDS_DIR+"{subset}_seq_test_hapmap_geno.gds",
+        n_pgdsf=GDS_DIR+"{subset}_seq_train_hapmap_geno.gds",
+        beta_hf=KG_dir+"RSSp_sim_gwas_beta/{subset}_{scen}_beta.h5"
+    params:
+        fgeneid=expand("{fgeneid}",fgeneid=FGENEID),
+        pve=PVE,
+        bias=BIAS,
+        nreps=NREPS
+    output:
+        h5f=KG_dir+"RSSp_sim_gwas_pheno/{subset}_{scen}_trait_test.h5"
+    script:
+        "../scripts/gen_ty_block_RSSp.R"
 
 
 rule sim_pheno_RSSp:
@@ -159,23 +188,34 @@ rule sim_pheno_RSSp:
     comparisons
         '''
     input:
-        gdsf=GDS_DIR+"{trait}_seq_train_hapmap_geno.gds"
+        gdsf=GDS_DIR+"{subset}_seq_train_hapmap_geno.gds"
     params:
         fgeneid=expand("{fgeneid}",fgeneid=FGENEID),
         pve=PVE,
         bias=BIAS,
-        nreps=NREPS
+        nreps=NREPS,
+        N=N,
+        p=P
     output:
-        h5f=KG_dir+"RSSp_sim_gwas_pheno/{trait}_trait.h5",
-        beta_hf=KG_dir+"RSSp_sim_gwas_beta/{trait}_beta.h5"#,        proff=PROF_DIR+"sim_pheno_RSSp_{trait}.prof"
+        h5f=KG_dir+"RSSp_sim_gwas_pheno/{subset}_{scen}_trait.h5",
+        beta_hf=KG_dir+"RSSp_sim_gwas_beta/{subset}_{scen}_beta.h5"#,        proff=PROF_DIR+"sim_pheno_RSSp_{subset}.prof"
     benchmark:
-        "benchmarks/{trait}_NA_SimPhenoRSSp.txt"
+        "benchmarks/{subset}_NA_SimPhenoRSSp.txt"
     script:
         "../scripts/gen_ty_block_RSSp.R"
 
 
         
-
+# rule all_uh_RSSp:
+#     input:
+#         gdsf=rules.sim_pheno_RSSp.input.gdsf,
+#         ymatf=rules.sim_pheno_RSSp.output.h5f
+#     output:
+#         rdsf=KG_dir+"RSSp_sim_{gwas}_genome/{subset}_sim_all_uh.h5"#,       
+# #        LDchunkf=temp(KG_dir+"RSSp_genome_gwas_uh_chunk/{subset}_{LDchunk}_sim.h5")#,        proff=PROF_DIR+"map_uh_{subset}_{LDchunk}.prof"
+#     threads: 1
+#     script:
+#         "../scripts/map_uh_LDchunk_RSSp.R"
 
         
 rule map_uh_RSSp:
@@ -185,7 +225,7 @@ rule map_uh_RSSp:
     params:
         LDchunk="{LDchunk}"
     output:
-        LDchunkf=temp(KG_dir+"RSSp_genome_gwas_uh_chunk/{trait}_{LDchunk}_sim.h5")#,        proff=PROF_DIR+"map_uh_{trait}_{LDchunk}.prof"
+        LDchunkf=temp(KG_dir+"RSSp_genome_gwas_uh_chunk/{subset}_{LDchunk}_{scen}_sim.h5")#,        proff=PROF_DIR+"map_uh_{subset}_{LDchunk}.prof"
     threads: 1
     script:
         "../scripts/map_uh_LDchunk_RSSp.R"
@@ -199,55 +239,69 @@ rule gen_quh_chunk_train:
         LDchunk="{LDchunk}",
         perc_variance="{pv}"
     output:
-        quhf=temp(KG_dir+"RSSp_genome_gwas_quh_chunk/{trait}_{LDchunk}_{pv}_{shr}_sim.h5")#,        proff=PROF_DIR+"quh_{trait}_{LDchunk}.prof"
+        quhf=temp(KG_dir+"RSSp_genome_gwas_quh_chunk/{subset}_{LDchunk}_{pv}_{shr}_{scen}_sim.h5")#,        proff=PROF_DIR+"quh_{subset}_{LDchunk}.prof"
     script:
         "../scripts/gen_quh_chunk.R"
                   
-        
+rule gen_quh_chunk_train_direct:
+    input:
+        evdf=KG_dir+"EVD_H5/all_{subset}_hapmap.h5"
+    params:
+        LDchunk=expand("{LDchunk}",LDchunk=ALL_REGIONS),
+        fgeneid=expand("{fgeneid}",fgeneid=FGENEID),
+        pve=PVE,
+        bias=BIAS,
+        nreps=NREPS
+    output:
+        quh_hf=expand(KG_dir+"RSSp_sim_direct_genome/{{subset}}_sim_all_quh_{pv}_{shr}_{{scen}}.h5",pv=pvv,shr=shr),
+        uh_hf= KG_dir+"RSSp_sim_direct_genome/{subset}_sim_all_uh_{scen}.h5"
+    script:
+        "../scripts/sim_uh_quh_direct.R"
+    
 
 rule merge_quh_region:
     input:
-        evdf=expand(KG_dir+"RSSp_genome_{{gwas}}_quh_chunk/{{trait}}_{LDchunk}_{{pv}}_{{shr}}_sim.h5",LDchunk=ALL_REGIONS)
+        evdf=expand(KG_dir+"RSSp_genome_gwas_quh_chunk/{{subset}}_{LDchunk}_{{pv}}_{{shr}}_{{scen}}_sim.h5",LDchunk=ALL_REGIONS)
     params:
         LDchunk=expand("{LDchunk}",LDchunk=ALL_REGIONS)
     output:
-        rdsf=KG_dir+"RSSp_sim_{gwas}_genome/{trait}_sim_all_quh_{pv}_{shr}.h5"#,        proff=PROF_DIR+"merge_quh_{gwas}_{trait}.prof"
+        rdsf=KG_dir+"RSSp_sim_gwas_genome/{subset}_sim_all_quh_{pv}_{shr}_{scen}.h5"#,        proff=PROF_DIR+"merge_quh_{gwas}_{subset}.prof"
     benchmark:
-        "benchmarks/{trait}_NA_MergeQuhRegion.txt"
+        "benchmarks/{subset}_NA_MergeQuhRegion.txt"
     script:
         "../scripts/concat_quh.R"
 
 rule merge_uh_region:
     input:
-        evdf=expand(KG_dir+"RSSp_genome_{{gwas}}_uh_chunk/{{trait}}_{LDchunk}_sim.h5",LDchunk=ALL_REGIONS)
+        evdf=expand(KG_dir+"RSSp_genome_gwas_uh_chunk/{{subset}}_{LDchunk}_{{scen}}_sim.h5",LDchunk=ALL_REGIONS)
     params:
         LDchunk=expand("{LDchunk}",LDchunk=ALL_REGIONS)
     output:
-        rdsf=KG_dir+"RSSp_sim_{gwas}_genome/{trait}_sim_all_uh.h5"#,        proff=PROF_DIR+"merge_uh_{gwas}_{trait}.prof"
+        rdsf=KG_dir+"RSSp_sim_gwas_genome/{subset}_sim_all_uh_{scen}.h5"#,        proff=PROF_DIR+"merge_uh_{gwas}_{subset}.prof"
     benchmark:
-        "benchmarks/{trait}_NA_MergeUhRegion.txt"
+        "benchmarks/{subset}_NA_MergeUhRegion.txt"
     script:
         "../scripts/concat_uh.R"                
 
 rule RSSp_chunk_mat_est:
     input:
-        rdsf=KG_dir+"RSSp_genome_{gwas}_quh_chunk/{trait}_{LDchunk}_sim.h5"
+        rdsf=KG_dir+"RSSp_genome_{gwas}_quh_chunk/{subset}_{LDchunk}_{scen}_sim.h5"
     params:
         LDchunk="{LDchunk}"
     output:
-        dff=KG_dir+"RSSp_sim_{gwas}_genome_est/sim_{trait}_{gwas}_{LDchunk}.txt.gz"
+        dff=KG_dir+"RSSp_sim_{gwas}_genome_est/sim_{subset}_{gwas}_{LDchunk}_{scen}.txt.gz"
     benchmark:
-        "benchmarks/{trait}_{LDchunk}_RSSpChunkSimMatEst.txt"
+        "benchmarks/{subset}_{LDchunk}_RSSpChunkSimMatEst.txt"
     script:
         "../scripts/mat_RSSp_sim_mat_est.R"
 
 rule RSSp_summarize_pv_shr:
     input:
-        summf=expand(OUTPUT_DIR+"sim_{{trait}}_{{gwas}}_RSSp_res_{pv}_{shr}.txt.gz",pv=pvv,shr=shr)
+        summf=expand(OUTPUT_DIR+"sim_{{subset}}_{{gwas}}_RSSp_res_{pv}_{shr}_{{scen}}.txt.gz",pv=pvv,shr=shr)
     params:
         pv_shr=expand("{pv},{shr}",pv=pvv,shr=shr)
     output:
-        dff=OUTPUT_DIR+"sim_{trait}_{gwas}_RSSp_res_ALL.txt.gz"
+        dff=OUTPUT_DIR+"sim_{subset}_{gwas}_RSSp_res_ALL_{scen}.txt.gz"
     script:
         "../scripts/summarise_pv.R"
 
@@ -257,46 +311,46 @@ rule RSSp_summarize_pv_shr:
 
 rule RSSp_sim_mat_est:
     input:
-        rdsf=KG_dir+"RSSp_sim_{gwas}_genome/{trait}_sim_all_quh_{pv}_{shr}.h5"
+        rdsf=KG_dir+"RSSp_sim_{gwas}_genome/{subset}_sim_all_quh_{pv}_{shr}_{scen}.h5"
     output:
-        dff=OUTPUT_DIR+"sim_{trait}_{gwas}_RSSp_res_{pv}_{shr}.txt.gz"
+        dff=OUTPUT_DIR+"sim_{subset}_{gwas}_RSSp_res_{pv}_{shr}_{scen}.txt.gz"
     benchmark:
-        "benchmarks/{trait}_NA_RsspSimMatEst.txt"
+        "benchmarks/{subset}_NA_RsspSimMatEst.txt"
     script:
         "../scripts/mat_RSSp_sim_mat_est.R"
 
 
 rule RSSp_beta_mat_chunk_est:
     input:
-        rdsf=KG_dir+"RSSp_genome_{gwas}_quh_chunk/{trait}_{LDchunk}_{pv}_{shr}_sim.h5",
-        test_gdsf=GDS_DIR+"{trait}_seq_test_hapmap_geno.gds",
+        rdsf=KG_dir+"RSSp_genome_gwas_quh_chunk/{subset}_{LDchunk}_{pv}_{shr}_{scen}_sim.h5",
+        test_gdsf=GDS_DIR+"{subset}_seq_test_hapmap_geno.gds",
         evdf=rules.ld_chunk_1kg_train.output.evdf,
-        dff=OUTPUT_DIR+"sim_{trait}_{gwas}_RSSp_res_{pv}_{shr}.txt.gz"
+        dff=OUTPUT_DIR+"sim_{subset}_gwas_RSSp_res_{pv}_{shr}_{scen}.txt.gz"
     params:
         LDchunk="{LDchunk}"
     output:
-        beta_hf=temp(KG_dir+"RSSp_sim_{gwas}_chunk_beta_est/cv_{trait}_sim_{LDchunk}_{pv}_{shr}_beta.h5")
+        beta_hf=temp(KG_dir+"RSSp_sim_{gwas}_chunk_beta_est/cv_{subset}_sim_{LDchunk}_{pv}_{shr}_{scen}_beta.h5")
     script:
         "../scripts/RSSp_beta_est.R"
 
 
 rule RSSp_concat_beta:
     input:
-        beta_hf=expand(KG_dir+"RSSp_sim_{{gwas}}_chunk_beta_est/cv_{{trait}}_sim_{LDchunk}_{{pv}}_{{shr}}_beta.h5",LDchunk=ALL_REGIONS),
+        beta_hf=expand(KG_dir+"RSSp_sim_{{gwas}}_chunk_beta_est/cv_{{subset}}_sim_{LDchunk}_{{pv}}_{{shr}}_{{scen}}_beta.h5",LDchunk=ALL_REGIONS),
     params:
         LDchunk=expand("{LDchunk}",LDchunk=ALL_REGIONS)
     output:
-        nbeta_hf=KG_dir+"RSSp_sim_{gwas}_all_beta_est/cv_{trait}_{pv}_{shr}_sim_beta.h5"
+        nbeta_hf=KG_dir+"RSSp_sim_{gwas}_all_beta_est/cv_{subset}_{pv}_{shr}_sim_{scen}_beta.h5"
     script:
         "../scripts/concat_beta_est.R"
         
                 
 # rule RSSp_true_y:
 #     input:
-#         test_gdsf=GDS_DIR+"{trait}_seq_test_hapmap_geno.gds",
-#         beta_hf=KG_dir+"RSSp_sim_gwas_beta/train_{trait}_beta.h5"
+#         test_gdsf=GDS_DIR+"{subset}_seq_test_hapmap_geno.gds",
+#         beta_hf=KG_dir+"RSSp_sim_gwas_beta/train_{subset}_beta.h5"
 #     output:
-#         ny_hf=KG_dir+"RSSp_sim_{gwas}_all_trait/cv_{trait}_sim_beta.h5"
+#         ny_hf=KG_dir+"RSSp_sim_{gwas}_all_trait/cv_{subset}_sim_beta.h5"
         
         
 
@@ -304,14 +358,14 @@ rule RSSp_concat_beta:
 
 rule ldsc_trait_chunk:
     input:
-        gdsf=GDS_DIR+"{trait}_seq_train_hapmap_haplo.gds",
-        evdf=expand(KG_dir+"EVD_H5/train_{{trait}}_hapmap_{LDchunk}.h5",LDchunk=ALL_REGIONS)
+        gdsf=GDS_DIR+"{subset}_seq_train_hapmap_haplo.gds",
+        evdf=expand(KG_dir+"EVD_H5/train_{{subset}}_hapmap_{LDchunk}_{shr}.h5",LDchunk=ALL_REGIONS,shr=shr)
     params:
         LDchunk=ALL_REGIONS,
-        outdir=KG_dir+"eur_w_ld_chr_{trait}_train"
+        outdir=KG_dir+"eur_w_ld_chr_{subset}_train"
     output:
-        outf=expand(KG_dir+"eur_w_ld_chr_{{trait}}_train/{chrom}.l2.ldscore.gz",chrom=range(1,23)),
-        soutf=expand(KG_dir+"eur_w_ld_chr_{{trait}}_train/{chrom}.l2.M_5_50",chrom=range(1,23))#                proff=PROF_DIR+"ldsc_trait_chunk_{trait}.prof",
+        outf=expand(KG_dir+"eur_w_ld_chr_{{subset}}_train/{chrom}.l2.ldscore.gz",chrom=range(1,23)),
+        soutf=expand(KG_dir+"eur_w_ld_chr_{{subset}}_train/{chrom}.l2.M_5_50",chrom=range(1,23))#                proff=PROF_DIR+"ldsc_trait_chunk_{subset}.prof",
 
     script:
         "../scripts/ldsc_trait_chunk.R"        
@@ -321,13 +375,13 @@ rule ldsc_trait_chunk:
         
 rule data_gwas_report:
     input:
-        rdsf=KG_dir+"RSSp_sim_gwas_genome/{trait}_sim_all_quh.h5",
-        uhrdsf=KG_dir+"RSSp_sim_gwas_genome/{trait}_sim_all_uh.h5"
+        rdsf=KG_dir+"RSSp_sim_gwas_genome/{subset}_sim_all_quh.h5",
+        uhrdsf=KG_dir+"RSSp_sim_gwas_genome/{subset}_sim_all_uh.h5"
     params:
-        traitn="{trait}",
+        traitn="{subset}",
         methn="gwas"
     output:
-        reportf="result_reports/{trait}_gwas_report_data.html"
+        reportf="result_reports/{subset}_gwas_report_data.html"
     script:
         "../scripts/gen_data_gwas_report.Rmd"                
 
@@ -336,42 +390,143 @@ rule RSSp_oracle_est:
     input:
         rdsf=rules.merge_quh_region.output.rdsf
     output:
-        dff=OUTPUT_DIR+"sim_{trait}_{gwas}_RSSp_oracle_res_{pv}_{shr}.txt.gz"#,        proff=PROF_DIR+"RSSp_oracle_est_{gwas}_{trait}.prof"
+        dff=OUTPUT_DIR+"sim_{subset}_{gwas}_RSSp_oracle_res_{pv}_{shr}_{scen}.txt.gz"#,        proff=PROF_DIR+"RSSp_oracle_est_{gwas}_{subset}.prof"
     script:
         "../scripts/oracle_lnZ.R"
 
 rule RSSp_summarise_oracle_pv_shr:
     input:
-        summf=expand(OUTPUT_DIR+"sim_{{trait}}_{{gwas}}_RSSp_oracle_res_{pv}_{shr}.txt.gz",pv=pvv,shr=shr)
+        summf=expand(OUTPUT_DIR+"sim_{{subset}}_{{gwas}}_RSSp_oracle_res_{pv}_{shr}_{{scen}}.txt.gz",pv=pvv,shr=shr)
     params:
         pv_shr=expand("{pv},{shr}",pv=pvv,shr=shr)
     output:
-        dff=OUTPUT_DIR+"sim_{trait}_{gwas}_RSSp_oracle_res_ALL.txt.gz"
+        dff=OUTPUT_DIR+"sim_{subset}_{gwas}_RSSp_oracle_res_ALL_{scen}.txt.gz"
     script:
         "../scripts/summarise_pv.R"
 
         
 rule prep_ldsc_uh:
     input:
-        rdsf=KG_dir+"RSSp_sim_{gwas}_genome/{trait}_sim_all_uh.h5",
-        gdsf=GDS_DIR+"{trait}_seq_hapmap_haplo.gds",
+        rdsf=KG_dir+"RSSp_sim_{gwas}_genome/{subset}_sim_all_uh_{scen}.h5",
+        gdsf=GDS_DIR+"{subset}_seq_hapmap_haplo.gds",
     params:
         fgeneid=FGENEID
-    output: ldscf=expand(KG_dir+"ldsc_sim_{{gwas}}_genome/{{trait}}_sim_{fgeneid}_uh.txt",fgeneid=FGENEID)#,        proff=PROF_DIR+"RSSp_oracle_est_{gwas}_{trait}.prof"
+    output: ldscf=temp(expand(KG_dir+"ldsc_sim_{{gwas}}_genome/{{subset}}_sim_{fgeneid}_uh_{{scen}}.txt",fgeneid=FGENEID))#,        proff=PROF_DIR+"RSSp_oracle_est_{gwas}_{subset}.prof"
     script:
         "../scripts/prep_ldsc_uh.R"
 
 
 rule prep_ldpred_uh:
     input:
-        uhf=KG_dir+"RSSp_sim_{gwas}_genome/{trait}_sim_all_uh.h5",
-        hdf5f=HDF5_DIR+"{trait}_seq_hapmap.h5"
+        uhf=KG_dir+"RSSp_sim_gwas_genome/{subset}_sim_all_uh.h5",
+        Sf=KG_dir+"RSSp_sim_gwas_beta/{subset}_beta.h5",
+        gdsf=GDS_DIR+"{subset}_seq_hapmap_geno.gds"
     params:
         fgeneid=FGENEID
     output:
-        ldpredf=temp(expand(KG_dir+"ldpred_sim_{{gwas}}_genome/{{trait}}_sim_{fgeneid}_uh.txt",fgeneid=FGENEID))
+        ldpredf=expand(KG_dir+"ldpred_sim_{{gwas}}_genome/{{subset}}_sim_{fgeneid}_uh.txt",fgeneid=FGENEID)
     script:
         "../scripts/prep_ldpred_uh.R"
+
+
+rule ldpred_coord:
+    input:
+        uhf=KG_dir+"ldpred_sim_gwas_genome/{subset}_sim_{fgeneid}_uh.txt",
+        bimf=GDS_DIR+"../bed/{subset}_seq_train_hapmap_geno.bim"
+    params:
+        bimpref=GDS_DIR+"../bed/{subset}_seq_train_hapmap_geno",
+        N=N
+    output:
+        hf=GDS_DIR+"../ldpred_res_coord/{subset}_coord_train_{fgeneid}.h5"
+    conda:
+        "envs/ldpred.yml"
+    shell:
+        "/home/nwknoblauch/miniconda3/envs/ldpred/bin/coord --gf={params.bimpref} --ssf={input.uhf} --N={params.N} --out={output.hf}"
+
+
+
+rule ldpred_zero:
+    input:
+        coordf=GDS_DIR+"../ldpred_res_coord/{subset}_coord_train_1.h5"
+    params:
+        out_pref=GDS_DIR+"../ldpred_res_tt/{subset}_train_1",
+        ldoutpref=GDS_DIR+"../ldpred_res_tt/{subset}_train_LD"
+    output:
+        templdf=temp(GDS_DIR+"../ldpred_res_tt/{subset}_train_LD_ldradius200.pickled.gz"),
+        hf=temp(expand(GDS_DIR+"../ldpred_res_tt/{{subset}}_train_1_LDpred{thing}.txt",
+                  thing=['_p1.0000e-03',
+                         '_p1.0000e+00',
+                         '_p1.0000e-01',
+                         '_p1.0000e-02',
+                         '_p3.0000e-01',
+                         '_p3.0000e-02',
+                         '-inf']))
+    conda:
+        "envs/ldpred.yml"
+    shell:
+                     "/home/nwknoblauch/miniconda3/envs/ldpred/bin/ldpred --coord={input.coordf} --ld_radius=200 --local_ld_file={params.ldoutpref} --N=503 --out={params.out_pref}"
+
+
+        
+rule ldpred_res:
+    input:
+        coordf=GDS_DIR+"../ldpred_res_coord/{subset}_coord_train_{fgeneid}.h5",
+        templdf=GDS_DIR+"../ldpred_res_tt/{subset}_train_LD_ldradius200.pickled.gz"
+    params:
+        out_pref=GDS_DIR+"../ldpred_res/{subset}_train_{fgeneid}",
+        ldoutpref=GDS_DIR+"../ldpred_res_tt/{subset}_train_LD"
+    output:
+        hf=temp(expand(GDS_DIR+"../ldpred_res/{{subset}}_train_{{fgeneid}}_LDpred{thing}.txt",
+                  thing=['_p1.0000e-03',
+                         '_p1.0000e+00',
+                         '_p1.0000e-01',
+                         '_p1.0000e-02',
+                         '_p3.0000e-01',
+                         '_p3.0000e-02',
+                         '-inf']))
+    conda:
+        "envs/ldpred.yml"
+    shell:
+                     "/home/nwknoblauch/miniconda3/envs/ldpred/bin/ldpred --coord={input.coordf} --ld_radius=200 --local_ld_file={params.ldoutpref} --N=503 --out={params.out_pref}"
+
+
+rule mutate_concat:
+    input:
+        summf=expand(GDS_DIR+"../ldpred_res/{{subset}}_train_{{fgeneid}}_LDpred{thing}.txt",
+                  thing=['_p1.0000e-03',
+                         '_p1.0000e+00',
+                         '_p1.0000e-01',
+                         '_p1.0000e-02',
+                         '_p3.0000e-01',
+                         '_p3.0000e-02',
+                         '-inf'])
+    params:
+        thing=expand("{thing}",thing=['_p1.0000e-03',
+                         '_p1.0000e+00',
+                         '_p1.0000e-01',
+                         '_p1.0000e-02',
+                         '_p3.0000e-01',
+                         '_p3.0000e-02',
+                         '-inf'])
+    output:
+        of=temp(GDS_DIR+"../ldpred_res_t/{subset}_train_{fgeneid}_LDpred.txt.gz")
+    script:
+        "../scripts/summarise_t.R"
+
+
+rule mutate_concat_genes:
+    input:
+        summf=expand(GDS_DIR+"../ldpred_res_t/{{subset}}_train_{fgeneid}_LDpred.txt.gz",
+                  fgeneid=FGENEID)
+    params:
+        fgeneid=expand("{fgeneid}",fgeneid=FGENEID)
+    output:
+        of=GDS_DIR+"../ldpred_res_f/{subset}_train_ALL_LDpred.txt.gz"
+    script:
+        "../scripts/summarise_t.R"        
+        
+        
+        
         
 rule ldsc_chrom_est:
     input:
@@ -391,14 +546,14 @@ rule ldsc_chrom_est:
 rule ldsc_trait_est:
     input:
         ldsc_f="ldsc/ldsc.py",
-        sumstatf=KG_dir+"ldsc_sim_{gwas}_genome/{trait}_sim_{fgeneid}_uh.txt",
-        chroml2=expand(KG_dir+"eur_w_ld_chr_{{trait}}_train/{chrom}.l2.ldscore.gz",chrom=range(1,23)),
-        soutf=expand(KG_dir+"eur_w_ld_chr_{{trait}}_train/{chrom}.l2.M_5_50",chrom=range(1,23))
+        sumstatf=KG_dir+"ldsc_sim_{gwas}_genome/{subset}_sim_{fgeneid}_uh_{scen}.txt",
+        chroml2=expand(KG_dir+"eur_w_ld_chr_{{subset}}_train/{chrom}.l2.ldscore.gz",chrom=range(1,23)),
+        soutf=expand(KG_dir+"eur_w_ld_chr_{{subset}}_train/{chrom}.l2.M_5_50",chrom=range(1,23))
     params:
-        out_pref=KG_dir+"ldsc_est_{gwas}_genome/est_{trait}_sim_{fgeneid}",
-        ld_dir=KG_dir+"eur_w_ld_chr_{trait}_train/"
+        out_pref=KG_dir+"ldsc_est_{gwas}_genome/est_{subset}_sim_{fgeneid}_{scen}",
+        ld_dir=KG_dir+"eur_w_ld_chr_{subset}_train/"
     output:
-        logf=KG_dir+"ldsc_est_{gwas}_genome/est_{trait}_sim_{fgeneid}.log"
+        logf=temp(KG_dir+"ldsc_est_{gwas}_genome/est_{subset}_sim_{fgeneid}_{scen}.log")
     shell:
         "python2 ldsc/ldsc.py --h2 {input.sumstatf} --ref-ld-chr {params.ld_dir} --w-ld-chr {params.ld_dir} --out {params.out_pref}"
                 # "module load python/2.7.13; source activate ~/python2_project/bin/activate; ldsc/ldsc.py --h2 {input.sumstatf} --ref-ld-chr {params.ld_dir} --w-ld-chr {params.ld_dir} --out {params.out_pref}"                
@@ -406,9 +561,9 @@ rule ldsc_trait_est:
 
 rule ldsc_trait_parse:
     input:
-        logf=expand(KG_dir+"ldsc_est_{{gwas}}_genome/est_{{trait}}_sim_{fgeneid}.log",fgeneid=FGENEID)
+        logf=expand(KG_dir+"ldsc_est_{{gwas}}_genome/est_{{subset}}_sim_{fgeneid}_{{scen}}.log",fgeneid=FGENEID)
     output:
-        logf=OUTPUT_DIR+"sim_{trait}_{gwas}_ldsc_res.txt.gz"
+        logf=OUTPUT_DIR+"sim_{subset}_{gwas}_ldsc_res_{scen}.txt.gz"
     params:
         fgeneid=expand("{fgeneid}",fgeneid=FGENEID)
     script:
@@ -417,10 +572,10 @@ rule ldsc_trait_parse:
         
 rule ldsc_parse_est:
     input:
-        logf=expand(KG_dir+"ldsc_est_{{gwas}}_{{chrom}}/sim_{fgeneid}.log",fgeneid=FGENEID),
-        tparamf=expand(KG_dir+"ldsc_sim_{{gwas}}_{{chrom}}/sim_{fgeneid}_tparam.tsv",fgeneid=FGENEID)
+        logf=expand(KG_dir+"ldsc_est_{{gwas}}_{{chrom}}/sim_{fgeneid}_{{scen}}.log",fgeneid=FGENEID),
+        tparamf=expand(KG_dir+"ldsc_sim_{{gwas}}_{{chrom}}/sim_{fgeneid}_tparam_{{scen}}.tsv",fgeneid=FGENEID)
     output:
-        logf=KG_dir+"ldsc_est_{gwas}_{chrom}/sim_results.tsv"
+        logf=KG_dir+"ldsc_est_{gwas}_{chrom}/sim_results_{scen}.tsv"
     params:
         fgeneid=expand("{fgeneid}",fgeneid=FGENEID)
     script:

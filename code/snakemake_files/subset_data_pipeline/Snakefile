@@ -16,6 +16,7 @@ VCF_DIR="../"+config["VCF_DIR"]
 
 #Directory that holds the haplotype and genotype `.gds` which are population specific (i.e EUR), and have had an allele frequency cutoff applied (i.e 0.05)
 GDS_DIR="../"+config["GDS_DIR"]
+MGDS_DIR=GDS_DIR+"../all_gds/"
 
 #Directory that holds the 1000 genomes genetic map files (you can get these off github, google 1000 genomes genetic maps)
 KG_MAPDIR="../"+config["KG_MAPDIR"]
@@ -28,14 +29,12 @@ OUTPUT_DIR= "../"+config["OUTPUT_DIR"]
 INPUT_DIR= "../"+config["INPUT_DIR"]
 VCF_DIR="../"+config["VCF_DIR"]
 
-TRAIT=["sub"]
+TRAIT=["chr1"]
 test_frac=0.01
 
 rule all:
     input:
-        expand(VCF_DIR+"../hdf5/ALL.chr{chrom}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.hdf5",chrom=range(1,23))
-        # expand(GDS_DIR+"{trait}_seq_{tt}_hapmap_{gh}.gds",tt=['train','test'],gh=['haplo','geno'],trait=TRAIT),
-        # expand(GDS_DIR+"../bed/{trait}_seq_hapmap_geno.bed",trait=TRAIT)
+        expand(GDS_DIR+"{subset}_seq_{tt}_hapmap_{hh}.gds",subset=TRAIT,tt=["train","test"],hh=["haplo","geno"])
          
 wildcard_constraints:
     chrom="\d+"
@@ -49,8 +48,8 @@ rule subset_gds:
         geno_gdsf=expand(KG_dir+"gds/ALL.chr{chr}_geno.gds",chr=range(1,23)),
         breakf=LD_break_file
     output:
-        gdsf=GDS_DIR+"ALL_seq_hapmap.gds",
-        geno_gdsf=GDS_DIR+"ALL_seq_hapmap_geno.gds"#,       proff=PROF_DIR+"gds_subset.prof",
+        gdsf=MGDS_DIR+"ALL_seq_hapmap.gds",
+        geno_gdsf=MGDS_DIR+"ALL_seq_hapmap_geno.gds"#,       proff=PROF_DIR+"gds_subset.prof",
     threads: 1
     script:
         "../scripts/gds_subset.R"
@@ -138,8 +137,8 @@ rule vcf_to_hdf5:
 
 rule train_test_gds:
     input:
-        haplo_gdsf=GDS_DIR+"ALL_seq_hapmap.gds",
-        geno_gdsf=GDS_DIR+"ALL_seq_hapmap_geno.gds"
+        haplo_gdsf=MGDS_DIR+"ALL_seq_hapmap.gds",
+        geno_gdsf=MGDS_DIR+"ALL_seq_hapmap_geno.gds"
     params:
         test_frac=test_frac
     output:
@@ -151,11 +150,20 @@ rule train_test_gds:
         "../../scripts/train_test_subset.R"
         
 
+
+rule all_snpi:
+    input:
+        haplo_gdsf=MGDS_DIR+"ALL_seq_hapmap.gds",
+        geno_gdsf=MGDS_DIR+"ALL_seq_hapmap_geno.gds"
+    output:
+        traitf=INPUT_DIR+"ALL_ldsc_ex.txt"
+    script:
+        "../../scripts/ALL_subset.R"
                 
 rule trait_subset_gds:
     input:
-        haplo_gdsf=GDS_DIR+"ALL_seq_hapmap.gds",
-        geno_gdsf=GDS_DIR+"ALL_seq_hapmap_geno.gds",
+        haplo_gdsf=MGDS_DIR+"ALL_seq_hapmap.gds",
+        geno_gdsf=MGDS_DIR+"ALL_seq_hapmap_geno.gds",
         traitf=INPUT_DIR+"{trait}_ldsc_ex.txt"
     output:
         haplo_gdsf=GDS_DIR+"{trait}_seq_hapmap_haplo.gds",
@@ -236,3 +244,5 @@ rule ldsc_chunk:
 
     script:
         "../scripts/ldsc_chunk.R"
+
+        

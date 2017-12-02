@@ -12,9 +12,9 @@ def count_lines(fname):
     
 
 N=503
-NREPS =15
-PVE=list(5*10**np.linspace(-1,-2.5,num=5))
-BIAS=list(np.linspace(0,0.1,num=3))
+NREPS =150
+PVE=list(9.999*10**np.linspace(-1,-1.5,num=4))
+BIAS=[0.0]
 TOT_SIM=NREPS*len(PVE)*len(BIAS)
 #TOT_SIM=1
 FGENEID=range(1,TOT_SIM+1)

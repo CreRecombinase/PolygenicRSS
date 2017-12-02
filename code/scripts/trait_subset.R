@@ -12,6 +12,9 @@ inputf <- snakemake@input[["traitf"]]
 geno_gdsf <- snakemake@input[["geno_gdsf"]]
 haplo_gdsf <- snakemake@input[["haplo_gdsf"]]
 
+stopifnot(file.exists(c(geno_gdsf,haplo_gdsf)),
+          !is.null(geno_gdsf),!is.null(haplo_gdsf))
+
 ogeno_hdf5 <- snakemake@output[["geno_hdf5"]]
 ohaplo_hdf5 <- snakemake@output[["haplo_hdf5"]]
 
