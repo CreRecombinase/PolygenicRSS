@@ -15,6 +15,8 @@ output: html_document
 * [Prediction using RSSp](RSSp_Prediction.html)
 * [RSSp vs ldsc in a high PVE setting](RSSp_ldsc_highPVE.html)
 * [Deriving the asymptotic standard error](RSSP_standard_error.html)
+* [Direct Simulations vs GWAS style Simulations](RSSp_ldsc_gwas_direct_noConfounding.html)
+
 
 <!-- * [Genome-Wide Simulation](GenomeWideSimulation.html) -->
 <!-- * [Diagonal Approximation of LD matrix](IndependenceCheck.html) -->
