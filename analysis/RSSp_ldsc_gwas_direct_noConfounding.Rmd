@@ -1,0 +1,161 @@
+---
+title: "Direct Simulation vs GWAS-style Simulation"
+author: "Nicholas Knoblauch"
+date: 2017-11-08
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+
+
+
+```{r load_data_gwas,echo=F,message=F}
+library(tidyverse)
+library(RSSp)
+
+ldsc_gwas_resf <- "../output/RSSp_snakemake/sim_scz2_gwas_ldsc_res_NoConfound.txt.gz"
+rss_gwas_resf <-  "../output/RSSp_snakemake/sim_scz2_gwas_RSSp_res_ALL_NoConfound.txt.gz"
+orss_gwas_resf <- "../output/RSSp_snakemake/sim_scz2_gwas_RSSp_oracle_res_ALL_NoConfound.txt.gz"
+
+
+est_df <- read_delim(rss_gwas_resf,delim="\t") %>% 
+  filter(!log_params,shrinkage==min(shrinkage),pv==max(pv)) %>% 
+  select(-log_params) %>% 
+  mutate(fgeneid=as.character(fgeneid),rel_bias=round(tbias/tpve,2),
+         rel_pve_error=(abs(pve-tpve)/(pve+tpve)),method=paste0("RSSp_",method),
+         p_n=p/n)
+
+
+tparam_df<- distinct(est_df,fgeneid,tsigu,tbias,p_n,tpve)
+
+comp_est_df <-  select(est_df,fgeneid,sigu,bias,method,p_n,pve) 
+
+ldsc_est_df <- read_delim(ldsc_gwas_resf,delim="\t") %>% mutate(fgeneid=as.character(fgeneid)) %>% inner_join(tparam_df)
+comp_ldsc_est_df <- mutate(
+  ldsc_est_df,
+  sigu=sqrt(Total_Observed_scale_h2/p_n),
+  method="LDSC"
+  ) %>% select(
+    pve=Total_Observed_scale_h2,
+    fgeneid,
+    bias=Intercept,
+    sigu,
+    method,
+    p_n) %>% mutate(bias=bias-1)
+comp_est_df <- rbind(comp_est_df,comp_ldsc_est_df) %>% inner_join(tparam_df)
+comp_est_df_gwas <- mutate(
+  comp_est_df,
+  t_rel_bias=round(tbias/tpve,3),
+  est_rel_bias=bias/calc_pve(sigu,p_n),
+  perc_tsigu=ntile(tsigu,3),sim="GWAS"
+  )
+
+
+```
+
+
+# Simulation
+To better understand the model, in particular the effect of LD estimation, I ran several simulations where GWAS summary stats were simulated directly from LD matrices, and compared the results to standard GWAS simulation.
+
+The loci used in the simulations consisted of the same 844500 SNPs.
+
+Genotype data came from ~ 450 Europeans in 1kg (1 thousand genomes).  $\hat{\textbf{u}}$ was simulated using the method [outlined here](simulation.html) for GWAS simulations. Direct simulations, $Q^{T}\hat{u}$ was drawn from a normal distribution $(Q^{T}\hat{u})_i \sim N(0,\sigma^2_u\lambda_i^2+\lambda)$. $\hat{u}$ was then simply $\hat{u}=QQ^{T}\hat{u}$.  $PVE$ took on `r length(unique(comp_est_df$tpve))` values between `r range(comp_est_df$tpve)`. To further simplify the comparisons, no confounding was included in these simulations. Each value of $PVE$ was simulated `r sum(comp_est_df$tpve==min(comp_est_df$tpve))`.
+
+It should be noted that even at "high" pve, this is still a very hard simulation. when true $PVE$ is `r max(comp_est_df$tpve)`, it's highest value in the simulation, this corresponds to a per SNP variance ($\sigma^2_\textbf{u}$) of `r max(comp_est_df$tsigu)`. When true $PVE$ is `r min(comp_est_df$tpve)`, $\sigma^2_\textbf{u}$ is `r min(comp_est_df$tsigu)^2`. This is a very small window.
+
+
+#
+
+
+```{r load_data_direct,echo=F,message=F}
+
+
+ldsc_gwas_resf <- "../output/RSSp_snakemake/sim_scz2_direct_ldsc_res_NoConfound.txt.gz"
+rss_gwas_resf <-  "../output/RSSp_snakemake/sim_scz2_direct_RSSp_res_ALL_NoConfound.txt.gz"
+orss_gwas_resf <- "../output/RSSp_snakemake/sim_scz2_direct_RSSp_oracle_res_ALL_NoConfound.txt.gz"
+
+
+est_df <- read_delim(rss_gwas_resf,delim="\t") %>% 
+  filter(!log_params,shrinkage==min(shrinkage),pv==max(pv)) %>% 
+  select(-log_params) %>% 
+  mutate(fgeneid=as.character(fgeneid),rel_bias=round(tbias/tpve,2),
+         rel_pve_error=(abs(pve-tpve)/(pve+tpve)),method=paste0("RSSp_",method),
+         p_n=p/n)
+
+
+tparam_df<- distinct(est_df,fgeneid,tsigu,tbias,p_n,tpve)
+
+comp_est_df <-  select(est_df,fgeneid,sigu,bias,method,p_n,pve) 
+
+ldsc_est_df <- read_delim(ldsc_gwas_resf,delim="\t") %>% mutate(fgeneid=as.character(fgeneid)) %>% inner_join(tparam_df)
+comp_ldsc_est_df <- mutate(
+  ldsc_est_df,
+  sigu=sqrt(Total_Observed_scale_h2/p_n),
+  method="LDSC"
+  ) %>% select(
+    pve=Total_Observed_scale_h2,
+    fgeneid,
+    bias=Intercept,
+    sigu,
+    method,
+    p_n) %>% mutate(bias=bias-1)
+comp_est_df <- rbind(comp_est_df,comp_ldsc_est_df) %>% inner_join(tparam_df)
+comp_est_df_direct <- mutate(
+  comp_est_df,
+  t_rel_bias=round(tbias/tpve,3),
+  est_rel_bias=bias/calc_pve(sigu,p_n),
+  perc_tsigu=ntile(tsigu,3),sim="Direct"
+  )
+
+
+```
+
+
+
+
+```{r}
+ggplot(comp_est_df_direct,aes(group=paste0(tpve,"_",method),x=tpve,y=abs(pve-tpve),fill=method))+geom_boxplot()
+```
+
+
+
+```{r}
+ac_df <- bind_rows(comp_est_df_gwas,comp_est_df_direct)
+nac_df <- select(ac_df,pve,method,tpve,tbias,sim,fgeneid) %>% unite("sim_method",method,sim) %>% spread(sim_method,pve)
+```
+
+```{r}
+ac_df %>% ggplot(aes(x=tpve,y=pve))+geom_point()+geom_jitter()+geom_smooth(method="lm",aes(col=method))+facet_grid(sim~method)+xlab(bquote(PVE))+ylab(bquote(hat(PVE)))+ggtitle("RSSp is biased under GWAS simulatiosn but not under Direct simulation","Original LDSC values")
+```
+```{r}
+ac_df %>%mutate(pve=pmax(pmin(pve,1),0)) %>% ggplot(aes(x=tpve,y=pve))+geom_point()+geom_jitter()+geom_smooth(method="lm",aes(col=method))+facet_grid(sim~method)+xlab(bquote(PVE))+ylab(bquote(hat(PVE)))+ggtitle("RSSp is biased under GWAS simulatiosn but not under Direct simulation","LDSC values bounded between 0 and 1")
+```
+
+```{r}
+mutate(ac_df,grp=paste0(tpve,"_",method)) %>% ggplot(aes(x=tpve,y=abs(pve-tpve),fill=method,group=grp))+geom_boxplot()+facet_wrap(~sim)+ylab(bquote(RMSE(PVE)))+xlab(bquote(PVE))+ggtitle("RSSp outperforms LDSC under Direct simulation","Original LDSC values")
+```
+
+```{r}
+mutate(ac_df,grp=paste0(tpve,"_",method),pve=pmax(pmin(pve,1),0)) %>% ggplot(aes(x=tpve,y=abs(pve-tpve),fill=method,group=grp))+geom_boxplot()+facet_wrap(~sim)+ylab(bquote(RMSE(PVE)))+xlab(bquote(PVE))+ggtitle("RSSp outperforms LDSC under Direct simulation","LDSC PVE bounded between 0 and 1")
+```
+
