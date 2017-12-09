@@ -39,7 +39,7 @@ INPUT_DIR=config["INPUT_DIR"]
 
 TRAIT="scz2"
 SCEN="NoConfound"
-METH=["gwas"]
+METH=["gwas","direct"]
 subworkflow gwas_subset_ldsc:
     workdir: "subset_data_pipeline"
 
@@ -67,10 +67,15 @@ def filter_chrom(df,chrom):
 #(the fact that the variable is  called `simulation_file` doesn't have any significance)
 rule all:
     input:
-        expand(OUTPUT_DIR+"sim_{subset}_{gwas}_RSSp_res_ALL_{scen}.txt.gz",subset=TRAIT,gwas=METH,scen=SCEN),
-        expand(OUTPUT_DIR+"sim_{subset}_{gwas}_RSSp_oracle_res_ALL_{scen}.txt.gz",subset=TRAIT,gwas=METH,scen=SCEN),
-        expand(OUTPUT_DIR+"sim_{subset}_{gwas}_ldsc_res_{scen}.txt.gz",subset=TRAIT,gwas=METH,scen=SCEN),
-        expand(KG_dir+"EVD_H5/all_{subset}_hapmap.h5",subset=TRAIT)
+         expand(OUTPUT_DIR+"sim_{subset}_{gwas}_RSSp_res_ALL_{scen}.txt.gz",subset=TRAIT,gwas=METH,scen=SCEN),
+         expand(OUTPUT_DIR+"sim_{subset}_{gwas}_ldsc_res_{scen}.txt.gz",subset=TRAIT,gwas=METH,scen=SCEN),
+         expand(OUTPUT_DIR+"sim_{subset}_{gwas}_RSSp_oracle_res_ALL_{scen}.txt.gz",subset=TRAIT,gwas=METH,scen=SCEN),
+         expand(OUTPUT_DIR+"/grm_h2_est/{subset}_seq_{scen}_est.txt.gz",subset=TRAIT,scen=SCEN)
+
+
+
+
+                #,        proff=PROF_DIR+"RSSp_oracle_est_{gwas}_{subset}.prof"
         # expand(KG_dir+"ldpred_sim_{gwas}_genome/{subset}_sim_{fgeneid}_uh.txt",fgeneid=FGENEID,trait=TRAIT,gwas=METH),
         # expand(GDS_DIR+"../ldpred_res_f/{subset}_train_ALL_LDpred.txt.gz",trait=TRAIT)
 
@@ -205,6 +210,15 @@ rule sim_pheno_RSSp:
         "../scripts/gen_ty_block_RSSp.R"
 
 
+
+rule do_GRM_est:
+    input:
+        gdsf=HDF5_DIR+"{subset}_seq_train_hapmap_geno.h5",
+        h5f=KG_dir+"RSSp_sim_gwas_pheno/{subset}_{scen}_trait.h5",
+    output:
+        grmef=OUTPUT_DIR+"/grm_h2_est/{subset}_seq_{scen}_est.txt.gz"
+    script:
+        "../scripts/grm_est_h2.R"
         
 # rule all_uh_RSSp:
 #     input:
@@ -238,46 +252,45 @@ rule gen_quh_chunk_train:
     params:
         LDchunk="{LDchunk}",
         perc_variance="{pv}"
-    output:
-        quhf=temp(KG_dir+"RSSp_genome_gwas_quh_chunk/{subset}_{LDchunk}_{pv}_{shr}_{scen}_sim.h5")#,        proff=PROF_DIR+"quh_{subset}_{LDchunk}.prof"
+    output: quhf=temp(KG_dir+"RSSp_genome_gwas_quh_chunk/{subset}_{LDchunk}_{pv}_{shr}_{scen}_sim.h5")
     script:
         "../scripts/gen_quh_chunk.R"
                   
 rule gen_quh_chunk_train_direct:
     input:
-        evdf=KG_dir+"EVD_H5/all_{subset}_hapmap.h5"
+        evdf=expand(KG_dir+"EVD_H5/train_{{subset}}_hapmap_{{LDchunk}}_{shr}.h5",shr=shr),
+        gdsf=GDS_DIR+"{subset}_seq_test_hapmap_geno.gds",
     params:
-        LDchunk=expand("{LDchunk}",LDchunk=ALL_REGIONS),
+        LDchunk="{LDchunk}",
         fgeneid=expand("{fgeneid}",fgeneid=FGENEID),
+        N=N,
         pve=PVE,
         bias=BIAS,
         nreps=NREPS
     output:
-        quh_hf=expand(KG_dir+"RSSp_sim_direct_genome/{{subset}}_sim_all_quh_{pv}_{shr}_{{scen}}.h5",pv=pvv,shr=shr),
-        uh_hf= KG_dir+"RSSp_sim_direct_genome/{subset}_sim_all_uh_{scen}.h5"
+        quh_hf=temp(expand(KG_dir+"RSSp_genome_direct_quh_chunk/{{subset}}_{{LDchunk}}_{pv}_{shr}_{{scen}}.h5",pv=pvv,shr=shr)),
+        uh_hf= temp(KG_dir+"RSSp_genome_direct_uh_chunk/{subset}_{LDchunk}_{scen}_sim.h5")
     script:
         "../scripts/sim_uh_quh_direct.R"
     
 
 rule merge_quh_region:
     input:
-        evdf=expand(KG_dir+"RSSp_genome_gwas_quh_chunk/{{subset}}_{LDchunk}_{{pv}}_{{shr}}_{{scen}}_sim.h5",LDchunk=ALL_REGIONS)
+        evdf=expand(KG_dir+"RSSp_genome_{{meth}}_quh_chunk/{{subset}}_{LDchunk}_{{pv}}_{{shr}}_{{scen}}_sim.h5",LDchunk=ALL_REGIONS)
     params:
         LDchunk=expand("{LDchunk}",LDchunk=ALL_REGIONS)
     output:
-        rdsf=KG_dir+"RSSp_sim_gwas_genome/{subset}_sim_all_quh_{pv}_{shr}_{scen}.h5"#,        proff=PROF_DIR+"merge_quh_{gwas}_{subset}.prof"
-    benchmark:
-        "benchmarks/{subset}_NA_MergeQuhRegion.txt"
+        rdsf=KG_dir+"RSSp_sim_{meth}_genome/{subset}_sim_all_quh_{pv}_{shr}_{scen}.h5"#,        proff=PROF_DIR+"merge_quh_{gwas}_{subset}.prof"
     script:
         "../scripts/concat_quh.R"
 
 rule merge_uh_region:
     input:
-        evdf=expand(KG_dir+"RSSp_genome_gwas_uh_chunk/{{subset}}_{LDchunk}_{{scen}}_sim.h5",LDchunk=ALL_REGIONS)
+        evdf=expand(KG_dir+"RSSp_genome_{{meth}}_uh_chunk/{{subset}}_{LDchunk}_{{scen}}_sim.h5",LDchunk=ALL_REGIONS)
     params:
         LDchunk=expand("{LDchunk}",LDchunk=ALL_REGIONS)
     output:
-        rdsf=KG_dir+"RSSp_sim_gwas_genome/{subset}_sim_all_uh_{scen}.h5"#,        proff=PROF_DIR+"merge_uh_{gwas}_{subset}.prof"
+        rdsf=KG_dir+"RSSp_sim_{meth}_genome/{subset}_sim_all_uh_{scen}.h5"#,        proff=PROF_DIR+"merge_uh_{gwas}_{subset}.prof"
     benchmark:
         "benchmarks/{subset}_NA_MergeUhRegion.txt"
     script:
@@ -390,17 +403,17 @@ rule RSSp_oracle_est:
     input:
         rdsf=rules.merge_quh_region.output.rdsf
     output:
-        dff=OUTPUT_DIR+"sim_{subset}_{gwas}_RSSp_oracle_res_{pv}_{shr}_{scen}.txt.gz"#,        proff=PROF_DIR+"RSSp_oracle_est_{gwas}_{subset}.prof"
+        dff=OUTPUT_DIR+"sim_{subset}_{meth}_RSSp_oracle_res_{pv}_{shr}_{scen}.txt.gz"
     script:
         "../scripts/oracle_lnZ.R"
 
 rule RSSp_summarise_oracle_pv_shr:
     input:
-        summf=expand(OUTPUT_DIR+"sim_{{subset}}_{{gwas}}_RSSp_oracle_res_{pv}_{shr}_{{scen}}.txt.gz",pv=pvv,shr=shr)
+        summf=expand(OUTPUT_DIR+"sim_{{subset}}_{{meth}}_RSSp_oracle_res_{pv}_{shr}_{{scen}}.txt.gz",pv=pvv,shr=shr)
     params:
         pv_shr=expand("{pv},{shr}",pv=pvv,shr=shr)
     output:
-        dff=OUTPUT_DIR+"sim_{subset}_{gwas}_RSSp_oracle_res_ALL_{scen}.txt.gz"
+        dff=OUTPUT_DIR+"sim_{subset}_{meth}_RSSp_oracle_res_ALL_{scen}.txt.gz"
     script:
         "../scripts/summarise_pv.R"
 
