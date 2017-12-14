@@ -2,6 +2,10 @@
     "KG_DIRECTORY": "../../../../../../project/xinhe/eQTL/1kg/",
     "VCF_DIR": "../../../../../../project/xinhe/eQTL/1kg/vcf/",
     "GDS_DIR": "../../../../../../project/xinhe/eQTL/1kg/gds/",
+    "HDF5_DIR": "../../../../../../project/xinhe/eQTL/1kg/h5/",
+    "WTCC_H5": "../../../../../../project/xinhe/eQTL/1kg/wtcc/",
     "KG_MAPDIR" :"../../../../../../project/xinhe/eQTL/1kg/1000-genomes-genetic-maps/",
+     "OUTPUT_DIR" :"../../output/RSSp_snakemake/",
+    "INPUT_DIR" :"../../data/Snakemake_inputs/",
     "LDETECT_BREAK_FILE": "fourier_ls-all.bed"
 }

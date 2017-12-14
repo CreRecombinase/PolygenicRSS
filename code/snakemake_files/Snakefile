@@ -37,9 +37,13 @@ INPUT_DIR=config["INPUT_DIR"]
 # File that has the LDetect LD breakpoints
 #URL for that file is here #LD_break_file_url="https://bitbucket.org/nygcresearch/ldetect-data/raw/ac125e47bf7ff3e90be31f278a7b6a61daaba0dc/EUR/fourier_ls-all.bed"
 
-TRAIT="scz2"
+TRAIT="sub"
 SCEN="NoConfound"
-METH=["gwas","direct"]
+METH=["gwas"]
+subworkflow wtcc_subset:
+    workdir: "wtcc_subset"
+
+
 subworkflow gwas_subset_ldsc:
     workdir: "subset_data_pipeline"
 
@@ -67,11 +71,9 @@ def filter_chrom(df,chrom):
 #(the fact that the variable is  called `simulation_file` doesn't have any significance)
 rule all:
     input:
-         expand(OUTPUT_DIR+"sim_{subset}_{gwas}_RSSp_res_ALL_{scen}.txt.gz",subset=TRAIT,gwas=METH,scen=SCEN),
-         expand(OUTPUT_DIR+"sim_{subset}_{gwas}_ldsc_res_{scen}.txt.gz",subset=TRAIT,gwas=METH,scen=SCEN),
-         expand(OUTPUT_DIR+"sim_{subset}_{gwas}_RSSp_oracle_res_ALL_{scen}.txt.gz",subset=TRAIT,gwas=METH,scen=SCEN),
-         expand(OUTPUT_DIR+"/grm_h2_est/{subset}_seq_{scen}_est.txt.gz",subset=TRAIT,scen=SCEN)
-
+         expand(OUTPUT_DIR+"grm_h2_est/{subset}_seq_{scen}_est.txt.gz",subset=TRAIT,scen=SCEN),
+         expand(KG_dir+"RSSr_sim_{gwas}_genome_est/sim_{subset}_{gwas}_{LDchunk}_{scen}_{shr}.txt.gz",subset=TRAIT,gwas=METH,scen=SCEN,LDchunk=ALL_REGIONS,shr=shr)
+         
 
 
 
@@ -216,7 +218,7 @@ rule do_GRM_est:
         gdsf=HDF5_DIR+"{subset}_seq_train_hapmap_geno.h5",
         h5f=KG_dir+"RSSp_sim_gwas_pheno/{subset}_{scen}_trait.h5",
     output:
-        grmef=OUTPUT_DIR+"/grm_h2_est/{subset}_seq_{scen}_est.txt.gz"
+        grmef=OUTPUT_DIR+"grm_h2_est/{subset}_seq_{scen}_est.txt.gz"
     script:
         "../scripts/grm_est_h2.R"
         
@@ -296,6 +298,18 @@ rule merge_uh_region:
     script:
         "../scripts/concat_uh.R"                
 
+
+rule RSSr_chunk_mat_est:
+    input:
+        uhf=KG_dir+"RSSp_genome_{gwas}_uh_chunk/{subset}_{LDchunk}_{scen}_sim.h5",
+        evdf=rules.ld_chunk_1kg_train.output.evdf,
+    params:
+        LDchunk="{LDchunk}"
+    output:
+        dff=KG_dir+"RSSr_sim_{gwas}_genome_est/sim_{subset}_{gwas}_{LDchunk}_{scen}_{shr}.txt.gz"
+    script:
+        "../scripts/mat_RSSr_sim_mat_est.R"
+        
 rule RSSp_chunk_mat_est:
     input:
         rdsf=KG_dir+"RSSp_genome_{gwas}_quh_chunk/{subset}_{LDchunk}_{scen}_sim.h5"
