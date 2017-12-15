@@ -28,6 +28,13 @@ INPUT_DIR= "../"+config["INPUT_DIR"]
 VCF_DIR="../"+config["VCF_DIR"]
 GWAS_NAMES = ["bd","cad","cd","ht","ra","t1d","t2d"]
 
+
+rule all:
+    input:
+        expand(HDF5_DIR+"{gn}_seq_hapmap_geno.h5",gn=GWAS_NAMES)
+
+
+
 rule subset_wtcc:
     ''' This rule creates the hdf5 file that will be used by most of the subsequent rules, It should be somewhere on RCC or gardner, and shouldn't have to be re-run'''
     input:
@@ -36,6 +43,6 @@ rule subset_wtcc:
     params:
         gn="{gn}"
     output:
-        outf=HDF5_DIR+"{gn}_seq_hapmap_geno.h5"
+        output_h5=HDF5_DIR+"{gn}_seq_hapmap_geno.h5"
     script:
-        "../scripts/subset_wtcc.R"
+        "../../scripts/subset_wtcc.R"

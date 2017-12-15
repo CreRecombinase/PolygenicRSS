@@ -1,0 +1,81 @@
+{
+"__default__":
+  {
+  "time" : "02:00:00",
+  "nodes" : 1,
+  "ntasks" : 1,
+  "cpuspertask": 1,
+  "mempercpu": "13gb",
+  "cpus": 1
+  
+  },
+  "ldsc_chrom_est":{
+    "time" : "00:30:00",
+    "mempercpu": "3gb"
+    },
+    "ldsc_chrom_est":
+      {
+      "time" : "00:30:00",
+      "mempercpu": "3gb"
+      },
+      "train_test_gds":
+        {
+        "time" : "00:15:00",
+        "mempercpu": "3gb"
+        },
+        "trait_subset_gds_tt":
+          {
+          "time" : "00:45:00",
+          "mempercpu": "30gb"
+          },
+          "trait_subset_gds":
+            {
+            "time" : "00:45:00",
+            "mempercpu": "30gb"
+            },
+            "gen_quh_chunk_train":
+              {
+              "time" : "00:05:00",
+              "mempercpu": "4gb"
+              },
+              "map_uh_RSSp":
+                {
+                "time" : "00:05:00",
+                "mempercpu": "5gb"
+                },
+                "merge_quh_region":
+                  {
+                  "time" : "00:35:00",
+                  "mempercpu": "32gb"
+                  },
+                  "RSSp_beta_mat_chunk_est":
+                    {
+                    "time" : "00:10:00",
+                    "mempercpu": "5gb",
+                    },
+                    "RSSp_concat_beta":
+                      {
+                      "time" : "00:30:00",
+                      "mempercpu": "35gb",
+                      },
+                      "RSSp_oracle_est":
+                        {
+                        "time" : "00:30:00",
+                        "mempercpu": "35gb",
+                        },
+                        "RSSp_sim_mat_est":
+                          {
+                          "time" : "00:30:00",
+                          "mempercpu": "35gb",
+                          },
+                          "subset_wtcc":
+                            {
+                            "time" : "02:30:00",
+                            "mempercpu": "55gb",
+                          },
+                          "RSSp_summarise_pv_shr":
+                            {
+                            "time" : "00:30:00",
+                            "mempercpu": "4gb",
+                            }    
+                            }

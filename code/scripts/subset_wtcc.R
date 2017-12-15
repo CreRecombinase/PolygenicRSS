@@ -1,9 +1,14 @@
 library(SeqSupport)
 library(tidyverse)
+
+## inf <- "/group/xhe-lab/1KG/wtcc/combined.h5"
+## gdsf <- "/group/xhe-lab/1KG/all_gds/ALL_seq_hapmap_geno.gds"
+## outf <- "/group/xhe-lab/1KG/h5/bd_seq_hapmap_geno.h5"
+## gn <- "bd"
 inf <- snakemake@input[["input_h5"]]
 outf <- snakemake@output[["output_h5"]]
 gdsf <- snakemake@input[["input_gds"]]
-gn <-snakemake@parms[["gn"]]
+gn <-snakemake@params[["gn"]]
 
 gds <- SeqArray::seqOpen(gdsf)
 si_map <- read_SNPinfo_gds(gds,alleles=T,map=T) %>% separate(allele,into=c("minor","major"))
@@ -33,14 +38,13 @@ map_si <- select(si_map,SNP,chr,map)
 
 input_file <- inf
 output_file <- outf
-subset_write <- function(df,input_file,output_file,map_si){
-  grp_name <- unique(df$grp)
-  stopifnot(length(grp_name)==1)
-  subset_id <- df$mat_snp_id
-  df <- inner_join(df,map_si)
-  sub_X <- rhdf5::h5read(input_file,paste0(grp_name,"/X"))[,subset_id]
-  RcppEigenH5::write_mat_h5(output_file,"dosage",sub_X,deflate_level=4L,data = sub_X)
-  write_df_h5(df,groupname="SNPinfo")
-}
-subset_write(sub_snp_info[[gn]],inf,outf,map_si)
+df <- sub_snp_info[[gn]]
+
+grp_name <- unique(df$grp)
+stopifnot(length(grp_name)==1)
+subset_id <- df$mat_snp_id
+df <- inner_join(df,map_si)
+sub_X <- rhdf5::h5read(input_file,paste0(grp_name,"/X"))[,subset_id]
+RcppEigenH5::write_mat_h5(output_file,groupname="/",dataname="dosage",deflate_level=4L,data = sub_X)
+write_df_h5(df,groupname="SNPinfo",output_file)
 

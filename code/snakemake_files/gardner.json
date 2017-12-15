@@ -69,6 +69,11 @@
 	"time" : "00:30:00",
 	"mempercpu": "35gb",
     },
+    "subset_wtcc":
+    {
+	"time" : "02:30:00",
+	"mempercpu": "55gb",
+    },
     "RSSp_summarise_pv_shr":
     {
 	"time" : "00:30:00",
