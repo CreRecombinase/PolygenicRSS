@@ -9,9 +9,11 @@
 <meta name="generator" content="pandoc" />
 
 
+<meta name="author" content="Nicholas Knoblauch" />
 
+<meta name="date" content="2017-12-15" />
 
-<title>Results</title>
+<title>Meeting Notes</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -302,25 +304,135 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Results</h1>
+<h1 class="title toc-ignore">Meeting Notes</h1>
+<h4 class="author"><em>Nicholas Knoblauch</em></h4>
+<h4 class="date"><em>2017-12-15</em></h4>
 
 </div>
 
 
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2017-12-18</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 494aae9</p>
+<div id="table-of-contents" class="section level1">
+<h1>Table of Contents</h1>
+<ol style="list-style-type: decimal">
+<li><a href="#org9b79d13">Notation</a></li>
+<li><a href="#orgf8acfec">Topics Discussed</a>
+<ol style="list-style-type: decimal">
+<li><a href="#org562cdfc">Models of Confounding</a>
+<ol style="list-style-type: decimal">
+<li><a href="#org316eaf3">original RSSp confounding model</a></li>
+<li><a href="#org90de4ae">confounding as a function of LD</a></li>
+<li><a href="#org170bc82">list/things to think about:</a></li>
+</ol></li>
+<li><a href="#org819d586">Prediction</a>
+<ol style="list-style-type: decimal">
+<li><a href="#org231cdcf">Prediction using RSSp</a></li>
+<li><a href="#org7a3397b">2 component RSsp</a></li>
+<li><a href="#orgdbeec50">list/things to think about:</a></li>
+</ol></li>
+</ol></li>
+<li><a href="#orgc96df8c">Relevant links:</a>
+<ol style="list-style-type: decimal">
+<li><a href="#org0e7a544">LD score regression supplement</a></li>
+<li><a href="#org2b0c662">Xiang Zhou’s paper on variance componenet estimation using summary statistics</a></li>
+</ol></li>
+</ol>
+<p><a id="org9b79d13"></a></p>
+</div>
+<div id="notation" class="section level1">
+<h1>Notation</h1>
 <ul>
-<li><a href="simulation.html">Standardized Effect Size Simulation</a></li>
-<li><a href="PolygenicEstimation.html">Polygenic Estimation With and Without Confounding</a></li>
-<li><a href="RSSp_ldsc.html">Comparing RSS-p to ldsc on a genome-wide scale</a></li>
-<li><a href="RSSp_Posterior.html">Deriving the Posterior for RSSp</a></li>
-<li><a href="RSSp_Prediction.html">Prediction using RSSp</a></li>
-<li><a href="RSSp_ldsc_highPVE.html">RSSp vs ldsc in a high PVE setting</a></li>
-<li><a href="RSSP_standard_error.html">Deriving the asymptotic standard error</a></li>
-<li><a href="RSSp_ldsc_gwas_direct_noConfounding.html">Direct Simulations vs GWAS style Simulations</a></li>
-<li><a href="Meeting_Notes.html">Meeting notes from 12/15/2017</a></li>
+<li><span class="math inline">\(\hat{\textbf{u}}\)</span>: GWAS summary statistic Z score (<span class="math inline">\(\hat{u}_i=\frac{\hat{\beta}}{\text{se}(\hat{\beta}_i)}\)</span>)</li>
+<li><span class="math inline">\(\textbf{u}\)</span>: True effect normalized by standard error (<span class="math inline">\(u_i=\frac{\beta_i}{\text{se}(\hat{\beta_i})}\)</span>)</li>
+<li><span class="math inline">\(\textbf{R}\)</span>: LD matrix.
+<ul>
+<li>The eigenvalue decomposition of <span class="math inline">\(\textbf{R}\)</span> is denoted <span class="math inline">\(\textbf{R}=\textbf{Q}\textbf{D}\textbf{Q}^{T}\)</span></li>
+</ul></li>
+<li><span class="math inline">\(\hat{\textbf{v}}\)</span>: Isomorphic transformation of <span class="math inline">\(\hat{\textbf{u}}\)</span>
+<ul>
+<li><span class="math inline">\(\hat{\textbf{v}}=\textbf{Q}^{T}\hat{\textbf{u}}\)</span></li>
+</ul></li>
 </ul>
-<!-- * [Genome-Wide Simulation](GenomeWideSimulation.html) -->
-<!-- * [Diagonal Approximation of LD matrix](IndependenceCheck.html) -->
-<!-- * [Getting up and running with LDetect](Running_ldetect.html) -->
+<p><a id="orgf8acfec"></a></p>
+</div>
+<div id="topics-discussed" class="section level1">
+<h1>Topics Discussed</h1>
+<p><a id="org562cdfc"></a></p>
+<div id="models-of-confounding" class="section level2">
+<h2>Models of Confounding</h2>
+<p><a id="org316eaf3"></a></p>
+<div id="original-rssp-confounding-model" class="section level3">
+<h3>original RSSp confounding model</h3>
+<p>The original model of confounding in RSSp was a constant times the identity: <span class="math display">\[\hat{\textbf{u}}|\textbf{u} \sim N(\textbf{R}\textbf{u},\textbf{R}+c\textbf{I}_p)\]</span></p>
+<p><a id="org90de4ae"></a></p>
+</div>
+<div id="confounding-as-a-function-of-ld" class="section level3">
+<h3>confounding as a function of LD</h3>
+<p>Under this model we have <span class="math display">\[\hat{\textbf{u}}|\textbf{u} \sim N(\textbf{R}\textbf{u},\textbf{R}+c\textbf{R})\]</span> Rotating <span class="math inline">\(\hat{\textbf{u}}\)</span> by <span class="math inline">\(\textbf{Q}^T\)</span> gives: <span class="math display">\[\hat{\textbf{v}} \sim N(0,\text{diag}(\sigma_u^2 \lambda_i^2+\lambda_i+c \lambda_i))\]</span> Can also add an “intercept”: <span class="math display">\[\hat{\textbf{v}} \sim N(0,\text{diag}(\sigma_u^2 \lambda_i^2+\lambda_i+c \lambda_i+d))\]</span></p>
+<p><a id="org170bc82"></a></p>
+</div>
+<div id="todo-listthings-to-think-about" class="section level3">
+<h3>TODO list/things to think about:</h3>
+<ol style="list-style-type: decimal">
+<li><p>TODO Estimate parameters <span class="math inline">\(\sigma_u^2,c\)</span> by regressing <span class="math inline">\(\hat{\textbf{v}}^2\)</span> on <span class="math inline">\(\sigma_u^2 \lambda_i^2+\lambda_i+c \lambda_i\)</span></p>
+<ol style="list-style-type: decimal">
+<li>Try with and without intercept</li>
+</ol></li>
+<li><p>Is there a way to formulate a model where the LDAK and LDSC models are special cases?</p>
+<ol style="list-style-type: decimal">
+<li><p>Is LDAK’s model accidentally conflating causation and confounding?</p></li>
+<li><p>LD score regression assumes that differences in alllele frequency between the LD panel and the data are uncorrelated</p></li>
+</ol></li>
+</ol>
+<p><a id="org819d586"></a></p>
+</div>
+</div>
+<div id="prediction" class="section level2">
+<h2>Prediction</h2>
+<p><a id="org231cdcf"></a></p>
+<div id="prediction-using-rssp" class="section level3">
+<h3>Prediction using RSSp</h3>
+<p>RSSp simulations and the ldpred paper indicate that prediction is hard using a polygenic model. Idea is to try to combine polygenic model with polygenic risk score.</p>
+<p><a id="org7a3397b"></a></p>
+</div>
+<div id="component-rssp" class="section level3">
+<h3>2 component RSsp</h3>
+<p>Idea is to break the one, polygenic variance component into a rank <span class="math inline">\(p-k\)</span> component, and a rank <span class="math inline">\(k\)</span> component. The rank <span class="math inline">\(k\)</span> component will consist of top SNPs. A rank <span class="math inline">\(k\)</span> update can be performed cheaply if <span class="math inline">\(k\)</span> is relatively small. This is achieved using the Sherman-Morrison-Woodbury formula. Components could also be chosen based on SNP annotation.</p>
+<p><a id="orgdbeec50"></a></p>
+</div>
+<div id="todo-listthings-to-think-about-1" class="section level3">
+<h3>TODO list/things to think about:</h3>
+<ol style="list-style-type: decimal">
+<li><p>TODO Implement prediction using two components.</p>
+<ol style="list-style-type: decimal">
+<li>Compare to polygenic risk score.</li>
+</ol></li>
+<li><p>Think about extending to multiple components</p></li>
+</ol>
+<p><a id="orgc96df8c"></a></p>
+</div>
+</div>
+</div>
+<div id="relevant-links" class="section level1">
+<h1>Relevant links:</h1>
+<p><a id="org0e7a544"></a></p>
+<div id="ld-score-regression-supplement" class="section level2">
+<h2><a href="https://images.nature.com/original/nature-assets/ng/journal/v47/n3/extref/ng.3211-S1.pdf">LD score regression supplement</a></h2>
+<p>Section 2 discusses the relationship between the intercept term and population stratification</p>
+<p><a id="org2b0c662"></a></p>
+</div>
+<div id="xiang-zhous-paper-on-variance-componenet-estimation-using-summary-statistics" class="section level2">
+<h2><a href="https://www.biorxiv.org/content/early/2016/03/08/042846">Xiang Zhou’s paper on variance componenet estimation using summary statistics</a></h2>
+<p>The entire paper is relevant, but pages 9 and 10 are of particular relevance here.</p>
+</div>
+</div>
 
 <hr>
 <p>
