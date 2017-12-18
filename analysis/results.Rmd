@@ -16,6 +16,8 @@ output: html_document
 * [RSSp vs ldsc in a high PVE setting](RSSp_ldsc_highPVE.html)
 * [Deriving the asymptotic standard error](RSSP_standard_error.html)
 * [Direct Simulations vs GWAS style Simulations](RSSp_ldsc_gwas_direct_noConfounding.html)
+* [Meeting notes from 12/15/2017](Meeting_Notes.html)
+
 
 
 <!-- * [Genome-Wide Simulation](GenomeWideSimulation.html) -->

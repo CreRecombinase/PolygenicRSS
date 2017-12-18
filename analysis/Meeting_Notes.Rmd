@@ -1,0 +1,149 @@
+---
+title: "Meeting Notes"
+author: "Nicholas Knoblauch"
+date: 2017-12-15
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+# Table of Contents
+
+1.  [Notation](#org9b79d13)
+2.  [Topics Discussed](#orgf8acfec)
+    1.  [Models of Confounding](#org562cdfc)
+        1.  [original RSSp confounding model](#org316eaf3)
+        2.  [confounding as a function of LD](#org90de4ae)
+        3.  [list/things to think about:](#org170bc82)
+    2.  [Prediction](#org819d586)
+        1.  [Prediction using RSSp](#org231cdcf)
+        2.  [2 component RSsp](#org7a3397b)
+        3.  [list/things to think about:](#orgdbeec50)
+3.  [Relevant links:](#orgc96df8c)
+    1.  [LD score regression supplement](#org0e7a544)
+    2.  [Xiang Zhou's paper on variance componenet estimation using summary statistics](#org2b0c662)
+
+
+<a id="org9b79d13"></a>
+
+# Notation
+
+-   \(\hat{\textbf{u}}\): GWAS summary statistic Z score (\(\hat{u}_i=\frac{\hat{\beta}}{\text{se}(\hat{\beta}_i)}\))
+-   \(\textbf{u}\): True effect normalized by standard error (\(u_i=\frac{\beta_i}{\text{se}(\hat{\beta_i})}\))
+-   \(\textbf{R}\): LD matrix.
+    -   The eigenvalue decomposition of \(\textbf{R}\) is denoted \(\textbf{R}=\textbf{Q}\textbf{D}\textbf{Q}^{T}\)
+-   \(\hat{\textbf{v}}\): Isomorphic transformation of \(\hat{\textbf{u}}\)
+    -   \(\hat{\textbf{v}}=\textbf{Q}^{T}\hat{\textbf{u}}\)
+
+
+<a id="orgf8acfec"></a>
+
+# Topics Discussed
+
+
+<a id="org562cdfc"></a>
+
+## Models of Confounding
+
+
+<a id="org316eaf3"></a>
+
+### original RSSp confounding model
+
+The original model of confounding in RSSp was a constant times the identity:
+\[\hat{\textbf{u}}|\textbf{u} \sim N(\textbf{R}\textbf{u},\textbf{R}+c\textbf{I}_p)\]
+
+
+<a id="org90de4ae"></a>
+
+### confounding as a function of LD
+
+Under this model we have
+\[\hat{\textbf{u}}|\textbf{u} \sim N(\textbf{R}\textbf{u},\textbf{R}+c\textbf{R})\]
+Rotating \(\hat{\textbf{u}}\) by \(\textbf{Q}^T\) gives:
+\[\hat{\textbf{v}} \sim N(0,\text{diag}(\sigma_u^2 \lambda_i^2+\lambda_i+c \lambda_i))\]
+Can also add an "intercept":
+\[\hat{\textbf{v}} \sim N(0,\text{diag}(\sigma_u^2 \lambda_i^2+\lambda_i+c \lambda_i+d))\]
+
+
+<a id="org170bc82"></a>
+
+### TODO list/things to think about:
+
+1.  TODO Estimate parameters \(\sigma_u^2,c\) by regressing \(\hat{\textbf{v}}^2\) on \(\sigma_u^2 \lambda_i^2+\lambda_i+c \lambda_i\)
+
+    1.  Try with and without intercept
+
+2.  Is there a way to formulate a model where the LDAK and LDSC models are special cases?
+
+    1.  Is LDAK's model accidentally conflating causation and confounding?
+    
+    2.  LD score regression assumes that differences in alllele frequency between the LD panel and the data are uncorrelated
+
+
+<a id="org819d586"></a>
+
+## Prediction
+
+
+<a id="org231cdcf"></a>
+
+### Prediction using RSSp
+
+RSSp simulations and the ldpred paper indicate that prediction is hard using a polygenic model. Idea is to try to combine polygenic model with polygenic risk score.
+
+
+<a id="org7a3397b"></a>
+
+### 2 component RSsp
+
+Idea is to break the one, polygenic variance component into a rank \(p-k\) component, and a rank \(k\) component. The rank \(k\) component will consist of top SNPs.  A rank \(k\) update can be performed cheaply if \(k\) is relatively small.  This is achieved using the Sherman-Morrison-Woodbury formula. Components could also be chosen based on SNP annotation.
+
+
+<a id="orgdbeec50"></a>
+
+### TODO list/things to think about:
+
+1.  TODO Implement prediction using two components.
+
+    1.  Compare to polygenic risk score.
+
+2.  Think about extending to multiple components
+
+
+<a id="orgc96df8c"></a>
+
+# Relevant links:
+
+
+<a id="org0e7a544"></a>
+
+## [LD score regression supplement](https://images.nature.com/original/nature-assets/ng/journal/v47/n3/extref/ng.3211-S1.pdf)
+
+Section 2 discusses the relationship between the intercept term and population stratification
+
+
+<a id="org2b0c662"></a>
+
+## [Xiang Zhou's paper on variance componenet estimation using summary statistics](https://www.biorxiv.org/content/early/2016/03/08/042846)
+
+The entire paper is relevant, but pages 9 and 10 are of particular relevance here.
+
+
