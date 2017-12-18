@@ -45,7 +45,7 @@ knitr::read_chunk("chunks.R")
 
 # Notation
 
--   \(\hat{\textbf{u}}\): GWAS summary statistic Z score (\(\hat{u}_i=\frac{\hat{\beta}}{\text{se}(\hat{\beta}_i)}\))
+-   \(\hat{\textbf{u}}\): GWAS summary statistic Z score (\(\hat{u}_i=\frac{\hat{\beta_i}}{\text{se}(\hat{\beta_i})}\))
 -   \(\textbf{u}\): True effect normalized by standard error (\(u_i=\frac{\beta_i}{\text{se}(\hat{\beta_i})}\))
 -   \(\textbf{R}\): LD matrix.
     -   The eigenvalue decomposition of \(\textbf{R}\) is denoted \(\textbf{R}=\textbf{Q}\textbf{D}\textbf{Q}^{T}\)
@@ -145,5 +145,8 @@ Section 2 discusses the relationship between the intercept term and population s
 ## [Xiang Zhou's paper on variance componenet estimation using summary statistics](https://www.biorxiv.org/content/early/2016/03/08/042846)
 
 The entire paper is relevant, but pages 9 and 10 are of particular relevance here.
+
+## [LDpred paper](http://www.cell.com/ajhg/fulltext/S0002-9297(15)00365-1)
+The `ldpred-inf` model is basically `RSSp`. 
 
 
