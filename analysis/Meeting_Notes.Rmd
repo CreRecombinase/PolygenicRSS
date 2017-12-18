@@ -147,6 +147,6 @@ Section 2 discusses the relationship between the intercept term and population s
 The entire paper is relevant, but pages 9 and 10 are of particular relevance here.
 
 ## [LDpred paper](http://www.cell.com/ajhg/fulltext/S0002-9297(15)00365-1)
-The `ldpred-inf` model is basically `RSSp`. 
+The `ldpred-inf` model uses a polygenic model. 
 
 
