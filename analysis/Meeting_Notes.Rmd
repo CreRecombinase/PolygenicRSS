@@ -137,7 +137,7 @@ Idea is to break the one, polygenic variance component into a rank \(p-k\) compo
 
 ## [LD score regression supplement](https://images.nature.com/original/nature-assets/ng/journal/v47/n3/extref/ng.3211-S1.pdf)
 
-Section 2 discusses the relationship between the intercept term and population stratification
+Section 2 discusses the relationship between the intercept term and population stratification.
 
 
 <a id="org2b0c662"></a>
