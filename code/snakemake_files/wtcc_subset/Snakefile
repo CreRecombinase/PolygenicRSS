@@ -1,11 +1,5 @@
 include: "../parameter_generation/Snakefile"
 gardner_dir="../../../../../../../../group/xhe-lab/1KG/"
-if os.path.exists(gardner_dir):
-    configpath="../workflow_params_gardner.json"
-else:
-    configpath="../workflow_params.json"
-include: "../parameter_generation/Snakefile"
-gardner_dir="../../../../../../../../group/xhe-lab/1KG/"
 rcc_dir="../../../../../../../project/xinhe/eQTL/1kg/"
 if os.path.exists(gardner_dir):
     configpath="../workflow_params_gardner.json"
@@ -25,8 +19,7 @@ shell.executable("/bin/bash")
 
 config = {key: "../"+value for (key,value) in config.items()}   
 
-GWAS_NAMES = ["bd","cad","cd","ht","ra","t1d","t2d"]
-GWAS_NAMES = ["t1d","t2d"]
+
 
 rule all:
     input:
