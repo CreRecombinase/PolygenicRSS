@@ -38,8 +38,8 @@ INPUT_DIR=config["INPUT_DIR"]
 
 rule all:
     input:
-        KG_dir+"RSSp_sim_gwas_pheno/scombined_wtcc_{scen}_trait.h5".format(scen=SCEN),
-        KG_dir+"RSSp_genome_gwas_uh/{subset}_{sub}_{scen}_sim.h5".format(scen=SCEN,subset="scombined",sub="wtcc")
+        KG_dir+"RSSp_sim_gwas_pheno/sscombined_wtcc_{scen}_trait.h5".format(scen=SCEN),
+        KG_dir+"RSSp_genome_gwas_uh/{subset}_{sub}_{scen}_sim.h5".format(scen=SCEN,subset="sscombined",sub="wtcc")
 
 
 rule sim_pheno_RSSp:

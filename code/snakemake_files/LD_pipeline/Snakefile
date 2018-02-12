@@ -1,16 +1,22 @@
 include: "../parameter_generation/Snakefile"
 gardner_dir="../../../../../../../../group/xhe-lab/1KG/"
+rcc_dir="../../../../../../../project/xinhe/eQTL/1kg/"
 if os.path.exists(gardner_dir):
     configpath="../workflow_params_gardner.json"
 else:
-    configpath="../workflow_params.json"
-
+    if os.path.exists(rcc_dir):
+        configpath="../workflow_params_rcc.json"
+    else:
+        if os.path.exists("../../../../Desktop/im_xps13"):
+            configpath="../workflow_params_xps.json"
+        else:
+            configpath="../workflow_params.json"    
 configfile:
     configpath
 
 config = {key: "../"+value for (key,value) in config.items()}   
 
-trait="scombined"
+trait=COMB_NAME
 
 rule all:
     input:
@@ -25,9 +31,18 @@ rule ld_chunk_1kg:
     script:
         "../../scripts/evd_1kg_h5.R"
 
+rule dl_map_h5:
+    output:
+        expand(config["KG_MAPDIR"]+"interpolated_from_hapmap/chr{chrom}.interpolated_genetic_map.gz",chrom=range(1,23))
+    params:
+        gdir=config["KG_MAPDIR"]
+    shell:
+        "git clone https://github.com/CreRecombinase/1000-genomes-genetic-maps {params.gdir}"
+
+        
 rule gen_map_h5:
     input:
-        mapf=expand(config["KG_MAPDIR"]+"interpolated_from_hapmap/chr{chrom}.interpolated_genetic_map.gz",chrom=range(1,23)),
+        mapf=expand(config["KG_MAPDIR"]+"interpolated_from_hapmap/chr{chrom}.interpolated_genetic_map.gz",chrom=range(1,23))
     params:
         chrom=range(1,23)
     output:

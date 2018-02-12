@@ -4,15 +4,30 @@ if os.path.exists(gardner_dir):
     configpath="../workflow_params_gardner.json"
 else:
     configpath="../workflow_params.json"
-
+include: "../parameter_generation/Snakefile"
+gardner_dir="../../../../../../../../group/xhe-lab/1KG/"
+rcc_dir="../../../../../../../project/xinhe/eQTL/1kg/"
+if os.path.exists(gardner_dir):
+    configpath="../workflow_params_gardner.json"
+else:
+    if os.path.exists(rcc_dir):
+        configpath="../workflow_params_rcc.json"
+    else:
+        if os.path.exists("../../../../Desktop/im_xps13"):
+            configpath="../workflow_params_xps.json"
+        else:
+            configpath="../workflow_params.json"    
+    
 configfile:
     configpath
+
+
 config = {key: "../"+value for (key,value) in config.items()}   
 
 
 rule all:
     input:
-        config["OUTPUT_DIR"]+"sim_{subseta}_{gwas}_RSSp_res_{sub}_{scen}.txt.gz".format(subseta="scombined",gwas="gwas",sub="wtcc",scen=SCEN)
+        config["OUTPUT_DIR"]+"sim_{subseta}_{gwas}_RSSp_res_{sub}_{scen}.txt.gz".format(subseta=COMB_NAME,gwas="gwas",sub="wtcc",scen=SCEN)
 
 
 rule gen_quh:

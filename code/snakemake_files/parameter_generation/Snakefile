@@ -9,8 +9,9 @@ def count_lines(fname):
         return count
 
 
-    
-
+GWAS_NAMES = ["bd","cad","cd","ht","ra","t1d","t2d"]
+GWAS_NAMES = ["t1d","t2d"]    
+COMB_NAME="sscombined"
 SCEN="NoConfoundSmall"
 NREPS =5
 PVE=list(9.999*10**np.linspace(-1,-1.5,num=4))

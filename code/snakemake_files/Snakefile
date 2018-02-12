@@ -45,30 +45,25 @@ subworkflow ld_pipeline:
 
 pvv=1.0
 shr=list(10**np.linspace(-2.5,-3.5,num=5))[-1]
-GWAS_NAMES = ["bd","cad","cd","ht","ra","t1d","t2d","combined"]
+#GWAS_NAMES = ["bd","cad","cd","ht","ra","t1d","t2d","combined"]
 #GWAS_NAMES = ["combined"]
+
 TRAIT=GWAS_NAMES
 
 #To generate different files, change the value of the variable `simulation_file`
 #(the fact that the variable is  called `simulation_file` doesn't have any significance)
 rule all:
     input:
-        config["OUTPUT_DIR"]+"gcta_h2_est/scombined_seq_wtcc_{scen}_est.txt".format(scen=SCEN)
+        config["OUTPUT_DIR"]+"gcta_h2_est/{ccn}_seq_wtcc_{scen}_est.txt".format(scen=SCEN,ccn="sscombined"),
+        config["OUTPUT_DIR"]+"gcta_h2_est/{subset}_seq_{sub}_{scen}_est.txt".format(subset="sscombined",sub="wtcc",scen=SCEN)
         #HDF5_DIR+"combined_seq_wtcc_geno.h5"
         # expand(HDF5_DIR+"{gn}_seq_wtcc_geno.h5",gn=GWAS_NAMES),
         # config["GDS_DIR"]+"combined_19.gds",
         # HDF5_DIR+"combined_seq_wtcc_geno.h5"
-ALL_REGIONS=["1"]        
-
-
         
-        
-        
-
-        
-wildcard_constraints:
-    chrom="\d+",
-    pv="[0-9].[0-9]+"
+# wildcard_constraints:
+#     chrom="\d+",
+#     pv="[0-9].[0-9]+"
 
 ## Rules for transforming VCFs to gds files
 
@@ -131,87 +126,42 @@ rule summarize_gcta:
     input:
         in_f=expand(config["PLINK_DIR"]+"gcta_h2_est/{{subset}}_seq_{{sub}}_{{scen}}_{gene}_est.hsq",gene=FGENEID)
     params:
-        gene=FGENEID[0:10]
+        gene=FGENEID
     output:
         out_f=config["OUTPUT_DIR"]+"gcta_h2_est/{subset}_seq_{sub}_{scen}_est.txt"
     script:
         "../scripts/summarise_gcta.R"
 
 
-# rule do_GRM_est:
+
+# rule ldsc_trait_chunk:
 #     input:
-#         gdsf=rules.sim_pheno_RSSp.input.gdsf,
-#         h5f=rules.sim_pheno_RSSp.output.h5f
-#     output:
-#         grmef=config["OUTPUT_DIR"]+"grm_h2_est/{subset}_seq_{sub}_{scen}_est.txt.gz"
-#     script:
-#         "../scripts/grm_est_h2.R"                
-
-        
-
-       
-
-
-rule ldsc_trait_chunk:
-    input:
-        evdf=config["KG_DIRECTORY"]+"EVD_H5/{subset}_{sub}_hapmap.h5"
-    params:
-        outdir=config["KG_DIRECTORY"]+"eur_w_ld_chr_{subset}_{sub}}"
-    output:
-        outf=expand(config["KG_DIRECTORY"]+"eur_w_ld_chr_{{subset}}/{chrom}.l2.ldscore.gz",chrom=range(1,23)),
-        soutf=expand(config["KG_DIRECTORY"]+"eur_w_ld_chr_{{subset}}_train/{chrom}.l2.M_5_50",chrom=range(1,23))#                proff=PROF_DIR+"ldsc_trait_chunk_{subset}.prof",
-    script:
-        "../scripts/ldsc_trait_chunk.R"        
-
-
-
-        
-rule data_gwas_report:
-    input:
-        rdsf=config["KG_DIRECTORY"]+"RSSp_sim_gwas_genome/{subset}_sim_all_quh.h5",
-        uhrdsf=config["KG_DIRECTORY"]+"RSSp_sim_gwas_genome/{subset}_sim_all_uh.h5"
-    params:
-        traitn="{subset}",
-        methn="gwas"
-    output:
-        reportf="result_reports/{subset}_gwas_report_data.html"
-    script:
-        "../scripts/gen_data_gwas_report.Rmd"                
-
-
-# rule RSSp_oracle_est:
-#     input:
-#         rdsf=rules.merge_quh_region.output.rdsf
-#     output:
-#         dff=config["OUTPUT_DIR"]+"sim_{subset}_{meth}_RSSp_oracle_res_{pv}_{shr}_{scen}.txt.gz"
-#     script:
-#         "../scripts/oracle_lnZ.R"
-
-# rule RSSp_summarise_oracle_pv_shr:
-#     input:
-#         summf=expand(config["OUTPUT_DIR"]+"sim_{{subset}}_{{meth}}_RSSp_oracle_res_{pv}_{shr}_{{scen}}.txt.gz",pv=pvv,shr=shr)
+#         evdf=config["KG_DIRECTORY"]+"EVD_H5/{subset}_{sub}_hapmap.h5"
 #     params:
-#         pv_shr=expand("{pv},{shr}",pv=pvv,shr=shr)
+#         outdir=config["KG_DIRECTORY"]+"eur_w_ld_chr_{subset}_{sub}}"
 #     output:
-#         dff=config["OUTPUT_DIR"]+"sim_{subset}_{meth}_RSSp_oracle_res_ALL_{scen}.txt.gz"
+#         outf=expand(config["KG_DIRECTORY"]+"eur_w_ld_chr_{{subset}}/{chrom}.l2.ldscore.gz",chrom=range(1,23)),
+#         soutf=expand(config["KG_DIRECTORY"]+"eur_w_ld_chr_{{subset}}_train/{chrom}.l2.M_5_50",chrom=range(1,23))#                proff=PROF_DIR+"ldsc_trait_chunk_{subset}.prof",
 #     script:
-#         "../scripts/summarise_pv.R"
+#         "../scripts/ldsc_trait_chunk.R"        
 
 
-rule gen_quh_chunk_train_direct:
-    input:
-        evdf=expand(config["KG_DIRECTORY"]+"EVD_H5/train_{{subset}}_hapmap_{{LDchunk}}_{shr}.h5",shr=shr),
-        gdsf=config["GDS_DIR"]+"{subset}_seq_test_hapmap_geno.gds",
-    params:
-        LDchunk="{LDchunk}",
-        fgeneid=expand("{fgeneid}",fgeneid=FGENEID),
-        pve=PVE,
-        bias=BIAS,
-        nreps=NREPS
-    output:
-        quh_hf=temp(expand(config["KG_DIRECTORY"]+"RSSp_genome_direct_quh_chunk/{{subset}}_{{LDchunk}}_{pv}_{shr}_{{scen}}.h5",pv=pvv,shr=shr)),
-        uh_hf= temp(config["KG_DIRECTORY"]+"RSSp_genome_direct_uh_chunk/{subset}_{LDchunk}_{scen}_sim.h5")
-    script:
-        "../scripts/sim_uh_quh_direct.R"
+
+
+# rule gen_quh_chunk_train_direct:
+#     input:
+#         evdf=expand(config["KG_DIRECTORY"]+"EVD_H5/train_{{subset}}_hapmap_{{LDchunk}}_{shr}.h5",shr=shr),
+#         gdsf=config["GDS_DIR"]+"{subset}_seq_test_hapmap_geno.gds",
+#     params:
+#         LDchunk="{LDchunk}",
+#         fgeneid=expand("{fgeneid}",fgeneid=FGENEID),
+#         pve=PVE,
+#         bias=BIAS,
+#         nreps=NREPS
+#     output:
+#         quh_hf=temp(expand(config["KG_DIRECTORY"]+"RSSp_genome_direct_quh_chunk/{{subset}}_{{LDchunk}}_{pv}_{shr}_{{scen}}.h5",pv=pvv,shr=shr)),
+#         uh_hf= temp(config["KG_DIRECTORY"]+"RSSp_genome_direct_uh_chunk/{subset}_{LDchunk}_{scen}_sim.h5")
+#     script:
+#         "../scripts/sim_uh_quh_direct.R"
     
         
