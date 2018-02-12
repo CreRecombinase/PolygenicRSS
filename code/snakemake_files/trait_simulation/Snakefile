@@ -1,45 +1,13 @@
 include: "../parameter_generation/Snakefile"
-gardner_dir="../../../../../../../../group/xhe-lab/1KG/"
-if os.path.exists(gardner_dir):
-    configpath="../workflow_params_gardner.json"
-else:
-    configpath="../workflow_params.json"
-
-configfile:
-    configpath
 
 
-METH="gwas"    
-config = {key: "../"+value for (key,value) in config.items()}   
-#Directory that will serve as base directory for this project (good idea to use scratch storage)
-KG_dir=config["KG_DIRECTORY"]
-
-#Directory that holds "raw" 1000 genomes vcf files (I think this already exists in the `compbio` folder in the `RSS` folder)
-VCF_DIR=config["VCF_DIR"]
-HG19_DIR=config["HG19_DIR"]
-WTCC_H5_DIR=config["WTCC_H5"]
-WTCC_INPUT_DIR=config["WTCC_INPUT_H5"]
-SNPGDS_DIR=config["SNPGDS_DIR"]
-PLINK_DIR=config["PLINK_DIR"]
-VCF_ODIR=config["VCF_ODIR"]
-#Directory that holds the haplotype and genotype `.gds` which are population specific (i.e EUR), and have had an allele frequency cutoff applied (i.e 0.05)
-GDS_DIR=config["GDS_DIR"]
-
-#Directory that holds the 1000 genomes genetic map files (you can get these off github, google 1000 genomes genetic maps)
-KG_MAPDIR=config["KG_MAPDIR"]
-
-HDF5_DIR=config["HDF5_DIR"]
-
-PROF_DIR=config["HDF5_DIR"]+"../profiling/"
-
-OUTPUT_DIR=config["OUTPUT_DIR"]
-
-INPUT_DIR=config["INPUT_DIR"]
+config = {key: "../"+value for (key,value) in config.items()}  
+trait=COMB_NAME
 
 rule all:
     input:
-        KG_dir+"RSSp_sim_gwas_pheno/sscombined_wtcc_{scen}_trait.h5".format(scen=SCEN),
-        KG_dir+"RSSp_genome_gwas_uh/{subset}_{sub}_{scen}_sim.h5".format(scen=SCEN,subset="sscombined",sub="wtcc")
+        config["KG_DIR"]+"RSSp_sim_gwas_pheno/{ccn}_wtcc_{scen}_trait.h5".format(scen=SCEN,ccn=trait),
+        config["KG_DIR"]+"RSSp_genome_gwas_uh/{subset}_{sub}_{scen}_sim.h5".format(scen=SCEN,subset=trait,sub="wtcc")
 
 
 rule sim_pheno_RSSp:
@@ -48,15 +16,15 @@ rule sim_pheno_RSSp:
     comparisons
         '''
     input:
-        gdsf=HDF5_DIR+"{subset}_seq_{sub}_geno.h5"
+        gdsf=config["HDF5_DIR"]+"{subset}_seq_{sub}_geno.h5"
     params:
         fgeneid=expand("{fgeneid}",fgeneid=FGENEID),
         pve=PVE,
         bias=BIAS,
         nreps=NREPS
     output:
-        h5f=KG_dir+"RSSp_sim_gwas_pheno/{subset}_{sub}_{scen}_trait.h5",
-        beta_hf=KG_dir+"RSSp_sim_gwas_beta/{subset}_{sub}_{scen}_beta.h5"#,        proff=PROF_DIR+"sim_pheno_RSSp_{subset}.prof"
+        h5f=config["KG_DIR"]+"RSSp_sim_gwas_pheno/{subset}_{sub}_{scen}_trait.h5",
+        beta_hf=config["KG_DIR"]+"RSSp_sim_gwas_beta/{subset}_{sub}_{scen}_beta.h5"#,        proff=PROF_DIR+"sim_pheno_RSSp_{subset}.prof"
     script:
         "../../scripts/gen_ty_block_RSSp.R"
 
@@ -65,7 +33,7 @@ rule map_uh_RSSp:
         h5f=rules.sim_pheno_RSSp.input.gdsf,
         ymatf=rules.sim_pheno_RSSp.output.h5f
     output:
-        uhf=KG_dir+"RSSp_genome_gwas_uh/{subset}_{sub}_{scen}_sim.h5"
+        uhf=config["KG_DIR"]+"RSSp_genome_gwas_uh/{subset}_{sub}_{scen}_sim.h5"
     threads: 1
     script:
         "../../scripts/map_uh_LDchunk_RSSp_h5.R"

@@ -1,12 +1,4 @@
 include: "../parameter_generation/Snakefile"
-gardner_dir="../../../../../../../../group/xhe-lab/1KG/"
-if os.path.exists(gardner_dir):
-    configpath="../workflow_params_gardner.json"
-else:
-    configpath="../workflow_params.json"
-
-configfile:
-    configpath
 
 config = {key: "../"+value for (key,value) in config.items()}   
 #Directory that will serve as base directory for this project (good idea to use scratch storage)

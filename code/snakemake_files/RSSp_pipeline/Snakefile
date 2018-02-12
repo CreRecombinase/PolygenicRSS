@@ -1,4 +1,5 @@
 include: "../parameter_generation/Snakefile"
+configpath = None
 gardner_dir="../../../../../../../../group/xhe-lab/1KG/"
 if os.path.exists(gardner_dir):
     configpath="../workflow_params_gardner.json"

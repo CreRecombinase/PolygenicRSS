@@ -1,6 +1,23 @@
 import numpy as np
 import gzip
 
+configpath = None
+gardner_dir="../../../../../../../../group/xhe-lab/1KG/"
+rcc_dir="../../../../../../../project/xinhe/eQTL/1kg/"
+if os.path.exists(gardner_dir):
+    configpath="../workflow_params_gardner.json"
+if os.path.exists(rcc_dir):
+    configpath="../workflow_params_rcc.json"
+if os.path.exists("../../../../Desktop/im_xps13"):
+    configpath="../workflow_params_xps.json"
+if os.path.exists("../../../../Desktop/scratch"):
+    configpath="../workflow_params.json"    
+    
+configfile:
+    configpath    
+
+
+
 def count_lines(fname):
     with gzip.open(fname) as fh:
         count = 0
