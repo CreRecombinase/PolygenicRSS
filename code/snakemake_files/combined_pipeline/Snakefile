@@ -1,0 +1,137 @@
+gardner_dir="../../../../../../../../group/xhe-lab/1KG/"
+if os.path.exists(gardner_dir):
+    configpath="../workflow_params_gardner.json"
+else:
+    configpath="../workflow_params.json"
+
+configfile:
+    configpath
+
+config = {key: "../"+value for (key,value) in config.items()}   
+#Directory that will serve as base directory for this project (good idea to use scratch storage)
+
+GRM_PARTS=4
+#Genetic Maps
+#ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20130507_omni_recombination_rates/
+#ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/working/20110106_recombination_hotspots/
+
+# File that has the LDetect LD breakpoints
+#URL for that file is here #LD_break_file_url="https://bitbucket.org/nygcresearch/ldetect-data/raw/ac125e47bf7ff3e90be31f278a7b6a61daaba0dc/EUR/fourier_ls-all.bed"
+
+TRAIT="bd"
+SCEN="NoConfound"
+METH="gwas"
+
+pvv=1.0
+#shr=list(10**np.linspace(-2.5,-3.5,num=5))[-1]
+#GWAS_NAMES = ["bd","cad","cd","ht","ra","t1d","t2d"]
+GWAS_NAMES = ["t1d","t2d"]
+#GWAS_NAMES = ["combined"]
+comb_name = "sscombined"
+TRAIT=GWAS_NAMES
+
+
+rule all:
+    input:
+        config["HDF5_DIR"]+"{ccn}_seq_wtcc_geno.h5".format(ccn=comb_name),
+        config["PLINK_DIR"]+"{ccn}_19.grm.bin".format(ccn=comb_name)
+
+
+
+# rule gds_merge:
+#     input:
+#         input_gdsf=expand(config["GDS_DIR"]+"{gn}_19.gds",gn=GWAS_NAMES)
+#     output:
+#         output_vcff=config["VCF_ODIR"]+"{cn}_19.vcf.gz",
+#         output_vcff=config["VCF_ODIR"]+"{cn}_19.vcf.gz"
+        
+rule vcf_idx:
+    input:
+        config["VCF_ODIR"]+"{gn}_19.vcf.gz"
+    output:
+        config["VCF_ODIR"]+"{gn}_19.vcf.gz.csi"
+    threads: 9
+    shell:
+        "bcftools index {input} --threads {threads}"
+
+
+rule vcf_merge:
+    input:
+        input_vcf=expand(config["VCF_ODIR"]+"{gn}_19.vcf.gz",gn=GWAS_NAMES),
+        input_vcfi=expand(config["VCF_ODIR"]+"{gn}_19.vcf.gz.csi",gn=GWAS_NAMES)
+    output:
+        out_vcf=config["VCF_ODIR"]+"{ccn}_19.vcf.gz".format(ccn=comb_name)
+    threads: 9
+    shell:
+        "bcftools merge --force-samples {input.input_vcf} --threads {threads} -Ou | bcftools view --genotype \"^miss\" -Oz --threads {threads} -o {output.out_vcf}"
+
+
+rule vcf2plink:
+    input:
+        inf=config["VCF_ODIR"]+"{ccn}_19.vcf.gz".format(ccn=comb_name)
+    output:
+        outf_fam=temp(config["PLINK_DIR"]+"{ccn}_19.fam".format(ccn=comb_name)),
+        outf_bim=temp(config["PLINK_DIR"]+"{ccn}_19.bim".format(ccn=comb_name)),
+        outf_bed=temp(config["PLINK_DIR"]+"{ccn}_19.bed".format(ccn=comb_name))
+    params:
+        out_pref=config["PLINK_DIR"]+"{ccn}_19".format(ccn=comb_name)
+    threads: 9
+    shell:
+        "plink --vcf {input.inf} --double-id --make-bed --out {params.out_pref} --threads {threads}"        
+
+# rule combine_wtccc_h5:
+#     input:
+#         input_h5=expand(config["HDF5_DIR"]+"{gn}_{map}_wtcc_geno.h5",gn=GWAS_NAMES),
+#     output:
+#         outf=WTCC_INPUT_DIR+"{cn}.h5"
+#     script:
+#         "../../scripts/concat_wtccc_h5.R"
+rule combine_grm:
+    input:
+        grmfb=expand(config["PLINK_DIR"]+"{{cn}}_19.part_"+str(GRM_PARTS)+"_{p}.grm.bin",p=range(1,GRM_PARTS+1)),
+        grmfi=expand(config["PLINK_DIR"]+"{{cn}}_19.part_"+str(GRM_PARTS)+"_{p}.grm.id",p=range(1,GRM_PARTS+1)),
+        grmfn=expand(config["PLINK_DIR"]+"{{cn}}_19.part_"+str(GRM_PARTS)+"_{p}.grm.N.bin",p=range(1,GRM_PARTS+1))
+    output:
+        grmfb=config["PLINK_DIR"]+"{cn}_19.grm.bin",
+        grmfi=config["PLINK_DIR"]+"{cn}_19.grm.id",
+        grmfn=config["PLINK_DIR"]+"{cn}_19.grm.N.bin"
+    shell:
+        "cat {input.grmfb} > {output.grmfb}; cat {input.grmfi} > {output.grmfi}; cat {input.grmfn} > {output.grmfn}"
+
+
+
+rule grm_combined:
+    input:
+        in_bed=rules.vcf2plink.output.outf_bed,
+        in_bim=rules.vcf2plink.output.outf_bim,
+        in_fam=rules.vcf2plink.output.outf_fam
+    output:
+        grmfb=temp(config["PLINK_DIR"]+"{cn}_19.part_"+str(GRM_PARTS)+"_{p}.grm.bin"),
+        grmfi=temp(config["PLINK_DIR"]+"{cn}_19.part_"+str(GRM_PARTS)+"_{p}.grm.id"),
+        grmfn=temp(config["PLINK_DIR"]+"{cn}_19.part_"+str(GRM_PARTS)+"_{p}.grm.N.bin")
+    params:
+        out_p=config["PLINK_DIR"]+"{cn}_19",
+        in_p=config["PLINK_DIR"]+"{cn}_19",
+        p="{p}"
+    threads: 11
+    shell:
+        "gcta64 --bfile {params.in_p} --make-grm-part "+str(GRM_PARTS)+" {params.p} --thread-num {threads} --out {params.out_p}"
+        
+rule gds_19:
+    input:
+        vcff=config["VCF_ODIR"]+"{cn}_19.vcf.gz"
+    output:
+        undup_gds=config["GDS_DIR"]+"{cn}_19.gds"
+    threads: 9
+    script:
+        "../../scripts/vcf2seq_gds.R"
+        
+        
+rule interp_map_wtcc:
+    ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are rearranged)'''
+    input:
+        input_gds=config["GDS_DIR"]+"{cn}_19.gds",
+    output:
+        outf=config["HDF5_DIR"]+"{cn}_seq_wtcc_geno.h5"
+    script:
+        "../../scripts/gds2h5.R"        

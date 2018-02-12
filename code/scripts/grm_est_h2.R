@@ -8,11 +8,13 @@ yf <-snakemake@input[["h5f"]]
 of <- snakemake@output[["grmef"]]
 stopifnot(!is.null(of))
 
-X <- scale(t(RcppEigenH5::read_2d_mat_h5(xf,"/","dosage")),center=T,scale=F)
-ym <- scale(RcppEigenH5::read_2d_mat_h5(yf,"trait","ymat"),center=T,scale=F)
-si <- RcppEigenH5::read_df_h5(yf,"SimulationInfo")
+X <- scale(t(EigenH5::read_matrix_h5(xf,"/","dosage")),center=T,scale=F)
+ym <- scale(EigenH5::read_matrix_h5(yf,"trait","ymat"),center=T,scale=F)
+snp_si <- read_df_h5(xf,"SNPinfo") 
+si <- EigenH5::read_df_h5(yf,"SimulationInfo")
 sx <- sum(apply(X,2,var))
 p <- ncol(X)
+stopifnot(nrow(snp_si)==p)
 svdX <- svd(X/sqrt(p))
 
 U <- svdX$u

@@ -1,4 +1,3 @@
-#Rprof(filename=snakemake@output[["proff"]],append=F)
 library(dplyr)
 library(SeqSupport)
 library(SeqArray)

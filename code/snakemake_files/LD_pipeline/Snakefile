@@ -1,0 +1,36 @@
+include: "../parameter_generation/Snakefile"
+gardner_dir="../../../../../../../../group/xhe-lab/1KG/"
+if os.path.exists(gardner_dir):
+    configpath="../workflow_params_gardner.json"
+else:
+    configpath="../workflow_params.json"
+
+configfile:
+    configpath
+
+config = {key: "../"+value for (key,value) in config.items()}   
+
+trait="scombined"
+
+rule all:
+    input:
+        config["KG_DIRECTORY"]+"EVD_H5/{subset}_{sub}_hapmap.h5".format(subset=trait,sub="wtcc")
+
+rule ld_chunk_1kg:
+    input:
+        hdff=config["HDF5_DIR"]+"{subset}_seq_{sub}_geno.h5",
+        mapf=config["KG_MAPDIR"]+"interpolated_hapmap.h5"
+    output:
+        evdf=config["KG_DIRECTORY"]+"EVD_H5/{subset}_{sub}_hapmap.h5"
+    script:
+        "../../scripts/evd_1kg_h5.R"
+
+rule gen_map_h5:
+    input:
+        mapf=expand(config["KG_MAPDIR"]+"interpolated_from_hapmap/chr{chrom}.interpolated_genetic_map.gz",chrom=range(1,23)),
+    params:
+        chrom=range(1,23)
+    output:
+        config["KG_MAPDIR"]+"interpolated_hapmap.h5"
+    script:
+        "../../scripts/map2RDS.R"

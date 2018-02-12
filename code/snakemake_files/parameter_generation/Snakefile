@@ -11,8 +11,8 @@ def count_lines(fname):
 
     
 
-N=503
-NREPS =150
+SCEN="NoConfoundSmall"
+NREPS =5
 PVE=list(9.999*10**np.linspace(-1,-1.5,num=4))
 BIAS=[0.0]
 TOT_SIM=NREPS*len(PVE)*len(BIAS)

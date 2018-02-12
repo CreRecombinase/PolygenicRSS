@@ -1,0 +1,22 @@
+rule gen_quh_chunk_true:
+    input:
+        evdf=KG_dir+"EVD_H5_{trait}/1KG_{trait}_hapmap_{LDchunk}.h5",
+        uhf=KG_dir+"RSSp_genome_true_uh_chunk/{trait}_{LDchunk}_sim.h5"
+    params:
+        LDchunk="{LDchunk}"
+    output:        
+        quhf=KG_dir+"RSSp_genome_true_quh_chunk/{trait}_{LDchunk}_sim.h5"#,        proff=PROF_DIR+"quh_true_{trait}_{LDchunk}.prof"
+    script:
+        "../scripts/gen_quh_chunk.R"
+
+
+
+rule uh_subset_true:
+    input:
+        inputf=OUTPUT_DIR+"{trait}_snpinfo.txt.gz",
+    params:
+        LDchunk=expand("{LDchunk}",LDchunk=ALL_REGIONS)
+    output:
+        outf=expand(KG_dir+"RSSp_genome_true_uh_chunk/{{trait}}_{LDchunk}_sim.h5",LDchunk=ALL_REGIONS)#,        proff=PROF_DIR+"uh_subset_true_{trait}.prof"
+    script:
+        "../ldsc_scripts/gwas_subset.R"

@@ -22,7 +22,7 @@ LDchunk <- as.character(snakemake@params[["LDchunk"]])
 stopifnot(file.exists(rdsf),
           !is.null(rdsf))
 
-tparam_df <- read_df_h5(rdsf,"tparam_df")
+tparam_df <- read_df_h5(rdsf,"SimulationInfo")
 ldgrp <- ifelse(is.null(snakemake@params[["LDchunk"]]),"/",snakemake@params[["LDchunk"]])
 
 exec_fn <-  function(quhl,tpdfl,D){
@@ -36,6 +36,10 @@ exec_fn <-  function(quhl,tpdfl,D){
     RSSp_estimate(doConfound=F) %>%
     inner_join(as_data_frame(tpdfl),by="fgeneid")
 }
+
+
+#n_grp <- length(ldgrp)
+#RcppEigenH5::concat_mat_chunks(rep(rdsf,n_grp),
 
 rss_res <- map2_df(
   array_branch(read_mat_h5(rdsf,ldgrp,"quh"),margin=2),

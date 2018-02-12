@@ -76,3 +76,189 @@ rule subset_report:
     script:
         "../../scripts/gen_report.Rmd"
         
+
+        
+rule prep_ldsc_uh:
+    input:
+        rdsf=KG_dir+"RSSp_sim_{gwas}_genome/{subset}_sim_all_uh_{scen}.h5",
+        KG_dir+"RSSp_sim_gwas_pheno/{subset}_{sub}_{scen}_trait.h5"
+#        gdsf=GDS_DIR+"{subset}_seq_hapmap_haplo.gds",
+    params:
+        fgeneid=FGENEID
+    output: ldscf=temp(expand(KG_dir+"ldsc_sim_{{gwas}}_genome/{{subset}}_sim_{fgeneid}_uh_{{scen}}.txt",fgeneid=FGENEID))#,        proff=PROF_DIR+"RSSp_oracle_est_{gwas}_{subset}.prof"
+    script:
+        "../scripts/prep_ldsc_uh.R"
+
+
+rule prep_ldpred_uh:
+    input:
+        uhf=KG_dir+"RSSp_sim_gwas_genome/{subset}_sim_all_uh.h5",
+        Sf=KG_dir+"RSSp_sim_gwas_beta/{subset}_beta.h5",
+        gdsf=GDS_DIR+"{subset}_seq_hapmap_geno.gds"
+    params:
+        fgeneid=FGENEID
+    output:
+        ldpredf=expand(KG_dir+"ldpred_sim_{{gwas}}_genome/{{subset}}_sim_{fgeneid}_uh.txt",fgeneid=FGENEID)
+    script:
+        "../scripts/prep_ldpred_uh.R"
+
+
+rule ldpred_coord:
+    input:
+        uhf=KG_dir+"ldpred_sim_gwas_genome/{subset}_sim_{fgeneid}_uh.txt",
+        bimf=GDS_DIR+"../bed/{subset}_seq_train_hapmap_geno.bim"
+    params:
+        bimpref=GDS_DIR+"../bed/{subset}_seq_train_hapmap_geno",
+        N=N
+    output:
+        hf=GDS_DIR+"../ldpred_res_coord/{subset}_coord_train_{fgeneid}.h5"
+    conda:
+        "envs/ldpred.yml"
+    shell:
+        "/home/nwknoblauch/miniconda3/envs/ldpred/bin/coord --gf={params.bimpref} --ssf={input.uhf} --N={params.N} --out={output.hf}"
+
+
+
+rule ldpred_zero:
+    input:
+        coordf=GDS_DIR+"../ldpred_res_coord/{subset}_coord_train_1.h5"
+    params:
+        out_pref=GDS_DIR+"../ldpred_res_tt/{subset}_train_1",
+        ldoutpref=GDS_DIR+"../ldpred_res_tt/{subset}_train_LD"
+    output:
+        templdf=temp(GDS_DIR+"../ldpred_res_tt/{subset}_train_LD_ldradius200.pickled.gz"),
+        hf=temp(expand(GDS_DIR+"../ldpred_res_tt/{{subset}}_train_1_LDpred{thing}.txt",
+                  thing=['_p1.0000e-03',
+                         '_p1.0000e+00',
+                         '_p1.0000e-01',
+                         '_p1.0000e-02',
+                         '_p3.0000e-01',
+                         '_p3.0000e-02',
+                         '-inf']))
+    conda:
+        "envs/ldpred.yml"
+    shell:
+                     "/home/nwknoblauch/miniconda3/envs/ldpred/bin/ldpred --coord={input.coordf} --ld_radius=200 --local_ld_file={params.ldoutpref} --N=503 --out={params.out_pref}"
+
+
+        
+rule ldpred_res:
+    input:
+        coordf=GDS_DIR+"../ldpred_res_coord/{subset}_coord_train_{fgeneid}.h5",
+        templdf=GDS_DIR+"../ldpred_res_tt/{subset}_train_LD_ldradius200.pickled.gz"
+    params:
+        out_pref=GDS_DIR+"../ldpred_res/{subset}_train_{fgeneid}",
+        ldoutpref=GDS_DIR+"../ldpred_res_tt/{subset}_train_LD"
+    output:
+        hf=temp(expand(GDS_DIR+"../ldpred_res/{{subset}}_train_{{fgeneid}}_LDpred{thing}.txt",
+                  thing=['_p1.0000e-03',
+                         '_p1.0000e+00',
+                         '_p1.0000e-01',
+                         '_p1.0000e-02',
+                         '_p3.0000e-01',
+                         '_p3.0000e-02',
+                         '-inf']))
+    conda:
+        "envs/ldpred.yml"
+    shell:
+                     "/home/nwknoblauch/miniconda3/envs/ldpred/bin/ldpred --coord={input.coordf} --ld_radius=200 --local_ld_file={params.ldoutpref} --N=503 --out={params.out_pref}"
+
+
+rule mutate_concat:
+    input:
+        summf=expand(GDS_DIR+"../ldpred_res/{{subset}}_train_{{fgeneid}}_LDpred{thing}.txt",
+                  thing=['_p1.0000e-03',
+                         '_p1.0000e+00',
+                         '_p1.0000e-01',
+                         '_p1.0000e-02',
+                         '_p3.0000e-01',
+                         '_p3.0000e-02',
+                         '-inf'])
+    params:
+        thing=expand("{thing}",thing=['_p1.0000e-03',
+                         '_p1.0000e+00',
+                         '_p1.0000e-01',
+                         '_p1.0000e-02',
+                         '_p3.0000e-01',
+                         '_p3.0000e-02',
+                         '-inf'])
+    output:
+        of=temp(GDS_DIR+"../ldpred_res_t/{subset}_train_{fgeneid}_LDpred.txt.gz")
+    script:
+        "../scripts/summarise_t.R"
+
+
+rule mutate_concat_genes:
+    input:
+        summf=expand(GDS_DIR+"../ldpred_res_t/{{subset}}_train_{fgeneid}_LDpred.txt.gz",
+                  fgeneid=FGENEID)
+    params:
+        fgeneid=expand("{fgeneid}",fgeneid=FGENEID)
+    output:
+        of=GDS_DIR+"../ldpred_res_f/{subset}_train_ALL_LDpred.txt.gz"
+    script:
+        "../scripts/summarise_t.R"        
+        
+        
+        
+        
+rule ldsc_chrom_est:
+    input:
+        ldsc_f="ldsc/ldsc.py",
+        sumstatf=KG_dir+"ldsc_sim_{gwas}_{chrom}/sim_{fgeneid}.sumstats.gz",
+        chroml2=KG_dir+"eur_w_ld_chr/{chrom}.l2.ldscore.gz"
+    params:
+        out_pref=KG_dir+"ldsc_est_{gwas}_{chrom}/sim_{fgeneid}",
+        ld_dir=KG_dir+"eur_w_ld_chr/"
+    output:
+        logf=KG_dir+"ldsc_est_{gwas}_{chrom}/sim_{fgeneid}.log"
+    shell:
+        "python2 ldsc/ldsc.py --h2 {input.sumstatf} --ref-ld-chr {params.ld_dir} --w-ld-chr {params.ld_dir} --out {params.out_pref}"
+                # "module load python/2.7.13; source activate ~/python2_project/bin/activate; ldsc/ldsc.py --h2 {input.sumstatf} --ref-ld-chr {params.ld_dir} --w-ld-chr {params.ld_dir} --out {params.out_pref}"
+
+
+rule ldsc_trait_est:
+    input:
+        ldsc_f="ldsc/ldsc.py",
+        sumstatf=KG_dir+"ldsc_sim_{gwas}_genome/{subset}_sim_{fgeneid}_uh_{scen}.txt",
+        chroml2=expand(KG_dir+"eur_w_ld_chr_{{subset}}_train/{chrom}.l2.ldscore.gz",chrom=range(1,23)),
+        soutf=expand(KG_dir+"eur_w_ld_chr_{{subset}}_train/{chrom}.l2.M_5_50",chrom=range(1,23))
+    params:
+        out_pref=KG_dir+"ldsc_est_{gwas}_genome/est_{subset}_sim_{fgeneid}_{scen}",
+        ld_dir=KG_dir+"eur_w_ld_chr_{subset}_train/"
+    output:
+        logf=temp(KG_dir+"ldsc_est_{gwas}_genome/est_{subset}_sim_{fgeneid}_{scen}.log")
+    shell:
+        "python2 ldsc/ldsc.py --h2 {input.sumstatf} --ref-ld-chr {params.ld_dir} --w-ld-chr {params.ld_dir} --out {params.out_pref}"
+                # "module load python/2.7.13; source activate ~/python2_project/bin/activate; ldsc/ldsc.py --h2 {input.sumstatf} --ref-ld-chr {params.ld_dir} --w-ld-chr {params.ld_dir} --out {params.out_pref}"                
+
+
+rule ldsc_trait_parse:
+    input:
+        logf=expand(KG_dir+"ldsc_est_{{gwas}}_genome/est_{{subset}}_sim_{fgeneid}_{{scen}}.log",fgeneid=FGENEID)
+    output:
+        logf=OUTPUT_DIR+"sim_{subset}_{gwas}_ldsc_res_{scen}.txt.gz"
+    params:
+        fgeneid=expand("{fgeneid}",fgeneid=FGENEID)
+    script:
+        "../scripts/parse_ldsc.R"                
+                
+        
+rule ldsc_parse_est:
+    input:
+        logf=expand(KG_dir+"ldsc_est_{{gwas}}_{{chrom}}/sim_{fgeneid}_{{scen}}.log",fgeneid=FGENEID),
+        tparamf=expand(KG_dir+"ldsc_sim_{{gwas}}_{{chrom}}/sim_{fgeneid}_tparam_{{scen}}.tsv",fgeneid=FGENEID)
+    output:
+        logf=KG_dir+"ldsc_est_{gwas}_{chrom}/sim_results_{scen}.tsv"
+    params:
+        fgeneid=expand("{fgeneid}",fgeneid=FGENEID)
+    script:
+        "../scripts/parse_ldsc.R"
+
+rule get_ldsc:
+    output:
+        "ldsc/ldsc.py"
+    shell:
+        "git clone https://github.com/bulik/ldsc.git"
+                      
+

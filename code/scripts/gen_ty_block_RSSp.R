@@ -2,7 +2,7 @@
 # save.image()
 # stop()
 library(SeqSupport)
-library(RcppEigenH5)
+
 library(tidyverse)
 library(progress)
 library(SeqArray)
@@ -28,9 +28,9 @@ if(!is.null(n_pgdsf)){
   seqClose(gds)
   gds <- seqOpen(gdsf)
 }else{
-  gds <- seqOpen(gdsf, readonly = T)
-  n <- length(seqGetData(gds, "sample.id"))
-  p <- length(seqGetData(gds, "variant.id"))
+
+  n <- calc_N_h5(c(gdsf,"/","dosage"))
+  p <- calc_p_h5(c(gdsf,"/","dosage"))
 }
 tparam_df <- gen_tparamdf_norm(pve,bias,nreps,n = n,p = p,mfgeneid) %>% mutate(n=n,p=p)
                                         # save.image()
@@ -44,12 +44,12 @@ if(!is.null(beta_infile)){
 }else{
   betamat <- NULL
 }
-ymat <- gen_sim_phenotype_gds(
-    gds=gds,
+ymat <- gen_sim_phenotype_h5(
+    h5file=gdsf,
     tparam_df = tparam_df,
     fgeneid = mfgeneid,
     betamat=betamat,
     beta_h5file=beta_h5file)
-write_mat_h5(out_h5f,"trait","ymat",ymat,deflate_level = 0L)
-write_df_h5(tparam_df,groupname = "SimulationInfo",outfile = out_h5f,deflate_level = 0L)
+EigenH5::write_matrix_h5(out_h5f,"trait","ymat",ymat)
+EigenH5::write_df_h5(tparam_df,groupname = "SimulationInfo",outfile = out_h5f)
 #Rprof(NULL)

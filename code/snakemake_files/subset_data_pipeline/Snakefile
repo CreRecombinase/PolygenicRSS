@@ -55,6 +55,11 @@ rule subset_gds:
         "../scripts/gds_subset.R"
 
 
+rule subset_wtcc_h5:
+    ''' This rule creates the reference panel HDF5 file from WTCC data'''
+    input:
+        input_h5=WTCC_H5_DIR+"../wtcc_input/{gn}_geno.h5",
+        breakf=LD_break_file
 
 
 rule impute_2_snpgds:

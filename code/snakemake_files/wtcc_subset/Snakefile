@@ -7,42 +7,131 @@ else:
 configfile:
     configpath
 
-KG_dir="../"+config["KG_DIRECTORY"]
+shell.executable("/bin/bash")
 
-#Directory that holds "raw" 1000 genomes vcf files (I think this already exists in the `compbio` folder in the `RSS` folder)
-VCF_DIR="../"+config["VCF_DIR"]
+config = {key: "../"+value for (key,value) in config.items()}   
 
-#Directory that holds the haplotype and genotype `.gds` which are population specific (i.e EUR), and have had an allele frequency cutoff applied (i.e 0.05)
-GDS_DIR="../"+config["GDS_DIR"]
-MGDS_DIR=GDS_DIR+"../all_gds/"
-
-#Directory that holds the 1000 genomes genetic map files (you can get these off github, google 1000 genomes genetic maps)
-KG_MAPDIR="../"+config["KG_MAPDIR"]
-WTCC_H5_DIR="../"+config["WTCC_H5"]
-HDF5_DIR="../"+config["HDF5_DIR"]
-# File that has the LDetect LD breakpoints
-#URL for that file is here #LD_break_file_url="https://bitbucket.org/nygcresearch/ldetect-data/raw/ac125e47bf7ff3e90be31f278a7b6a61daaba0dc/EUR/fourier_ls-all.bed"
-LD_break_file="../"+config["LDETECT_BREAK_FILE"]
-OUTPUT_DIR= "../"+config["OUTPUT_DIR"]
-INPUT_DIR= "../"+config["INPUT_DIR"]
-VCF_DIR="../"+config["VCF_DIR"]
 GWAS_NAMES = ["bd","cad","cd","ht","ra","t1d","t2d"]
-
+GWAS_NAMES = ["t1d","t2d"]
 
 rule all:
     input:
-        expand(HDF5_DIR+"{gn}_seq_hapmap_geno.h5",gn=GWAS_NAMES)
+        expand(config["HDF5_DIR"]+"{gn}_hapmap_wtcc_geno.h5",gn=GWAS_NAMES),
+        expand(config["VCF_ODIR"]+"{gn}_19.vcf.gz",gn=GWAS_NAMES)
+#        expand(WTCC_INPUT_DIR+"{trait}.h5",trait=GWAS_NAMES)
+        # expand(config["HDF5_DIR"]+"{gn}_seq_hapmap_geno.h5",gn=GWAS_NAMES)
+
+#RsMergeArch url       
+#ftp://ftp.ncbi.nlm.nih.gov/snp/organisms/human_9606/database/data/organism_data/RsMergeArch.bcp.gz
 
 
 
-rule subset_wtcc:
-    ''' This rule creates the hdf5 file that will be used by most of the subsequent rules, It should be somewhere on RCC or gardner, and shouldn't have to be re-run'''
+rule repack_wtcc:
+    ''' This rule repacks the gzipped HDF5 files using the blosc filter so that they can more quickly be read and written'''
     input:
-        input_gds=MGDS_DIR+"ALL_seq_hapmap_geno.gds",
-        input_h5=WTCC_H5_DIR+"combined.h5"
-    params:
-        gn="{gn}"
+        inf=config["WTCC_INPUT_H5"]+"{gn}.mat"
     output:
-        output_h5=HDF5_DIR+"{gn}_seq_hapmap_geno.h5"
+        outf=config["WTCC_INPUT_H5"]+"{gn}_16.h5"
+    shell:
+        "/usr/local/bin/h5repack -f UD=32001,2,4,8 {input.inf} {output.outf}"
+        
+
+rule wtccc_plink_gds:
+    ''' This rule converts HDF5 to plink files using SNPrelate'''
+    input:
+        input_h5=config["WTCC_INPUT_H5"]+"{gn}_16.h5"
+    output:
+        outf_snpgds=temp(config["SNPGDS_DIR"]+"{gn}_16_snp_wtcc_geno.gds"),
+        outf_fam=temp(config["PLINK_DIR"]+"{gn}_16.fam"),
+        outf_bim=temp(config["PLINK_DIR"]+"{gn}_16.bim"),
+        outf_bed=temp(config["PLINK_DIR"]+"{gn}_16.bed")
+    params:
+        outf_pref_plink=config["PLINK_DIR"]+"{gn}_16",
+        gn="{gn}"
     script:
-        "../../scripts/subset_wtcc.R"
+        "../../scripts/h52tplink.R"
+
+rule badplink_to_vcf:
+    input:
+        in_bed=rules.wtccc_plink_gds.output.outf_bed,
+        in_bim=rules.wtccc_plink_gds.output.outf_bim,
+        in_fam=rules.wtccc_plink_gds.output.outf_fam
+    params:
+        in_pref_plink=config["PLINK_DIR"]+"{gn}_16",
+        out_pref_vcf=config["VCF_ODIR"]+"{gn}_16"
+    output:
+        out_vcf=temp(config["VCF_ODIR"]+"{gn}_16.vcf.gz"),
+        out_vcf_nsx=temp(config["VCF_ODIR"]+"{gn}_16.nosex"),
+        out_vcf_lg=temp(config["VCF_ODIR"]+"{gn}_16.log")
+    threads: 11
+    shell:
+        "plink --bfile {params.in_pref_plink} --recode vcf bgz --out {params.out_pref_vcf} --threads {threads}"
+        
+rule gds_19:
+    input:
+        vcff=config["VCF_ODIR"]+"{gn}_19.vcf.gz"
+    output:
+        temp_gds=config["GDS_DIR"]+"{gn}_19.gds"
+    threads: 9
+    script:
+        "../../scripts/vcf2seq_gds.R"
+    
+rule crossover_vcf:
+    input:
+        in_vcf=config["VCF_ODIR"]+"{gn}_16.vcf.gz",
+        in_chain="../../../data/hg16ToHg19.over.chain.gz",
+        in_hg19=config["HG19_DIR"]+"hg19.fa"
+    output:
+        out_vcf=temp(config["VCF_ODIR"]+"{gn}_19.vcf")
+    conda:
+        "envs/ldpred.yml"
+    shell:
+        "CrossMap.py vcf {input.in_chain} {input.in_vcf} {input.in_hg19} {output.out_vcf}"
+
+
+
+rule vcf_id2x:
+    input:
+        config["VCF_ODIR"]+"{gn}_19.vcf"
+    output:
+        vcfi=config["VCF_ODIR"]+"{gn}_19.vcf.gz"
+    threads: 9
+    shell:
+        "cat {input} | vcf-sort -c -p {threads} | bgzip > {output.vcfi}"
+
+
+rule vcf_idx:
+    input:
+        config["VCF_ODIR"]+"{gn}_19.vcf.gz"
+    output:
+        config["VCF_ODIR"]+"{gn}_19.vcf.gz.csi"
+    threads: 9
+    shell:
+        "bcftools index {input}"
+
+        
+rule vcf_to_goodplink:
+    input:
+        in_vcf=config["VCF_ODIR"]+"{gn}.vcf.gz"
+    output:
+        out_bed=config["PLINK_DIR"]+"{gn}_19.bed",
+        out_bim=config["PLINK_DIR"]+"{gn}_19.bim",
+        out_fam=config["PLINK_DIR"]+"{gn}_19.fam"        
+    params:
+        out_pref_plink=config["PLINK_DIR"]+"{gn}_19"
+    shell:
+        "plink --vcf {input.in_vcf} --make-bed --out {params.out_pref_plink}"        
+
+
+
+
+rule interp_map_wtcc:
+    ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are rearranged)'''
+    input:
+        input_gds=config["GDS_DIR"]+"{gn}_19.gds"
+#        mapf=KG_MAPDIR+"interpolated_{map}.h5"
+    output:
+        outf=config["HDF5_DIR"]+"{gn}_seq_wtcc_geno.h5"
+    script:
+        "../../scripts/gds2h5.R"        
+

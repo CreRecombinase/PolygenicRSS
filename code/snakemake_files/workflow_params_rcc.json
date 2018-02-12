@@ -1,11 +1,15 @@
 {
-    "KG_DIRECTORY": "../../../../../../project/xinhe/eQTL/1kg/",
-    "VCF_DIR": "../../../../../../project/xinhe/eQTL/1kg/vcf/",
-    "GDS_DIR": "../../../../../../project/xinhe/eQTL/1kg/gds/",
-    "HDF5_DIR": "../../../../../../project/xinhe/eQTL/1kg/h5/",
-    "WTCC_H5": "../../../../../../project/xinhe/eQTL/1kg/wtcc/",
-    "KG_MAPDIR" :"../../../../../../project/xinhe/eQTL/1kg/1000-genomes-genetic-maps/",
-     "OUTPUT_DIR" :"../../output/RSSp_snakemake/",
-    "INPUT_DIR" :"../../data/Snakemake_inputs/",
+    "KG_DIRECTORY":   "../../../../../../scratch/midway2/",
+    "VCF_DIR":        "../../../../../../scratch/midway2/nwknoblauch/vcf/",
+    "VCF_ODIR":       "../../../../../../scratch/midway2/nwknoblauch/vcf/",
+    "GDS_DIR":        "../../../../../../scratch/midway2/nwknoblauch/gds/",
+    "SNPGDS_DIR":     "../../../../../../scratch/midway2/nwknoblauch/snpgds/",
+    "PLINK_DIR":      "../../../../../../scratch/midway2/nwknoblauch/plink/",
+    "WTCC_INPUT_DIR": "../../../../../../scratch/midway2/nwknoblauch/",
+    "HDF5_DIR":       "../../../../../../scratch/midway2/nwknoblauch/h5/",
+    "WTCC_H5":        "../../../../../../scratch/midway2/nwknoblauch/",
+    "KG_MAPDIR" :     "../../../../../../project/xinhe/eQTL/1kg/1000-genomes-genetic-maps/",
+     "OUTPUT_DIR" :   "../../output/RSSp_snakemake/",
+    "INPUT_DIR" :     "../../data/Snakemake_inputs/",
     "LDETECT_BREAK_FILE": "fourier_ls-all.bed"
 }
