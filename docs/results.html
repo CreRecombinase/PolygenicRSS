@@ -38,7 +38,7 @@ if (window.hljs) {
   hljs.configure({languages: []});
   hljs.initHighlightingOnLoad();
   if (document.readyState && document.readyState === "complete") {
-    window.setTimeout(function() { hljs.initHighlightingOnLoad(); }, 0);
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
   }
 }
 </script>
@@ -308,19 +308,35 @@ div.tocify {
 
 
 <ul>
-<li><a href="simulation.html">Standardized Effect Size Simulation</a></li>
+<li><a href="chr_16.html">Comparing RSS-p to ldsc</a></li>
+<li><a href="chr_2.html">Comparing RSS-p to ldsc</a></li>
+<li><a href="GenomeWideSimulation.html">Comparing RSS-p to ldsc</a></li>
+<li><a href="GRM_estimation.html">Assessing PVE using the GRM</a></li>
+<li><a href="Heritability.html">Background on Heritability</a></li>
+<li><a href="IndependenceCheck.html">Diagonal Approximation of LD matrix</a></li>
+<li><a href="Meeting_Notes.html">Meeting Notes</a></li>
+<li><a href="MeetingSummary1.html">Summary of Meeting</a></li>
 <li><a href="PolygenicEstimation.html">Polygenic Estimation With and Without Confounding</a></li>
-<li><a href="RSSp_ldsc.html">Comparing RSS-p to ldsc on a genome-wide scale</a></li>
-<li><a href="RSSp_Posterior.html">Deriving the Posterior for RSSp</a></li>
-<li><a href="RSSp_Prediction.html">Prediction using RSSp</a></li>
-<li><a href="RSSp_ldsc_highPVE.html">RSSp vs ldsc in a high PVE setting</a></li>
-<li><a href="RSSP_standard_error.html">Deriving the asymptotic standard error</a></li>
-<li><a href="RSSp_ldsc_gwas_direct_noConfounding.html">Direct Simulations vs GWAS style Simulations</a></li>
-<li><a href="Meeting_Notes.html">Meeting notes from 12/15/2017</a></li>
+<li><a href="RSSp_Large_Simulation.html">Investigating Inflation in Large Sample Simulations</a></li>
+<li><a href="RSSp_Large_WTCC_noConfounding.html">Combined WTCC simulation results</a></li>
+<li><a href="RSSp_ldsc_gwas_direct_noConfounding.html">Direct Simulation vs GWAS-style Simulation</a></li>
+<li><a href="RSSp_ldsc_highPVE_chr1.html">RSSp vs ldsc (High PVE)</a></li>
+<li><a href="RSSp_ldsc_highPVE_hr.html">RSSp vs ldsc (High PVE)</a></li>
+<li><a href="RSSp_ldsc_highPVE.html">RSSp vs ldsc (High PVE)</a></li>
+<li><a href="RSSp_ldsc_noConfounding.html">RSSp vs ldsc (No Confounding)</a></li>
+<li><a href="RSSp_ldsc.html">RSSp vs ldsc</a></li>
+<li><a href="RSSp_Posterior.html">RSSp for Prediction</a></li>
+<li><a href="RSSp_Prediction.html">Prediction with RSSp</a></li>
+<li><a href="RSSP_standard_error.html">Deriving the Standard Error for RSSp</a></li>
+<li><a href="RSSp_WTCC_noConfounding.html">Preliminary WTCC simulation results</a></li>
+<li><a href="RSSR_PolygenicData.html">Sparse Model, Polygenic Data</a></li>
+<li><a href="Running_ldetect.html">Getting up and running with LDetect</a></li>
+<li><a href="shrinkage_effect.html">Effect of LDshrink</a></li>
+<li><a href="simulatingGWAS.html">Simulating GWAS using snakemake</a></li>
+<li><a href="simulation.html">Standardized Effect Size Simulation</a></li>
+<li><a href="Summary.html">Polygenic Regression with Summary Statistics (RSSp)</a></li>
+<li><a href="RSSp_Large_Simulation.html">Diagnosing inflation at large sample size</a></li>
 </ul>
-<!-- * [Genome-Wide Simulation](GenomeWideSimulation.html) -->
-<!-- * [Diagonal Approximation of LD matrix](IndependenceCheck.html) -->
-<!-- * [Getting up and running with LDetect](Running_ldetect.html) -->
 
 <hr>
 <p>
