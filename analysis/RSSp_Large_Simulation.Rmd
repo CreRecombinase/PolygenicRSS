@@ -1,0 +1,153 @@
+---
+title: "Investigating Inflation in Large Sample Simulations"
+author: "Nicholas Knoblauch"
+date: 2018-02-14
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+
+
+```{r}
+
+library(tidyverse)
+library(RSSp)
+library(EigenH5)
+
+gwas_names <- c("RA & CAD")
+# meth <- "direct"
+ldscf <- "../output/RSSp_snakemake/sim_RA-CAD_wtcc_gwas_ldsc_res_NoConfoundSmaller.txt.gz"
+ldsc_f <- dir("../output/RSSp_snakemake")
+all_res <- dir("../output/RSSp_snakemake",full.names = T)
+all_res <- all_res[grepl("sim_RA-CAD.+[.0-9]+.txt.gz",all_res)]
+pvv <- as.numeric(gsub(".+sim_RA-CAD[^.0-9]+([.0-9]+).txt.gz","\\1",all_res))
+meth <- gsub(".+sim_RA-CAD_(.+)_RSSp_.+","\\1",all_res)
+res_df <- pmap_dfr(list(fn=all_res,pv=pvv,m=meth),function(fn,pv,m){
+  read_delim(fn,delim="\t")%>% mutate(method=m,pvv=pv)
+  })
+n <- unique(res_df$n)
+p <- unique(res_df$p)
+# quhf <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_genome_gwas_quh_chunk/RA-CAD_wtcc_NoConfoundSmaller_sim.h5"
+# 
+# ldsc_f <- "/home/nwknoblauch/Dropbox/PolygenicRSS/output/RSSp_snakemake/sim_RA-CAD_wtcc_gwas_ldsc_res_NoConfoundSmaller.txt.gz"
+tparam_df <- distinct(res_df,fgeneid,tpve,tsigu)
+idt <- distinct(res_df,fgeneid,tpve,tsigu) %>% group_by(tpve,tsigu) %>% summarise(n_replicates=n()) %>% rename(pve=tpve,sigma_u=tsigu) 
+ldsc_df <- read_delim(ldscf,delim="\t") %>% rename(pve=Total_Observed_scale_h2) %>% mutate(method="LDSC") %>% inner_join(tparam_df)
+```
+
+The simulation parameters were as follows
+```{r}
+knitr::kable(idt,align="l")
+```
+
+
+# Datasets
+
+I combined the `RA` and `CAD` `wtccc` datasets. The total number of SNPs is `r p` and total number of individuals is `r n`. 
+
+## Inflation of PVE estimates
+
+In GWAS simulations, estimates of PVE are inflated. This is not the case for direct simulations.
+```{r}
+res_df %>% filter(pvv==1) %>% ggplot(aes(x=tpve,y=pve,col=method))+geom_point()+xlim(c(0,1))+ylim(c(0,1))+geom_abline(intercept=0,slope=1)+ggtitle("Inflation of PVE estimates")+xlab("True PVE")+ylab("PVE estimate")
+```
+
+## Diagnosing Inflation
+
+### LD score regression
+
+LD score regression shows inflation, but to a much smaller degree
+
+```{r}
+ggplot(ldsc_df,aes(x=tpve,y=pve))+geom_point()+geom_abline(intercept=0,slope=1)+ggtitle("Inflation of PVE estimates in LDSC")+xlab("True PVE")+ylab("PVE estimate")
+```
+
+
+## Method of Moments
+
+An alternative to directly optimizing the marginalized likelihood is to estimate $\sigma_u$ by moment matching. If $v=Q^{T}\hat{u}$, then the idea is to fit the model $v^2=\sigma_u^2\lambda^2+\lambda$.
+
+```{r}
+library(EigenH5)
+library(broom)
+library(tidyverse)
+quhf <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_genome_gwas_quh_chunk/RA-CAD_wtcc_NoConfoundSmaller_1.0.h5"
+tparam_df <- read_df_h5(quhf,"SimulationInfo")
+tparam_df <- group_by(tparam_df,tpve) %>% mutate(replicate=1:n()) %>% ungroup()
+
+D <- read_vector_h5(quhf,"/","D")
+quh_df <- read_matrix_h5(quhf,"/","quh")^2 %>% magrittr::set_colnames(tparam_df$fgeneid) %>% as_data_frame %>%mutate(eigen_id=1:n(),D=D) %>% gather("fgeneid","v",-eigen_id,-D) %>% inner_join(tparam_df) %>% mutate()
+```
+
+```{r}
+a_models <- models <- group_by(quh_df,fgeneid,tpve,tsigu) %>% do(tidy(lm(v~I(D^2)+offset(D)+0,data=.))) %>% ungroup()
+ggplot(a_models,aes(x=tsigu^2,y=estimate))+geom_point()+xlab("sigma_u^2(True)")+ylab("sigma_u^2(Estimate)")+ggtitle("Linear Model")
+```
+
+
+# Residuals
+
+One standard diagnostic of a linear model fit is to plot the leverage vs the residuals. From this we can see there are clearly some outliers.
+
+```{r}
+models <- group_by(quh_df,fgeneid,tpve,tsigu,replicate) %>% do(augment(lm(v~I(D^2)+offset(D)+0,data=.)) %>% select(vsq=v,Dsq=I.D.2.,D=offset.D.,fitted=.fitted,resid=.resid,std.resid=.std.resid,leverage=.hat) %>% mutate(eigen_chunk=1:n())) %>% ungroup()
+tquh<- filter(quh_df,tpve<0.9)  %>% filter(fgeneid==fgeneid[1])
+# tlm <- lm(v~I(D^2)+offset(D)+0,data=tquh)
+# ttlm <- lm(v~offset(tsigu^2*D^2)+offset(D)+0,data=tquh)
+# group_by(models,fgeneid,tpve,tsigu) %>% summarise()
+# plot(tlm)
+# ggplot(models)
+
+filter(models) %>% ggplot(aes(x=leverage,y=std.resid))+geom_hex()+facet_wrap(~tpve,labeller="label_both")+ggtitle("Leverage vs Residuals")
+```
+
+
+
+```{r}
+filter(models) %>% ggplot(aes(x=vsq,y=std.resid))+geom_hex()+facet_wrap(~tpve,labeller = "label_both")+ggtitle("Residuals vs Response")
+```
+
+```{r}
+filter(models,fgeneid=="1") %>% ggplot(aes(x=D,y=leverage))+geom_point()+scale_x_log10()+scale_y_log10()+ggtitle("Leverage vs Eigenvalues (log-log) scale")
+
+```
+
+
+## Truncated EVD
+
+One (possible) strategy for fixing this problem is to throw away eigenvectors/eigenvalues with small eigenvalues. The motivation being that in the situation where the (true) underlying matrix is rank deficient, the trailing eigenvectors/eigenvalues will only add noise, which will increase $v^2$. Below I show the result of refitting the model using this approach. The panel heading `perc_rank=0.5` indicates that top eigenvalues were taken until the cumulative total sum of the eigenvalues was half the total.
+
+
+```{r}
+res_df %>% filter(method!="direct") %>% rename(perc_rank=pvv) %>%  ggplot(aes(x=tpve,y=pve,col=method))+geom_point()+xlim(c(0,1))+ylim(c(0,1))+geom_abline(intercept=0,slope=1)+ggtitle("Inflation of PVE estimates using truncated EVD")+xlab("True PVE")+ylab("PVE estimate")+facet_wrap(~perc_rank)
+
+
+```
+
+
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

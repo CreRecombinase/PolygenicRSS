@@ -1,0 +1,25 @@
+
+rule gen_quh:
+    input:
+        evdf=config["KG_DIRECTORY"]+"EVD_H5/{subseta}_{sub}_hapmap.h5",
+        uhf=config["KG_DIRECTORY"]+"RSSp_genome_gwas_uh/{subseta}_{sub}_{scen}_sim.h5"
+    output:
+        quhf=config["KG_DIRECTORY"]+"RSSp_genome_gwas_quh_chunk/{subseta}_{sub}_{scen}_sim.h5"
+    script:
+        "../scripts/gen_quh_chunk_h5.R"
+
+rule RSSp_est:
+    input:
+        rdsf=config["KG_DIRECTORY"]+"RSSp_genome_{gwas}_quh_chunk/{subseta}_{sub}_{scen}_sim.h5"
+    output:
+        dff=config["OUTPUT_DIR"]+"sim_{subseta}_{gwas}_RSSp_res_{sub}_{scen}.txt.gz"
+    script:
+        "../scripts/RSSp_est.R"
+
+rule RSSp_grid:
+    input:
+        rdsf=config["KG_DIRECTORY"]+"RSSp_genome_{gwas}_quh_chunk/{subseta}_{sub}_{scen}_sim.h5"
+    output:
+        dff=config["OUTPUT_DIR"]+"sim_{subseta}_{gwas}_grid_RSSp_res_{sub}_{scen}.txt.gz"
+    script:
+        "../scripts/RSSp_grid_est.R"

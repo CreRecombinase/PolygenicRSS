@@ -1,0 +1,40 @@
+import numpy as np
+import gzip
+
+configpath = None
+gardner_dir="../../../../../../../../group/xhe-lab/1KG/"
+rcc_dir="../../../../../../../project/xinhe/eQTL/1kg/"
+helab_dir="../../../../Desktop/scratch/"
+if os.path.exists(gardner_dir):
+    configpath="../workflow_params_gardner.json"
+if os.path.exists(rcc_dir):
+    configpath="../workflow_params_rcc.json"
+if os.path.exists("../../../../Desktop/im_xps13"):
+    configpath="../workflow_params_xps.json"
+if os.path.exists(helab_dir):
+    configpath="../workflow_params.json"    
+shell.executable("/bin/bash")    
+configfile:
+    configpath    
+
+
+
+def count_lines(fname):
+    with gzip.open(fname) as fh:
+        count = 0
+        for _ in fh:
+            count += 1
+        return count
+
+
+GWAS_NAMES = ["bd","cad","cd","ht","ra","t1d","t2d"]
+GWAS_NAMES = ["ra","cad"]    
+COMB_NAME="RA-CAD"
+SCEN="NoConfoundSmaller"
+NREPS =5
+PVE=list(8.9999*10**np.linspace(-1,-2.5,num=5))
+BIAS=[0.0]
+TOT_SIM=NREPS*len(PVE)*len(BIAS)
+#TOT_SIM=1
+FGENEID=range(1,TOT_SIM+1)
+

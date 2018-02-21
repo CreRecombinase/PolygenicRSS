@@ -1,0 +1,72 @@
+shell.executable("/bin/bash")
+
+# rule all:
+#     input:
+#         config["OUTPUT_DIR"]+"gcta_h2_est/{ccn}_seq_wtcc_{scen}_est.txt".format(scen=SCEN,ccn="sscombined"),
+#         config["OUTPUT_DIR"]+"gcta_h2_est/{subset}_seq_{sub}_{scen}_est.txt".format(subset="sscombined",sub="wtcc",scen=SCEN)
+
+
+# rule interp_map_wtcc:
+#     ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are rearranged)'''
+#     input:
+#         input_gds=config["GDS_DIR"]+"{gn}_19.gds"
+#     params:
+#         gn="{gn}"
+#     output:
+#         outf=temp(config["HDF5_DIR"]+"{gn}_19.h5")
+#     script:
+#         "../scripts/gds2h5.R"
+
+            
+# rule gcta_grm:
+#     input:
+#         in_bed=config["PLINK_DIR"]+"{gn}_19.bed",
+#         in_bim=config["PLINK_DIR"]+"{gn}_19.bim",
+#         in_fam=config["PLINK_DIR"]+"{gn}_19.fam"
+#     params:
+#         in_pref_plink=config["PLINK_DIR"]+"{gn}_19",
+#         grm_pref=config["PLINK_DIR"]+"{gn}_19"
+#     threads: 9
+#     output:
+#         grmbin=config["PLINK_DIR"]+"{gn}_19.grm.bin",
+#         grmnbin=config["PLINK_DIR"]+"{gn}_19.grm.N.bin",
+#         grmidbin=config["PLINK_DIR"]+"{gn}_19.grm.id"
+#     shell:
+#         "gcta64 --bfile {params.in_pref_plink} --make-grm-bin --out {params.grm_pref} --thread-num {threads}"
+        
+
+rule gen_pheno_gcta:
+    input:
+        phenof=config["KG_DIRECTORY"]+"RSSp_sim_gwas_pheno/{subset}_{sub}_{scen}_trait.h5",
+        grmidbin=config["PLINK_DIR"]+"{subset}_19.grm.id"
+    output:
+        phenof=temp(config["KG_DIRECTORY"]+"RSSp_sim_gwas_pheno/{subset}_{sub}_{scen}_trait.pheno")
+    script:
+        "../scripts/pheno2gctapheno.R"
+        
+rule gcta_h2:
+    input:
+        grmbin=config["PLINK_DIR"]+"{subset}_19.grm.bin",
+        phenof=config["KG_DIRECTORY"]+"RSSp_sim_gwas_pheno/{subset}_{sub}_{scen}_trait.pheno"
+    params:
+        grm_pref=config["PLINK_DIR"]+"{subset}_19",
+        out_pref=config["PLINK_DIR"]+"gcta_h2_est/{subset}_seq_{sub}_{scen}_{gene}_est",
+        gene="{gene}"
+    threads: 9
+    output:
+        out_f=temp(config["PLINK_DIR"]+"gcta_h2_est/{subset}_seq_{sub}_{scen}_{gene}_est.hsq")
+    shell:
+        "gcta64 --reml --grm {params.grm_pref} --pheno {input.phenof} --mpheno {params.gene} --out {params.out_pref} --thread-num {threads}"
+    
+
+        
+rule summarize_gcta:
+    input:
+        in_f=expand(config["PLINK_DIR"]+"gcta_h2_est/{{subset}}_seq_{{sub}}_{{scen}}_{gene}_est.hsq",gene=FGENEID)
+    params:
+        gene=FGENEID
+    output:
+        out_f=config["OUTPUT_DIR"]+"gcta_h2_est/{subset}_seq_{sub}_{scen}_est.txt"
+    script:
+        "../scripts/summarise_gcta.R"
+
