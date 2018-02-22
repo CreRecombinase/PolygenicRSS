@@ -1,54 +1,42 @@
                                         #Rprof(filename=snakemake@output[["proff"]],append=F)
 
 library(SeqSupport)
-library(RSSp)
-library(dplyr)
-library(rhdf5)
-#
-
-
-stopifnot(!is.null(snakemake@params[["N"]]))
-stopifnot(!is.null(snakemake@params[["P"]]))
-# stop()
+library(EigenH5)
+# library(RSSp)
+library(tidyverse)
+library(LDshrink)
 
 
 evdf <- snakemake@input[["evdf"]]
-LDchunk <- as.character(snakemake@params[["LDchunk"]])
+traitf <- snakemake@input[["traitf"]]
+pvv <- as.numeric(snakemake@params[["pvv"]])
 quhf <- snakemake@output[["quhf"]]
 
 
-n <- as.integer(as.numeric(snakemake@params[["N"]]))
-p <- as.integer(as.numeric(snakemake@params[["P"]]))
+tparam_df <-read_df_h5(traitf,"SimulationInfo")
+
+# D_df <- map_df(ld_grp,~data_frame(region_id=.x,D=read_vector_h5(evdf,paste0("EVD/",.x),"D")))
+#It doesn't actually matter what order D is in
+#D <- purrr::map(ld_grp,~read_vector_h5(evdf,paste0("EVD/",.x),"D")) %>% purrr::flatten_dbl()
+ld_grp <-get_objs_h5(evdf,"EVD")
+D_df <- map_df(ld_grp,~data_frame(region_id=as.integer(.x),D=read_vector_h5(evdf,paste0("EVD/",.x),"D")))
+
+sub_D_pvv <- filter_pvv(D_df,pvv)
+D <- sub_D_pvv$D
+#gw_snpi <- read_vec(evdf,"LDinfo/snp_id")
+p <- length(D)
+quh <- do.call("cbind",purrr::map(tparam_df$tsigu,~rnorm(n = p,mean = 0,sd = sqrt(.x^2*D^2+D))))
 
 
+write_matrix_h5(quhf,
+                "/",
+                "quh",
+                quh)
 
-mfgeneid <- as.character(snakemake@params[["fgeneid"]])
-pve <- as.numeric(snakemake@params[["pve"]])
-bias <- as.numeric(snakemake@params[["bias"]])
-nreps <- as.integer(as.numeric(snakemake@params[["nreps"]]))
+write_vector_h5(quhf,"/","D",D)
 
+write_df_h5(tparam_df,groupname = "SimulationInfo",quhf)
+write_df_h5(read_df_h5(evdf,"LDinfo"),"SNPinfo",quhf)
 
-
-tparam_df <- gen_tparamdf_norm(pve,bias,nreps,n = n,p = p,mfgeneid) %>% mutate(n=n,p=p)
-
-
-D <- read_vec(evdf,"EVD/D")
-
-gw_snpi <- read_vec(evdf,"LDinfo/snp_id")
-
-
-resl <- sim_quh_dir_df(tparam_df,D=D,seed=NULL,snp_id=gw_snpi)
-
-write_mat_h5(quhf,
-             LDchunk,
-             "quh",
-             resl$quh,
-             deflate_level=0,
-             doTranspose=F)
-
-write_vec(quhf,LDchunk,"D",resl$D)
-
-write_vec(quhf,LDchunk,"snp_id",resl$snp_id)
-write_df_h5(tparam_df,"SimulationInfo",quhf)
-warnings()
+#warnings()
 #Rprof(NULL)

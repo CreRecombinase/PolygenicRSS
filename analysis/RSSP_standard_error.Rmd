@@ -27,26 +27,56 @@ knitr::read_chunk("chunks.R")
 
 #Background 
 
-## Fisher's Approximation in the  i.i.d case
+## Fisher's information for multivariate normal
 
 If we have $n$ independent data points, each with the distribution $f(x|\theta)$, for large $n$, the MLE $\hat{\theta}$ as approximately normal, with mean $\theta$, and variance $\frac{\tau^2(\theta)}{n}$, where 
 
 $$ \frac{1}{\tau^2(\theta)}=E \left( \frac{d}{d \theta} \log f(X_1|\theta) \right)^2 = -E \left[ \frac{d^2}{d\theta^2} \log f(X_1|\theta) \right]$$
-
-## What if data is independent but not identical?
-
-Consider the scenario where $X_i$ has density $f_i(x|\theta)$, and 
-
-$$\sigma^2_i(\theta) = E \left( \frac{d}{d\theta} \log f_i(X_i|\theta) \right)^2 = -E \left[ \frac{d}{d\theta^2} \log f_i(X_i|\theta) \right]$$
+$$\mathcal{I}(\sigma_\textbf{u}^2)=\frac{1}{2}\text{tr}\left( \Sigma^{-1} \frac{\partial  \Sigma}{\partial \sigma_{\textbf{u}^2}}  \Sigma^{-1} \frac{\partial  \Sigma}{\partial \sigma_{\textbf{u}^2}} \right) \\ 
+=\frac{1}{2}\sum_{i=1}^p \frac{\lambda_i^4}{(\sigma_\textbf{u}^2 \lambda_i^2+\lambda_i)^2} $$
 
 In this case, $\sqrt{n}(\hat{\theta}-\theta)$ is approximately normal with an expectation of $0$  and a variance given by $$\frac{1}{\sum_{i=1}^n \sigma_i^2(\theta)}$$.  (This result comes from equation 5.77 of the text of Stigler's STAT 244 class)
 
-## The RSSp scenario
+#RSSp
+
+##RSSp without confounding
 
 Remember the marginalized form of $\hat{u}$ (or check out the `RSSp_Posterior` post)
 
-$$ \hat{\textbf{u}}|\sigma_u^2,c \sim N(0,\sigma_u^2R^2+R+cI_p)$$
+$$ \hat{\textbf{u}}|\sigma_u^2 \sim N(0,\sigma_u^2R^2+R)$$
 Also remember that we have diagonalized the LD matrix:
+
+$$\sigma^2_uR^2+R \\ = \sigma_u^2QD_R^2Q^{T} + Q D_{R} Q^{T} \\ =Q(D_\textbf{u})Q^{T}$$
+
+Where $D_R=\text{diag}\left(\lambda_i\right)$ and $D_\textbf{u}=\text{diag}\left(\sigma_u^2\lambda_i^2+\lambda_i\right)$
+
+If we transform $\hat{\textbf{u}}$, multiplying it by $Q^{T}$, then instead of having a multivariate  $\hat{\textbf{u}}|\sigma_u^2$ , we now have $p$ univariate normals, with densities given by 
+
+$$(Q^{T}\hat{\textbf{u}})_i|\sigma_u^2  \sim N(0,\sigma_u^2\lambda_i^2+\lambda_i)$$
+
+If we call $(Q^{T}\hat{\textbf{u}})_i$ $\hat{q}_i$ then we can write the log-likelihood as:
+
+$$-\frac{1}{2} \frac{\hat{q}_i^2}{\lambda_i^2 \sigma_u^2 + \lambda_i} - \frac{1}{2} \log(\lambda_i^2 \sigma_u^2 + \lambda_i) + \frac{1}{2} (-\log(2) - \log(π))$$
+
+
+
+The first derivative wrt. $\sigma_u^2$ is
+
+$$\sum_{i=1}^p -\frac{(\lambda_i^2 \sigma_u^2 + \lambda_i - \hat{q}_i^2)}{2 (\lambda^2 \sigma_u^2 + \lambda_i)^2}$$
+
+The second derivative wrt. $\sigma_u^2$ is :
+
+$$\sum_{i=1}^p  \frac{\lambda_i (\lambda_i^2 \sigma_u^2 + \lambda_i - 2 \hat{q}_i^2)}{2 (\lambda_i^2 \sigma_u^2 + \lambda_i)^3}$$
+
+
+
+
+## With Confounding
+
+
+
+$$ \hat{\textbf{u}}|\sigma_u^2,c \sim N(0,\sigma_u^2R^2+R+cI_p)$$
+
 
 $$\sigma^2_uR^2+R+cI_p \\ = \sigma_u^2QD_R^2Q^{T} + Q D_{R} Q^{T} + cI_p \\ =\sigma_u^2QD_R^2Q^{T}+QD_LQ^{T} \\ =Q(\sigma_u^2D^2_R + D_L)Q^{T} \\ =Q(D_\textbf{u})Q^{T}$$
 Where $D_R=\text{diag}\left(\lambda_i\right)$ ,$D_L=\text{diag}\left(\lambda_i+c\right)$ and $D_\textbf{u}=\text{diag}\left(\sigma_u^2\lambda_i^2+\lambda_i+c\right)$
@@ -58,6 +88,9 @@ $$(Q^{T}\hat{\textbf{u}})_i|\sigma_u^2,c  \sim N(0,\sigma_u^2\lambda_i^2+\lambda
 If we call $(Q^{T}\hat{\textbf{u}})_i$ $\hat{q}_i$ then we can write the log-likelihood as:
 
 $$-\frac{1}{2} \frac{\hat{q}_i^2}{c + \lambda_i^2 \sigma_u^2 + \lambda_i} - \frac{1}{2} \log(c + \lambda_i^2 \sigma_u^2 + \lambda_i) + \frac{1}{2} (-\log(2) - \log(π))$$
+
+
+
 The first derivative wrt. $\sigma_u^2$ is
 
 $$-\frac{\lambda_i^2 (c + \lambda_i^2 \sigma_u^2 + \lambda_i - \hat{q}_i^2)}{2 (c + \lambda^2 \sigma_u^2 + \lambda_i)^2}$$
@@ -118,8 +151,7 @@ evdQ <- evdR$vectors
 D <- evdR$values
 a <- 0.2
 u_data <- rnorm(p,mean=0,sd=sigma_u)
-# u_hat <- t(mvtnorm::rmvnorm(n=reps,mean=R%*%u_data,sigma=R)) %>%   array_branch(2) %>%
-#   imap_dfr(~data_frame(rep=.y,beta_hat=.x,beta=u_data))
+
 
 u_hat <- mvtnorm::rmvnorm(n=reps,mean=R%*%u_data,sigma=R+a*diag(p)) %>%   array_branch(1) %>%
   imap_dfr(~data_frame(fgeneid=as.character(.y),beta_hat=.x,beta=u_data,quh=c(crossprod(evdQ,beta_hat)),D=D,p_n=.5))
@@ -130,7 +162,7 @@ rssp_est <- group_by(u_hat,fgeneid) %>% do(RSSp_estimate(.,doConfound=T)) %>% un
 
 
 ```{r}
-ggplot(rssp_est,aes(x=fisher_det))+geom_histogram()+xlab(bquote(group("|",H,"|")))+ggtitle("The Hessian is singular in the absence of LD")
+ggplot(rssp_est,aes(x=fisher_det))+geom_histogram()+xlab(bquote(group("|",I,"|")))+ggtitle("The Information matrix is singular in the absence of LD")
 ```
 
 
@@ -162,7 +194,7 @@ rssp_est <- group_by(u_hat,fgeneid) %>% do(RSSp_estimate(.,doConfound=T)) %>% un
 
 
 ```{r}
-ggplot(rssp_est,aes(x=fisher_det))+geom_histogram(bins=50)+xlab(bquote(group("|",H,"|")))+ggtitle("The Hessian is non-singular in the presence of LD")
+ggplot(rssp_est,aes(x=fisher_det))+geom_histogram(bins=50)+xlab(bquote(group("|",I,"|")))+ggtitle("The Information matrix is non-singular in the presence of LD")
 ```
 
 
@@ -174,14 +206,26 @@ Are our estimates centered around the true value? How well does the asymptotic n
 In this plot, each point is the MLE of $\sigma_u^2,c$ from a random draw from $\hat{\textbf{u}}|\textbf{u},c,R$.  The vertical bars represent the asymptotic estimate of variance in $c$, the horizontal bars represent the asymptotic estimate of  variance in $\sigma_u^2$, and the diagonal bar represents the estimate of covariance between $c$ and $\sigma_u^2$.  The gold colored lines indicate the true value of $\sigma_u^2$ and $c$
 
 ```{r}
+
+Info <- RSSp_information(c(sigma_u,a),dvec = D)
+
+ests <- cbind(rssp_est$sigu^2,rssp_est$bias)
+est_cov <- cov(ests)
 filter(rssp_est,abs(sigu_bias_cov)<1) %>% 
 ggplot(aes(x=sigu^2,y=bias))+geom_point()+geom_errorbar(aes(ymin=(bias-bias_var),ymax=(bias+bias_var))) +
   geom_errorbarh(aes(xmin=sigu^2-sigu_var,xmax=sigu^2+sigu_var)) +
   geom_spoke(aes(angle=pi/4,radius=sigu_bias_cov)) +
   geom_hline(yintercept = a,col="gold",size=2,alpha=0.5) +
-  geom_vline(xintercept=sigma_u^2,col="gold",size=2,alpha=0.5)+xlab(bquote(hat(sigma)[u]^2))+ylab(bquote(hat(c)))
+  geom_vline(xintercept=sigma_u^2,col="gold",size=2,alpha=0.5)+
+  xlab(bquote(hat(sigma)[u]^2))+ylab(bquote(hat(c)))
 ```
 
+```{r}
+filter(rssp_est,sigu_var_h>0,sigu_var_h<.3) %>% ggplot(aes(x=sigu_var_h,y=sigu_var))+geom_point()
+```
+```{r}
+filter(rssp_est,bias_var_h>0,bias_var_h<0.9) %>% ggplot(aes(x=bias_var_h,y=sigu_var_h))+geom_point()
+```
 
 
 Here we see that the estimated variance of the confounding parameter is highly correlated to the estimated variance of $\sigma^2_\textbf{u}$

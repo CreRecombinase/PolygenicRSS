@@ -31,7 +31,16 @@ knitr::read_chunk("chunks.R")
 ```{r load_data,echo=F,message=F}
 library(tidyverse)
 library(RSSp)
-
+# bs2f <- "~/Dropbox/PolygenicRSS/data/Snakemake_inputs/scz2_ldsc_ex.txt"
+# sigf <- "~/Desktop/scratch/polyg_scratch/gds/scz2_seq_hapmap_geno.gds"
+# ldrf <- "~/Dropbox/PolygenicRSS/code/snakemake_files/scz2_LD_regions.txt"
+# ldr <- scan("~/Dropbox/PolygenicRSS/code/snakemake_files/scz2_LD_regions.txt",what=integer())
+# gds <- SeqArray::seqOpen(sigf)
+# si <- read_SNPinfo_gds(gds,region_id = T) %>% filter(chr==1)
+# nldr <- sort(unique(si$region_id))
+# write(nldr,file = "~/Dropbox/PolygenicRSS/code/snakemake_files/chr1_LD_regions.txt",sep="\n")
+# bs <- read_delim(bs2f,delim="\t") %>% semi_join(si)
+# write_delim(bs,"~/Dropbox/PolygenicRSS/data/Snakemake_inputs/chr1_ldsc_ex.txt",delim = "\t")
 ldsc_gwas_resf <- "~/Dropbox/PolygenicRSS/output/RSSp_snakemake/sim_scz2_gwas_ldsc_res.txt.gz"
 rss_gwas_resf <-  "~/Dropbox/PolygenicRSS/output/RSSp_snakemake/sim_scz2_gwas_RSSp_res_ALL.txt.gz"
 orss_gwas_resf <- "~/Dropbox/PolygenicRSS/output/RSSp_snakemake/sim_scz2_gwas_RSSp_oracle_res.txt.gz"

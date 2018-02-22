@@ -1,45 +1,42 @@
+
+
+
 rule gen_quh_chunk_direct:
     input:
-        evdf=KG_dir+"EVD_H5_{trait}/1KG_{trait}_hapmap_{LDchunk}.h5"
+        evdf=config["KG_DIRECTORY"]+"EVD_H5/{subset}_{sub}_hapmap.h5",
+        traitf=config["KG_DIRECTORY"]+"RSSp_sim_gwas_pheno/{subset}_{sub}_{scen}_trait.h5"
     params:
-        LDchunk="{LDchunk}",
-        fgeneid=expand("{fgeneid}",fgeneid=FGENEID),
-        P=P,
-        N=N,
-        pve=PVE,
-        bias=BIAS,
-        nreps=NREPS
+        pvv="{pvv}"
     output:
-        quhf=KG_dir+"RSSp_genome_direct_quh_chunk/{trait}_{LDchunk}_sim.h5"#,        proff=PROF_DIR+"direct_quh_{trait}_{LDchunk}.prof"
-        
+        quhf=config["KG_DIRECTORY"]+"RSSp_genome_direct_quh_chunk/{subset}_{sub}_{scen}_{pvv}.h5"
     script:
         "../scripts/gen_quh_chunk_direct.R"
 
 
-rule data_direct_report:
-    input:
-        rdsf=KG_dir+"RSSp_sim_direct_genome/{trait}_sim_all_quh.h5",
-    params:
-        traitn="{trait}",
-        methn="direct"
-    output:
-        reportf="result_reports/{trait}_direct_report_data.html"
-    script:
-        "../scripts/gen_data_direct_report.Rmd"        
+# rule data_direct_report:
+#     input:
+#         rdsf=config["KG_DIRECTORY"]+"RSSp_sim_direct_genome/{trait}_sim_all_quh.h5",
+#     params:
+#         traitn="{trait}",
+#         methn="direct"
+#     output:
+#         reportf="result_reports/{trait}_direct_report_data.html"
+#     script:
+#         "../scripts/gen_data_direct_report.Rmd"        
 
-rule sim_ldsc_chrom_direct:
-    input:
-        evd_chunkf=KG_dir+"EVD_CHROM_H5/1KG_hapmap_{chrom}.h5",
-        gdsf=rules.subset_gds.output.geno_gdsf
-    params:
-        chrom="{chrom}",
-        pve=PVE,
-        bias=BIAS,
-        nreps=NREPS
-    output:
-        outf=expand(KG_dir+"ldsc_sim_direct_{{chrom}}/sim_{fgeneid}.sumstats.gz",fgeneid=FGENEID),
-        soutf=expand(KG_dir+"ldsc_sim_direct_{{chrom}}/sim_{fgeneid}_tparam.tsv",fgeneid=FGENEID),
-        rdsf=KG_dir+"RSSp_sim_direct_{chrom}/sim_all.RDS"
-    script:
-        "../scripts/sim_chrom_ldsc_direct.R"
+# rule sim_ldsc_chrom_direct:
+#     input:
+#         evd_chunkf=config["KG_DIRECTORY"]+"EVD_CHROM_H5/1KG_hapmap_{chrom}.h5",
+#         gdsf=rules.subset_gds.output.geno_gdsf
+#     params:
+#         chrom="{chrom}",
+#         pve=PVE,
+#         bias=BIAS,
+#         nreps=NREPS
+#     output:
+#         outf=expand(config["KG_DIRECTORY"]+"ldsc_sim_direct_{{chrom}}/sim_{fgeneid}.sumstats.gz",fgeneid=FGENEID),
+#         soutf=expand(config["KG_DIRECTORY"]+"ldsc_sim_direct_{{chrom}}/sim_{fgeneid}_tparam.tsv",fgeneid=FGENEID),
+#         rdsf=config["KG_DIRECTORY"]+"RSSp_sim_direct_{chrom}/sim_all.RDS"
+#     script:
+#         "../scripts/sim_chrom_ldsc_direct.R"
         

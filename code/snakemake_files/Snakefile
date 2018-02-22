@@ -1,167 +1,32 @@
-include: "parameter_generation/Snakefile"
+include: "param_snakefile"
+include: "wtcc_snakefile"
+include: "combined_snakefile"
+include: "trait_snakefile"
+include: "LD_snakefile"
+include: "ldsc_snakefile"
+include: "rssp_snakefile"
+include: "grm_snakefile"
+include: "direct_snakefile"
 
-import pandas as pd
-import os
-import tables
-import h5py as h5
-gardner_dir="../../../../../../../../group/xhe-lab/1KG/"
-rcc_dir="../../../../../../project/xinhe/eQTL/1kg/"
 
-if os.path.exists(gardner_dir):
-    configpath="workflow_params_gardner.json"
-else:
-    if os.path.exists(rcc_dir):
-        configpath="workflow_params_rcc.json"
-    else:
-        if os.path.exists("../../../../Desktop/im_xps13"):
-            configpath="workflow_params_xps.json"
-        else:
-            configpath="workflow_params.json"
-
-configfile:
-    configpath    
-#Genetic Maps
-#ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20130507_omni_recombination_rates/
-#ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/working/20110106_recombination_hotspots/
-
-# File that has the LDetect LD breakpoints
-#URL for that file is here #LD_break_file_url="https://bitbucket.org/nygcresearch/ldetect-data/raw/ac125e47bf7ff3e90be31f278a7b6a61daaba0dc/EUR/fourier_ls-all.bed"
-
-TRAIT="bd"
+TRAIT=COMB_NAME
 
 METH="gwas"
-subworkflow wtcc_subset:
-    workdir: "wtcc_subset"
 
 
-subworkflow combined_pipeline:
-    workdir: "combined_pipeline"
 
-subworkflow trait_simulation:
-    workdir: "trait_simulation"
 
-subworkflow ld_pipeline:
-    workdir: "LD_pipeline"
-
-pvv=1.0
+pvv=np.linspace(0.5,1,num=5)
 shr=list(10**np.linspace(-2.5,-3.5,num=5))[-1]
 #GWAS_NAMES = ["bd","cad","cd","ht","ra","t1d","t2d","combined"]
 #GWAS_NAMES = ["combined"]
 
-TRAIT=GWAS_NAMES
-
-#To generate different files, change the value of the variable `simulation_file`
-#(the fact that the variable is  called `simulation_file` doesn't have any significance)
+TRAIT=COMB_NAME
 rule all:
     input:
-        config["OUTPUT_DIR"]+"gcta_h2_est/{ccn}_seq_wtcc_{scen}_est.txt".format(scen=SCEN,ccn="sscombined"),
-        config["OUTPUT_DIR"]+"gcta_h2_est/{subset}_seq_{sub}_{scen}_est.txt".format(subset="sscombined",sub="wtcc",scen=SCEN)
-        #HDF5_DIR+"combined_seq_wtcc_geno.h5"
-        # expand(HDF5_DIR+"{gn}_seq_wtcc_geno.h5",gn=GWAS_NAMES),
-        # config["GDS_DIR"]+"combined_19.gds",
-        # HDF5_DIR+"combined_seq_wtcc_geno.h5"
-        
-# wildcard_constraints:
-#     chrom="\d+",
-#     pv="[0-9].[0-9]+"
-
-## Rules for transforming VCFs to gds files
-
-
-rule interp_map_wtcc:
-    ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are rearranged)'''
-    input:
-        input_gds=config["GDS_DIR"]+"{gn}_19.gds"
-    params:
-        gn="{gn}"
-    output:
-        outf=temp(config["HDF5_DIR"]+"{gn}_19.h5")
-    script:
-        "../scripts/gds2h5.R"
-
-            
-rule gcta_grm:
-    input:
-        in_bed=config["PLINK_DIR"]+"{gn}_19.bed",
-        in_bim=config["PLINK_DIR"]+"{gn}_19.bim",
-        in_fam=config["PLINK_DIR"]+"{gn}_19.fam"
-    params:
-        in_pref_plink=config["PLINK_DIR"]+"{gn}_19",
-        grm_pref=config["PLINK_DIR"]+"{gn}_19"
-    threads: 9
-    output:
-        grmbin=config["PLINK_DIR"]+"{gn}_19.grm.bin",
-        grmnbin=config["PLINK_DIR"]+"{gn}_19.grm.N.bin",
-        grmidbin=config["PLINK_DIR"]+"{gn}_19.grm.id"
-    shell:
-        "gcta64 --bfile {params.in_pref_plink} --make-grm-bin --out {params.grm_pref} --thread-num {threads}"
-        
-
-rule gen_pheno_gcta:
-    input:
-        phenof=config["KG_DIRECTORY"]+"RSSp_sim_gwas_pheno/{subset}_{sub}_{scen}_trait.h5",
-        grmidbin=config["PLINK_DIR"]+"{subset}_19.grm.id"
-    output:
-        phenof=temp(config["KG_DIRECTORY"]+"RSSp_sim_gwas_pheno/{subset}_{sub}_{scen}_trait.pheno")
-    script:
-        "../scripts/pheno2gctapheno.R"
-        
-rule gcta_h2:
-    input:
-        grmbin=config["PLINK_DIR"]+"{subset}_19.grm.bin",
-        phenof=config["KG_DIRECTORY"]+"RSSp_sim_gwas_pheno/{subset}_{sub}_{scen}_trait.pheno"
-    params:
-        grm_pref=config["PLINK_DIR"]+"{subset}_19",
-        out_pref=config["PLINK_DIR"]+"gcta_h2_est/{subset}_seq_{sub}_{scen}_{gene}_est",
-        gene="{gene}"
-    threads: 9
-    output:
-        out_f=temp(config["PLINK_DIR"]+"gcta_h2_est/{subset}_seq_{sub}_{scen}_{gene}_est.hsq")
-    shell:
-        "gcta64 --reml --grm {params.grm_pref} --pheno {input.phenof} --mpheno {params.gene} --out {params.out_pref} --thread-num {threads}"
-    
-
-        
-rule summarize_gcta:
-    input:
-        in_f=expand(config["PLINK_DIR"]+"gcta_h2_est/{{subset}}_seq_{{sub}}_{{scen}}_{gene}_est.hsq",gene=FGENEID)
-    params:
-        gene=FGENEID
-    output:
-        out_f=config["OUTPUT_DIR"]+"gcta_h2_est/{subset}_seq_{sub}_{scen}_est.txt"
-    script:
-        "../scripts/summarise_gcta.R"
-
-
-
-# rule ldsc_trait_chunk:
-#     input:
-#         evdf=config["KG_DIRECTORY"]+"EVD_H5/{subset}_{sub}_hapmap.h5"
-#     params:
-#         outdir=config["KG_DIRECTORY"]+"eur_w_ld_chr_{subset}_{sub}}"
-#     output:
-#         outf=expand(config["KG_DIRECTORY"]+"eur_w_ld_chr_{{subset}}/{chrom}.l2.ldscore.gz",chrom=range(1,23)),
-#         soutf=expand(config["KG_DIRECTORY"]+"eur_w_ld_chr_{{subset}}_train/{chrom}.l2.M_5_50",chrom=range(1,23))#                proff=PROF_DIR+"ldsc_trait_chunk_{subset}.prof",
-#     script:
-#         "../scripts/ldsc_trait_chunk.R"        
-
-
-
-
-# rule gen_quh_chunk_train_direct:
-#     input:
-#         evdf=expand(config["KG_DIRECTORY"]+"EVD_H5/train_{{subset}}_hapmap_{{LDchunk}}_{shr}.h5",shr=shr),
-#         gdsf=config["GDS_DIR"]+"{subset}_seq_test_hapmap_geno.gds",
-#     params:
-#         LDchunk="{LDchunk}",
-#         fgeneid=expand("{fgeneid}",fgeneid=FGENEID),
-#         pve=PVE,
-#         bias=BIAS,
-#         nreps=NREPS
-#     output:
-#         quh_hf=temp(expand(config["KG_DIRECTORY"]+"RSSp_genome_direct_quh_chunk/{{subset}}_{{LDchunk}}_{pv}_{shr}_{{scen}}.h5",pv=pvv,shr=shr)),
-#         uh_hf= temp(config["KG_DIRECTORY"]+"RSSp_genome_direct_uh_chunk/{subset}_{LDchunk}_{scen}_sim.h5")
-#     script:
-#         "../scripts/sim_uh_quh_direct.R"
-    
-        
+        expand(config["VCF_DIR"]+"../impute/EUR.chr{chr}.h5",chr=range(1,23)),
+        expand(config["HDF5_DIR"]+"1KG{chr}_seq_1kg_haplo.h5",chr=range(1,23))
+#        expand(config["OUTPUT_DIR"]+"sim_{subseta}_{gwas}_RSSp_res_{sub}_{scen}_{pvv}.txt.gz",subseta=TRAIT,gwas=["gwas","direct"],sub="wtcc",scen=SCEN,pvv=pvv)
+        #expand(config["OUTPUT_DIR"]+"sim_{subseta}_{gwas}_grid_RSSp_res_{sub}_{scen}_{pvv}.txt.gz",subseta=TRAIT,gwas=METH,sub="wtcc",scen=SCEN,pvv=pvv)
+        #config["OUTPUT_DIR"]+"gcta_h2_est/{subset}_seq_{sub}_{scen}_est.txt".format(subset=TRAIT,sub="wtcc",scen=SCEN)
+        #config["OUTPUT_DIR"]+"sim_{subset}_{sub}_{gwas}_ldsc_res_{scen}.txt.gz".format(subset=TRAIT,sub="wtcc",gwas=METH,scen=SCEN),

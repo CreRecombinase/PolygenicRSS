@@ -145,10 +145,10 @@ nac_df <- select(ac_df,pve,method,tpve,tbias,sim,fgeneid) %>% unite("sim_method"
 ```
 
 ```{r}
-ac_df %>% ggplot(aes(x=tpve,y=pve))+geom_point()+geom_jitter()+geom_smooth(method="lm",aes(col=method))+facet_grid(sim~method)+xlab(bquote(PVE))+ylab(bquote(hat(PVE)))+ggtitle("RSSp is biased under GWAS simulatiosn but not under Direct simulation","Original LDSC values")
+ac_df %>% ggplot(aes(x=tpve,y=pve))+geom_point()+geom_jitter()+geom_smooth(method="lm",aes(col=method))+facet_grid(sim~method)+xlab(bquote(PVE))+ylab(bquote(hat(PVE)))+ggtitle("RSSp is biased under GWAS simulation but not under Direct simulation","Original LDSC values")
 ```
 ```{r}
-ac_df %>%mutate(pve=pmax(pmin(pve,1),0)) %>% ggplot(aes(x=tpve,y=pve))+geom_point()+geom_jitter()+geom_smooth(method="lm",aes(col=method))+facet_grid(sim~method)+xlab(bquote(PVE))+ylab(bquote(hat(PVE)))+ggtitle("RSSp is biased under GWAS simulatiosn but not under Direct simulation","LDSC values bounded between 0 and 1")
+ac_df %>%mutate(pve=pmax(pmin(pve,1),0)) %>% ggplot(aes(x=tpve,y=pve))+geom_point()+geom_jitter()+geom_smooth(method="lm",aes(col=method))+facet_grid(sim~method)+xlab(bquote(PVE))+ylab(bquote(hat(PVE)))+ggtitle("RSSp is biased under GWAS simulation but not under Direct simulation","LDSC values bounded between 0 and 1")
 ```
 
 ```{r}

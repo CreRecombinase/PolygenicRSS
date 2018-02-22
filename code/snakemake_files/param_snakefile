@@ -6,12 +6,16 @@ gardner_dir="../../../../../../../../group/xhe-lab/1KG/"
 rcc_dir="../../../../../../../project/xinhe/eQTL/1kg/"
 helab_dir="../../../../Desktop/scratch/"
 if os.path.exists(gardner_dir):
+    print("On Gardner\n")
     configpath="../workflow_params_gardner.json"
 if os.path.exists(rcc_dir):
+    print("On RCC\n")
     configpath="../workflow_params_rcc.json"
 if os.path.exists("../../../../Desktop/im_xps13"):
+    print("On laptop\n")
     configpath="../workflow_params_xps.json"
 if os.path.exists(helab_dir):
+    print("On desktop\n")
     configpath="../workflow_params.json"    
 shell.executable("/bin/bash")    
 configfile:

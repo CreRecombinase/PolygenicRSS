@@ -1,5 +1,7 @@
-
-
+# save.image()
+# stop()
+# load(".RData")
+# setwd("~/Dropbox/PolygenicRSS/code/snakemake_files")
 library(RSSp)
 library(dplyr)
                                         #library(SeqSupport)
@@ -12,6 +14,7 @@ fix_path <- function(x){
     files <- basename(x)
     return(file.path(dirnames,files))
 }
+  # rdsf <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_genome_direct_quh_chunk/RA-CAD_wtcc_NoConfoundSmaller_1.0.h5"
 
 rdsf <- fix_path(snakemake@input[["rdsf"]])
 outf <- fix_path(snakemake@output[["dff"]])
@@ -44,24 +47,6 @@ exec_fn <-  function(quhl,tpdfl,D){
 rss_res <- map2_df(
   array_branch(read_mat_h5(rdsf,ldgrp,"quh"),margin=2),
   transpose(tparam_df),exec_fn,D=read_vector_h5(rdsf,ldgrp,"D"))
-# colnames(quh_mat) <- as.character(tparam_df$fgeneid)
 
-# quh_mat <- quh_mat[,1,drop=F]
-# tparam_df <- slice(tparam_df,1)
-
-# n <-unique(tparam_df$n)
-# stopifnot(length(n)==1)
-
-
-
-# all_RSS_estimate <- function(data_df){
-#     tp_df <- distinct(data_df,fgeneid,.keep_all=T) %>% select(-D,-quh)
-#     return(cross_df(list(doConfound=c(T,F),log_params=c(F),useGradient=c(T))) %>%
-#            pmap_dfr(RSSp_estimate,data_df=data_df) %>% inner_join(tp_df,by="fgeneid"))
-#     }
-
-
-
-# rss_res <- group_by(inputs,fgeneid) %>% do(all_RSS_estimate(.)) %>% ungroup()
 
 write_delim(rss_res,outf,delim="\t")

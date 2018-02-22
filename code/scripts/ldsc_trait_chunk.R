@@ -1,11 +1,13 @@
-#Rprof(filename=snakemake@output[["proff"]],append=F)
-
-library(SeqSupport)
 library(tidyverse)
 library(SeqArray)
 library(EigenH5)
+library(LDshrink)
 library(progress)
-#gdsf <- snakemake@input[["gdsf"]]
+data("break_df")
+evdf <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/EVD_H5/sscombined_wtcc_hapmap.h5"
+
+outf <- paste0("/home/nwknoblauch/Desktop/scratch/polyg_scratch/eur_w_ld_chr_sscombined/",1:22,".l2.ldscore.gz")
+soutf <- paste0("/home/nwknoblauch/Desktop/scratch/polyg_scratch/eur_w_ld_chr_sscombined/",1:22,".l2.M_5_50")
 evdf <- snakemake@input[["evdf"]]
 outf <- snakemake@output[["outf"]]
 soutf <- snakemake@output[["soutf"]]
@@ -23,29 +25,18 @@ tdf <-data_frame(CHR=character(),
 walk(outf,write_delim,x=tdf,delim="\t")
 walk(soutf,write,x=0L)
 
-snp_df <- read_df_h5(evdf,"LDinfo") %>% rename(CHR=chr,BP=pos)
-snp_df <- group_by(snp_df,region_id) %>% do(mutate(.,L2=read_vector_h5(evdf,paste0("LDSC/",as.character(.$region_id[1])),"L2"))) %>% ungro
-
-#pb <- progress_bar$new(total=length(LDchunk))
-
-## ldsc_read <-function(fn,LDc){
-##   pb$tick()
-## return(read_df_h5(fn,groupname="LDinfo") %>% mutate(region_id=as.integer(LDc),L2=colSums(read_2d_mat_h5(fn,"LD","R")^2)-1) %>% rename(CHR=chr,BP=pos))
-## }
-
-## evd_info <- map2_dfr(evdf,LDchunk,ldsc_read)
+snp_df <- select(break_df,chr,region_id) %>%
+  inner_join(read_df_h5(evdf,"LDinfo")) %>%
+  rename(CHR=chr,BP=pos,CM=map) %>% select(-snp_id)
+snp_df <- group_by(snp_df,region_id) %>% do(mutate(.,L2=read_vector_h5(evdf,paste0("LDSC/",as.character(.$region_id[1])),"L2"))) %>% ungroup() %>% select(-region_id)
 
 
-
-
-## gds <- seqOpen(gdsf)
-## pb <- progress_bar$new(total=length(outf))
-## snpi <- read_SNPinfo_ldsc_ld(gds) %>% inner_join(evd_info) %>% mutate(out_file=outf[as.integer(CHR)],sout_file=soutf[as.integer(CHR)])
-split(snp_df,snpi$CHR) %>% walk(function(df){
+pb <- progress_bar$new(total=length(outf))
+split(snp_df,snp_df$CHR) %>% walk(function(df){
   pb$tick()
   ldscoref <- outf[df$CHR[1]]
   countf <- soutf[df$CHR[1]]
-  readr::write_delim(select(df,CHR,SNP,BP,CM,MAF,L2),path=ldscoref,delim="\t")
+  mutate(df,SNP=paste0("rs",SNP)) %>% select(CHR,SNP,BP,CM,MAF,L2) %>% readr::write_delim(path=ldscoref,delim="\t")
   nc <- dplyr::filter(df,MAF>0.05) %>% nrow()
   write(x=nc,file=countf)
   stopifnot(all(file.exists(c(ldscoref,countf))))

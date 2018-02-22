@@ -25,7 +25,7 @@ rule vcf_merge:
         out_vcf=config["VCF_ODIR"]+"{ccn}_19.vcf.gz".format(ccn=COMB_NAME)
     threads: 9
     shell:
-        "bcftools merge --force-samples {input.input_vcf} --threads {threads} -Ou | bcftools view --genotype \"^miss\" -Oz --threads {threads} -o {output.out_vcf} --min-af 0.05 --min-ac 1:minor"
+        "bcftools merge --force-samples {input.input_vcf} --threads {threads} -Ou | bcftools view --genotype \"^miss\" -Oz --threads {threads} -o {output.out_vcf} --types snps --min-af 0.05 --min-ac 1:minor"
 
 
 rule vcf2plink:

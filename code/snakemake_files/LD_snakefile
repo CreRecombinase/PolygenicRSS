@@ -1,12 +1,3 @@
-# include: "../parameter_generation/Snakefile"
-
-# config = {key: "../"+value for (key,value) in config.items()}   
-
-# trait=COMB_NAME
-
-# rule all:
-#     input:
-#         config["KG_DIRECTORY"]+"EVD_H5/{subset}_{sub}_hapmap.h5".format(subset=trait,sub="wtcc")
 
 rule ld_chunk_1kg:
     input:
@@ -25,7 +16,7 @@ rule dl_map_h5:
     shell:
         "git clone https://github.com/CreRecombinase/1000-genomes-genetic-maps {params.gdir}"
 
-        
+
 rule gen_map_h5:
     input:
         mapf=expand(config["KG_MAPDIR"]+"interpolated_from_hapmap/chr{chrom}.interpolated_genetic_map.gz",chrom=range(1,23))
@@ -35,3 +26,60 @@ rule gen_map_h5:
         config["KG_MAPDIR"]+"interpolated_hapmap.h5"
     script:
         "../scripts/map2RDS.R"
+
+
+rule vcf_2_clean:
+    input:
+        vcff=config["VCF_DIR"]+"ALL.chr{chr}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
+        filt_f="EUR.samples"
+    params:
+        out_pref=config["VCF_DIR"]+"EUR.chr{chr}_maf_01.vcf.gz"
+    output:
+        vcff=config["VCF_DIR"]+"EUR.chr{chr}_maf_01.vcf.gz"
+    threads: 2
+    shell:
+        "bcftools view {input.vcff} -Oz -o {params.out_pref} -S {input.filt_f} --min-alleles 2 --max-alleles 2 --min-af 0.01 --threads {threads}"
+
+rule vcf_2_allel:
+    input:
+        vcff=config["VCF_DIR"]+"EUR.chr{chr}_maf_01.vcf.gz"
+    output:
+        legf=config["VCF_DIR"]+"../impute/EUR.chr{chr}.h5"
+    threads: 11
+    script:
+        "../scripts/vcf2allel.py"
+
+
+rule allel2haplotype:
+    input:
+        legf=config["VCF_DIR"]+"../impute/EUR.chr{chr}.h5"
+    output:
+        h5f=config["HDF5_DIR"]+"1KG{chr}_seq_1kg_haplo.h5"
+    script:
+        "../scripts/allel2haplo_h5.R"
+
+rule impute2hdf5:
+    input:
+        hapf=temp(config["VCF_DIR"]+"../impute/ALL.chr{chr}_maf_01.impute.hap"),
+        legf=temp(config["VCF_DIR"]+"../impute/ALL.chr{chr}_maf_01.impute.legend")
+    params:
+        chrom="{chr}"
+    output:
+        hdff=config["KG_DIRECTORY"]+"../hdf5/1kg{chr}_seq_{sub}_geno.h5"
+    script:
+        "../scripts/impute2h5.R"
+
+
+# rule impute_2_snpgds:
+#     input:
+#         hapf=KG_dir+"impute/ALL.chr{chr}.impute.hap",
+#         legf=KG_dir+"impute/ALL.chr{chr}.impute.legend",
+#         mapf=KG_dir+"1000-genomes-genetic-maps/interpolated_hapmap/chr{chr}.interpolated_genetic_map.gz",
+#         filt_f="EUR.samples"
+#     params:
+#         chrom="{chr}"
+#     output:
+#         gdsf=KG_dir+"gds/ALL.chr{chr}.gds",
+#         geno_gdsf=KG_dir+"gds/ALL.chr{chr}_geno.gds"
+#     script:
+#         "../scripts/impute_2_seqgds.R"

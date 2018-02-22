@@ -2,10 +2,10 @@ library(SeqArray)
 library(tidyverse)
 
 
-inpf <- "/run/media/nwknoblauch/Data/wtcc_input/vcf/t1d_19_dup.vcf.gz"
-toutf <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/gds/scombined_19.gds"
+## inpf <- "/run/media/nwknoblauch/Data/wtcc_input/vcf/t1d_19_dup.vcf.gz"
+## toutf <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/gds/scombined_19.gds"
 inpf <- snakemake@input[["vcff"]]
-toutf <- snakemake@output[["undup_gds"]]
+toutf <- snakemake@output[["temp_gds"]]
 
 cores <- as.integer(snakemake@threads)
 

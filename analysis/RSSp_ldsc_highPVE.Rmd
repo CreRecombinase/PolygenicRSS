@@ -135,7 +135,7 @@ The next several plots show the same data as the box plots, (RMSE of PVE across 
 
 ```{r joy_bias_pve}
 library(ggjoy)
-mutate(comp_est_df,rel_confounding=round(tbias/tpve,3),true_pve=round(tpve,3)) %>% filter(true_pve<1) %>% mutate(pve=ifelse(pve>1,1,pve)) %>% mutate(true_pve=round(tpve,3),pve=ifelse(pve<0,0,pve)) %>%  ggplot(aes(x=abs(pve-true_pve),y=method,fill=method))+geom_joy()+xlab(bquote(RMSE[PVE]))+facet_grid(true_pve~rel_confounding,labeller=partial(label_both,sep="\n"))+scale_x_log10()
+mutate(comp_est_df,rel_confounding=round(tbias/tpve,3),true_pve=round(tpve,3)) %>% filter(true_pve<1) %>% mutate(pve=ifelse(pve>1,1,pve)) %>% mutate(true_pve=round(tpve,3),pve=ifelse(pve<0,0,pve)) %>%  ggplot(aes(x=abs(pve-true_pve),y=method,fill=method))+geom_joy()+xlab(bquote(RMSE[PVE]))+facet_grid(true_pve~rel_confounding,labeller=partial(label_both,sep="\n"))
 ```
 ```{r joy_pve_bias}
 
