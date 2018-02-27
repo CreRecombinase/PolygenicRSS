@@ -8,6 +8,8 @@ rule ld_chunk_1kg:
     script:
         "../scripts/evd_1kg_h5.R"
 
+
+
 rule dl_map_h5:
     output:
         expand(config["KG_MAPDIR"]+"interpolated_from_hapmap/chr{chrom}.interpolated_genetic_map.gz",chrom=range(1,23))
@@ -54,20 +56,20 @@ rule allel2haplotype:
     input:
         legf=config["VCF_DIR"]+"../impute/EUR.chr{chr}.h5"
     output:
-        h5f=config["HDF5_DIR"]+"1KG{chr}_seq_1kg_haplo.h5"
+        h5f=config["HDF5_DIR"]+"1KG{chr}_seq_1kg_geno.h5"
     script:
         "../scripts/allel2haplo_h5.R"
 
-rule impute2hdf5:
-    input:
-        hapf=temp(config["VCF_DIR"]+"../impute/ALL.chr{chr}_maf_01.impute.hap"),
-        legf=temp(config["VCF_DIR"]+"../impute/ALL.chr{chr}_maf_01.impute.legend")
-    params:
-        chrom="{chr}"
-    output:
-        hdff=config["KG_DIRECTORY"]+"../hdf5/1kg{chr}_seq_{sub}_geno.h5"
-    script:
-        "../scripts/impute2h5.R"
+# rule impute2hdf5:
+#     input:
+#         hapf=temp(config["VCF_DIR"]+"../impute/ALL.chr{chr}_maf_01.impute.hap"),
+#         legf=temp(config["VCF_DIR"]+"../impute/ALL.chr{chr}_maf_01.impute.legend")
+#     params:
+#         chrom="{chr}"
+#     output:
+#         hdff=config["KG_DIRECTORY"]+"../hdf5/1kg{chr}_seq_{sub}_geno.h5"
+#     script:
+#         "../scripts/impute2h5.R"
 
 
 # rule impute_2_snpgds:

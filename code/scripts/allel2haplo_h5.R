@@ -1,6 +1,6 @@
 library(EigenH5)
 library(tidyverse)
-library(SeqSupport)
+
 library(progress)
 library(LDshrink)
 # inpf <- dir("/home/nwknoblauch/Desktop/scratch/polyg_scratch/impute",full.names=T)

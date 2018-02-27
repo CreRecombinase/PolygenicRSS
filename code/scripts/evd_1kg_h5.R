@@ -5,12 +5,12 @@ library(tidyverse)
 
 
 data("break_df")
-hdff <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/h5/1KG1_seq_1kg_haplo.h5"
+hdff <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/h5/1KG19_seq_1kg_haplo.h5"
 
 
 mapf <- "/run/media/nwknoblauch/Data/1kg/1000-genomes-genetic-maps/interpolated_hapmap.h5"
 chunk_snps <- 0
-outf <- paste0("/home/nwknoblauch/Desktop/scratch/polyg_scratch/EVD_H5/1KG1_1kg_hapmap_0.h5")
+outf <- paste0("/home/nwknoblauch/Desktop/scratch/polyg_scratch/EVD_H5/1KG19_1kg_hapmap_0.h5")
 if(file.exists(outf)){
   file.remove(outf)
 }
@@ -21,7 +21,7 @@ outf <- snakemake@output[["evdf"]]
 chunk_snps <- as.integer(snakemake@params[["chunk_snps"]])
 cutoff <- as.numeric(snakemake@params[["cutoff"]])
 if(length(cutoff)==0){
-    cutoff <- formals(SeqSupport::chunkwise_LDshrink)[["cutoff"]]
+    cutoff <- formals(LDshrink::chunkwise_LDshrink_h5)[["cutoff"]]
 }
 if(length(chunk_snps)==0){
   chunk_snps <- 0
@@ -43,4 +43,4 @@ snp_df <- assign_map(snp_df,map_df)
 rm(map_df)
 
 
-SeqSupport::chunkwise_LDshrink_h5(input_file = hdff,output_file = outf,snp_df = snp_df,evd = F,svd = F,cutoff=cutoff)
+LDshrink::chunkwise_LDshrink_h5(input_file = hdff,output_file = outf,snp_df = snp_df,evd = F,svd = F,cutoff=cutoff,df=T)
