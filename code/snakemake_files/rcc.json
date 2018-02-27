@@ -1,0 +1,29 @@
+{
+    "__default__":
+    {
+	"time" : "02:00:00",
+	"nodes" : 1,
+	"ntasks" : 1,
+	"cpuspertask": 1,
+	"mempercpu": "13gb",
+	"cpus": 1
+	
+    },
+    "vcf_2_clean":
+    {
+	"cpuspertask": 2
+	"time" : "00:30:00",
+	"mem": "6gb"
+    },
+    "vcf_2_allel":
+    {
+	"time" : "00:35:00",
+	"mem": "20gb"
+    }
+    "ld_chunk_1kg":
+    {
+	"time" : "01:00:00",
+	"mem": "20gb"
+    }
+    
+}

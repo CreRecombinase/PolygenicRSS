@@ -24,8 +24,6 @@ shr=list(10**np.linspace(-2.5,-3.5,num=5))[-1]
 TRAIT=COMB_NAME
 rule all:
     input:
-        expand(config["VCF_DIR"]+"../impute/EUR.chr{chr}.h5",chr=range(1,23)),
-        expand(config["HDF5_DIR"]+"1KG{chr}_seq_1kg_haplo.h5",chr=range(1,23)),
         expand(config["KG_DIRECTORY"]+"EVD_H5/1KG{chr}_1kg_hapmap.h5",chr=range(1,23))
 #        expand(config["OUTPUT_DIR"]+"sim_{subseta}_{gwas}_RSSp_res_{sub}_{scen}_{pvv}.txt.gz",subseta=TRAIT,gwas=["gwas","direct"],sub="wtcc",scen=SCEN,pvv=pvv)
         #expand(config["OUTPUT_DIR"]+"sim_{subseta}_{gwas}_grid_RSSp_res_{sub}_{scen}_{pvv}.txt.gz",subseta=TRAIT,gwas=METH,sub="wtcc",scen=SCEN,pvv=pvv)

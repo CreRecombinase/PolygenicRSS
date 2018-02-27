@@ -25,7 +25,7 @@ rule gen_map_h5:
     params:
         chrom=range(1,23)
     output:
-        config["KG_MAPDIR"]+"interpolated_hapmap.h5"
+        mapf=config["KG_MAPDIR"]+"interpolated_hapmap.h5"
     script:
         "../scripts/map2RDS.R"
 
@@ -47,7 +47,7 @@ rule vcf_2_allel:
         vcff=config["VCF_DIR"]+"EUR.chr{chr}_maf_01.vcf.gz"
     output:
         legf=config["VCF_DIR"]+"../impute/EUR.chr{chr}.h5"
-    threads: 11
+    threads: 1
     script:
         "../scripts/vcf2allel.py"
 
