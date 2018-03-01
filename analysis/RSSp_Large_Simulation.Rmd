@@ -26,7 +26,7 @@ knitr::read_chunk("chunks.R")
 
 
 
-```{r}
+```{r read_results,echo=FALSE,message=FALSE}
 
 library(tidyverse)
 library(RSSp)
@@ -41,7 +41,7 @@ all_res <- all_res[grepl("sim_RA-CAD.+[.0-9]+.txt.gz",all_res)]
 pvv <- as.numeric(gsub(".+sim_RA-CAD[^.0-9]+([.0-9]+).txt.gz","\\1",all_res))
 meth <- gsub(".+sim_RA-CAD_(.+)_RSSp_.+","\\1",all_res)
 res_df <- pmap_dfr(list(fn=all_res,pv=pvv,m=meth),function(fn,pv,m){
-  read_delim(fn,delim="\t")%>% mutate(method=m,pvv=pv)
+  read_delim(fn,delim="\t")%>% mutate(simulation=m,pvv=pv)
   })
 n <- unique(res_df$n)
 p <- unique(res_df$p)
@@ -50,24 +50,29 @@ p <- unique(res_df$p)
 # ldsc_f <- "/home/nwknoblauch/Dropbox/PolygenicRSS/output/RSSp_snakemake/sim_RA-CAD_wtcc_gwas_ldsc_res_NoConfoundSmaller.txt.gz"
 tparam_df <- distinct(res_df,fgeneid,tpve,tsigu)
 idt <- distinct(res_df,fgeneid,tpve,tsigu) %>% group_by(tpve,tsigu) %>% summarise(n_replicates=n()) %>% rename(pve=tpve,sigma_u=tsigu) 
-ldsc_df <- read_delim(ldscf,delim="\t") %>% rename(pve=Total_Observed_scale_h2) %>% mutate(method="LDSC") %>% inner_join(tparam_df)
+ldsc_df <- read_delim(ldscf,delim="\t") %>% rename(pve=Total_Observed_scale_h2) %>% mutate(simulation="LDSC") %>% inner_join(tparam_df)
+
+gctaf <- "../output/RSSp_snakemake/gcta_h2_est/RA-CAD_seq_wtcc_NoConfoundSmaller_est.txt"
+gcta_res <- read_delim(gctaf,delim="\t")  %>%
+    filter(Source=="V(G)")%>% mutate(Source="gcta_pve",Variance=as.numeric(Variance)) %>% select(-SE) %>%spread(Source,Variance) %>% inner_join(tparam_df)
 ```
 
+
 The simulation parameters were as follows
-```{r}
+```{r simulations}
 knitr::kable(idt,align="l")
 ```
 
 
-# Datasets
+# Dataset
 
-I combined the `RA` and `CAD` `wtccc` datasets. The total number of SNPs is `r p` and total number of individuals is `r n`. 
+I combined the `RA` and `CAD` `wtccc` datasets. The total number of SNPs is `r p` and total number of individuals is `r n`. LD was estimated in-sample.
 
 ## Inflation of PVE estimates
 
-In GWAS simulations, estimates of PVE are inflated. This is not the case for direct simulations.
-```{r}
-res_df %>% filter(pvv==1) %>% ggplot(aes(x=tpve,y=pve,col=method))+geom_point()+xlim(c(0,1))+ylim(c(0,1))+geom_abline(intercept=0,slope=1)+ggtitle("Inflation of PVE estimates")+xlab("True PVE")+ylab("PVE estimate")
+In GWAS simulations, estimates of PVE are inflated. This is not the case for direct simulations. Henceforth "direct" simulations means simulating directly from the model.
+```{r gwas_inflation}
+res_df %>% filter(pvv==1) %>% ggplot(aes(x=tpve,y=pve,col=simulation))+geom_point()+xlim(c(0,1))+ylim(c(0,1))+geom_abline(intercept=0,slope=1)+ggtitle("Inflation of PVE estimates")+xlab("True PVE")+ylab("PVE estimate")
 ```
 
 ## Diagnosing Inflation
@@ -76,75 +81,104 @@ res_df %>% filter(pvv==1) %>% ggplot(aes(x=tpve,y=pve,col=method))+geom_point()+
 
 LD score regression shows inflation, but to a much smaller degree
 
-```{r}
-ggplot(ldsc_df,aes(x=tpve,y=pve))+geom_point()+geom_abline(intercept=0,slope=1)+ggtitle("Inflation of PVE estimates in LDSC")+xlab("True PVE")+ylab("PVE estimate")
+```{r ldsc_inflation}
+ggplot(ldsc_df,aes(x=tpve,y=pve))+geom_point()+geom_abline(intercept=0,slope=1)+ggtitle("PVE estimates in LDSC")+xlab("True PVE")+ylab("PVE estimate")
+```
+
+### GCTA 
+
+GCTA estimates are not inflated.
+
+```{r gcta_inflation}
+ggplot(gcta_res,aes(x=tpve,y=gcta_pve))+geom_point()+geom_abline(slope=1,intercept=0)+ggtitle("GCTA")+xlab("PVE")+ylab(bquote(hat(PVE)))
 ```
 
 
-## Method of Moments
 
-An alternative to directly optimizing the marginalized likelihood is to estimate $\sigma_u$ by moment matching. If $v=Q^{T}\hat{u}$, then the idea is to fit the model $v^2=\sigma_u^2\lambda^2+\lambda$.
+## Estimation of $\sigma_u^2$ using least squares
 
-```{r}
+An alternative to directly optimizing the marginalized likelihood is to estimate $\sigma_u$ by moment matching. If $v=Q^{T}\hat{u}$, then the idea is to fit the model $v^2=\sigma_u^2\lambda^2+\lambda$ (where $\lambda$ is a vector of eigenvalues). This can be done for both "direct" and GWAS based simulations. 
+
+```{r least_squares}
 library(EigenH5)
 library(broom)
 library(tidyverse)
 quhf <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_genome_gwas_quh_chunk/RA-CAD_wtcc_NoConfoundSmaller_1.0.h5"
+quhf_direct <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_genome_direct_quh_chunk/RA-CAD_wtcc_NoConfoundSmaller_1.0.h5"
 tparam_df <- read_df_h5(quhf,"SimulationInfo")
-tparam_df <- group_by(tparam_df,tpve) %>% mutate(replicate=1:n()) %>% ungroup()
+tparam_df <- group_by(tparam_df,tpve) %>% mutate(pve_replicate=1:n()) %>% ungroup()
 
 D <- read_vector_h5(quhf,"/","D")
-quh_df <- read_matrix_h5(quhf,"/","quh")^2 %>% magrittr::set_colnames(tparam_df$fgeneid) %>% as_data_frame %>%mutate(eigen_id=1:n(),D=D) %>% gather("fgeneid","v",-eigen_id,-D) %>% inner_join(tparam_df) %>% mutate()
+quh_df <- read_matrix_h5(quhf,"/","quh")^2 %>% magrittr::set_colnames(tparam_df$fgeneid) %>% as_data_frame %>%mutate(eigen_id=1:n(),D=D) %>%gather("fgeneid","v",-eigen_id,-D) %>% inner_join(tparam_df)%>% mutate(simulation="gwas")
+
+D_direct <- read_vector_h5(quhf_direct,"/","D")
+quh_df <- bind_rows(quh_df,read_matrix_h5(quhf_direct,"/","quh")^2 %>% magrittr::set_colnames(tparam_df$fgeneid) %>% as_data_frame %>%mutate(eigen_id=1:n(),D=D_direct) %>%gather("fgeneid","v",-eigen_id,-D) %>% inner_join(tparam_df) %>% mutate(simulation="direct")) 
+
 ```
-
-```{r}
-a_models <- models <- group_by(quh_df,fgeneid,tpve,tsigu) %>% do(tidy(lm(v~I(D^2)+offset(D)+0,data=.))) %>% ungroup()
-ggplot(a_models,aes(x=tsigu^2,y=estimate))+geom_point()+xlab("sigma_u^2(True)")+ylab("sigma_u^2(Estimate)")+ggtitle("Linear Model")
-```
+To start, here's a look at what a plot of $\hat{v}^2$ vs $\lambda$ looks like.
 
 
-# Residuals
-
-One standard diagnostic of a linear model fit is to plot the leverage vs the residuals. From this we can see there are clearly some outliers.
-
-```{r}
-models <- group_by(quh_df,fgeneid,tpve,tsigu,replicate) %>% do(augment(lm(v~I(D^2)+offset(D)+0,data=.)) %>% select(vsq=v,Dsq=I.D.2.,D=offset.D.,fitted=.fitted,resid=.resid,std.resid=.std.resid,leverage=.hat) %>% mutate(eigen_chunk=1:n())) %>% ungroup()
-tquh<- filter(quh_df,tpve<0.9)  %>% filter(fgeneid==fgeneid[1])
-# tlm <- lm(v~I(D^2)+offset(D)+0,data=tquh)
-# ttlm <- lm(v~offset(tsigu^2*D^2)+offset(D)+0,data=tquh)
-# group_by(models,fgeneid,tpve,tsigu) %>% summarise()
-# plot(tlm)
-# ggplot(models)
-
-filter(models) %>% ggplot(aes(x=leverage,y=std.resid))+geom_hex()+facet_wrap(~tpve,labeller="label_both")+ggtitle("Leverage vs Residuals")
-```
-
-
-
-```{r}
-filter(models) %>% ggplot(aes(x=vsq,y=std.resid))+geom_hex()+facet_wrap(~tpve,labeller = "label_both")+ggtitle("Residuals vs Response")
-```
-
-```{r}
-filter(models,fgeneid=="1") %>% ggplot(aes(x=D,y=leverage))+geom_point()+scale_x_log10()+scale_y_log10()+ggtitle("Leverage vs Eigenvalues (log-log) scale")
+```{r v_lambda}
+filter(quh_df,tpve==max(tpve)|tpve==min(tpve))  %>%rename(true_pve=tpve) %>% mutate(true_pve=round(true_pve,4)) %>%filter(pve_replicate==pve_replicate[1])%>% ggplot(aes(x=D,y=v))+geom_point()+ggtitle("V^2 vs eigenvalues")+xlab(bquote(lambda))+ylab(bquote(v^2))+facet_grid(true_pve~simulation,labeller = "label_both")
 
 ```
 
+To drive home the difficulty in fitting this model, here's a plot of $\sigma_u^2 \lambda^2 + \lambda$ vs $v^2$. As you can see,in the direct simulation setting, the best fit line fitting ${\sigma_u}_{\text{true}}^2 \lambda^2 + \lambda$ against $v^2$ corresponds to a line with slope 1 and intercept 0. In the GWAS simulation setting, the best fit line is far from the ideal 1-1 line.
+
+```{r true_observed}
+tquh <- filter(quh_df,tpve==max(tpve)|tpve==min(tpve))  %>%rename(true_pve=tpve) %>% mutate(true_pve=factor(round(true_pve,4))) %>%filter(pve_replicate==pve_replicate[1])
+tquh %>%  ggplot(aes(x=tsigu^2*D^2+D,y=v,col=true_pve))+geom_point()+geom_smooth(method="lm",aes(linetype=true_pve),size=2)+geom_abline(slope=1,intercept=0)+ggtitle("'True' v^2 vs observed v^2")+xlab(bquote(sigma[u]^2~lambda^2+lambda))+ylab(bquote(v^2))+facet_wrap(~simulation,labeller = "label_both")
+
+```
 
 ## Truncated EVD
 
-One (possible) strategy for fixing this problem is to throw away eigenvectors/eigenvalues with small eigenvalues. The motivation being that in the situation where the (true) underlying matrix is rank deficient, the trailing eigenvectors/eigenvalues will only add noise, which will increase $v^2$. Below I show the result of refitting the model using this approach. The panel heading `perc_rank=0.5` indicates that top eigenvalues were taken until the cumulative total sum of the eigenvalues was half the total.
+One (possible) strategy for fixing this problem is to throw away eigenvectors/eigenvalues with small eigenvalues. The motivation being that in the situation where the (true) underlying matrix is rank deficient, the trailing eigenvectors/eigenvalues will only add noise, which will increase $v^2$.
 
+### Truncation strategy
 
-```{r}
-res_df %>% filter(method!="direct") %>% rename(perc_rank=pvv) %>%  ggplot(aes(x=tpve,y=pve,col=method))+geom_point()+xlim(c(0,1))+ylim(c(0,1))+geom_abline(intercept=0,slope=1)+ggtitle("Inflation of PVE estimates using truncated EVD")+xlab("True PVE")+ylab("PVE estimate")+facet_wrap(~perc_rank)
+Remember that for the eigenvalue decomposition of a PSD correlation matrix of rank $p$, if $\lambda_i$ is the $i$th leading eigenvalue, then $\sum_{i=1}^n \lambda_i =p$. 
 
+Below I show the result of refitting the model using this approach. The panel heading `perc_rank=0.5` indicates that top eigenvalues were taken until the cumulative total sum of the eigenvalues was half the total, that is I find the smallest $j$ such that $\frac{\sum_{i=1}^j \lambda_i}{\sum_{i=1}^{n} \lambda_i} \leq x$, where $x$ is the desired proportion between 0 and 1. I fit the model using the original 1D optimization and the least squares approach. 
 
+### Optimization-based results
+
+First the 1d optimizer results.  The main take-away is that the direct simulation results are mostly unaffected by the truncation, and that the gwas-based estimates are improved by the truncation.
+
+```{r trunc_optim}
+res_df %>% rename(perc_rank=pvv) %>% mutate(perc_rank=round(perc_rank,3)) %>%  ggplot(aes(x=tpve,y=pve,col=simulation))+geom_point()+xlim(c(0,1))+ylim(c(0,1))+geom_abline(intercept=0,slope=1)+ggtitle("PVE estimates using truncated EVD","1D optimization")+xlab("True PVE")+ylab("PVE estimate")+facet_wrap(~perc_rank,labeller = "label_both")
 ```
 
 
+```{r read_lm}
+# aresff <- dir("~/Desktop/scratch/polyg_scratch",full.names = T,recursive = T,pattern="Smaller_[0-9].[0-9]+.h5")
+# meth <- gsub(".+genome_([a-z]+)_quh.+","\\1",aresff)
+# pvv <- as.numeric(gsub(".+Smaller_([0-9].[0-9]+).h5","\\1",aresff))
+# nres_df <- list(filen=aresff,simulation=meth,tpvv=pvv) %>% pmap_df(function(filen,simulation,tpvv){
+#   D <- read_vector_h5(filen,"/","D")
+#   quh_df <-read_matrix_h5(filen,"/","quh")^2 %>% array_branch(margin=2)%>% map2_dfr(tparam_df$fgeneid,~mutate(tidy(lm(.x~I(D^2)+offset(D)+0)),fgeneid=.y)) %>% select(estimate,fgeneid) %>%
+#     mutate(pve=p_n*estimate,simulation=simulation,pvv=tpvv) %>% select(-estimate) %>%inner_join(tparam_df)
+#   return(quh_df)
+# })
+# 
+# nres_df <- mutate(nres_df,perc_rank=round(pvv,2)) 
+# nres_df %>% ggplot(aes(x=tpve,y=pve,col=simulation))+geom_point()+facet_wrap(~perc_rank,labeller = "label_both")+geom_abline(slope=1,intercept=0)+xlim(c(-1.3,2.5))+ylim(c(-1.3,2.5))+ggtitle("PVE estimates using truncated EVD","Least Squares")
+#saveRDS(nres_df,"../output/temp_model2.RDS")
+nres_df <- readRDS("../output/temp_model2.RDS")%>% select(-pvv,simulation=method)
+```
 
+### Regression results
 
+Because the regression-based estimates of $\sigma_u^2$ are not constrained, it is possible for $PVE$ estimates to be negative (or greater than 1). What's interesting to note is that regression-based estimates tend to drastically _underestimate_ PVE, while optimization-based estimates tend to _overestimate_ PVE.
+
+```{r trunc_lsq}
+p_n <- unique(res_df$p/res_df$n)
+group_by(nres_df,perc_rank) %>% filter(n_distinct(simulation)==2) %>%ungroup()  %>% ggplot(aes(x=tpve,y=pve,col=simulation))+geom_point()+facet_wrap(~perc_rank,labeller = "label_both")+geom_smooth(method="lm")+xlab(bquote(PVE))+ylab(bquote(hat(PVE)))+ggtitle(bquote(Regression~estimate~of~PVE))+geom_abline(intercept=0,slope=1)+xlim(c(-1.3,2.5))+ylim(c(-1.3,2.5))
+```
+
+```{r lsq_rmse}
+filter(nres_df) %>% ggplot(aes(x=perc_rank,y=abs(pve-tpve),col=simulation))+geom_point()+geom_smooth(method="lm")+ggtitle("Regression-based RMSE of PVE")+ylab(bquote(RMSE(PVE)))+xlab("Proportion of total rank")
+```
 
 ## Session information
 
