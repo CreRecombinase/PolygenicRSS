@@ -19,3 +19,4 @@ output: html_document
 * [Simulating GWAS using snakemake](simulatingGWAS.html)
 * [Standardized Effect Size Simulation](simulation.html)
 * [Diagnosing inflation at large sample size](RSSp_Large_Simulation.html)
+* [Influece of chunk size on PVE inflation](RSSp_Chunksize_Investigation.html)

@@ -64,10 +64,6 @@ idt <- distinct(res_df,fgeneid,tpve,tsigu) %>% group_by(tpve,tsigu) %>% summaris
 ```
 
 
-The simulation parameters were as follows
-```{r simulations}
-knitr::kable(idt,align="l")
-```
 
 
 ## Chunking doesn't seem to matter
@@ -75,7 +71,7 @@ knitr::kable(idt,align="l")
 To investigate the role that using `ldetect` LD blocks might have on the results, I calculated LD/EVD using `LDshrink` (i.e Wen-Stephens) either 1) within each `ldetect` boundary (`chunked=TRUE`), or 2) treating each chromosome as a boundary. I did this simulation for GWAS simulated from the whole genome `chr1-22`, as well as GWAS simulated frome one chromosome (`chr1`,`chr2`,...`chr22`).  
 
 
-##Single chromosome simulations
+## Single chromosome simulations
 
 I simulated GWAS effects from `chr2`, and then estimated PVE using LD/EVD calculated blockwise (`chunked=T`), or for the whole chromosome (`chunked=F`)
 
