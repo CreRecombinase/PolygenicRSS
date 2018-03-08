@@ -1,0 +1,171 @@
+---
+title: "Investigating Inflation in Large Sample Simulations With Varying LD block size"
+author: "Nicholas Knoblauch"
+date: 2018-02-14
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+
+
+```{r read_results,echo=FALSE,message=FALSE}
+
+library(tidyverse)
+library(RSSp)
+library(EigenH5)
+library(ggridges)
+gwas_names <- c("RA & CAD")
+# meth <- "direct"
+# ldscf <- "../output/RSSp_snakemake/sim_RA-CAD_wtcc_gwas_ldsc_res_NoConfoundSmaller.txt.gz"
+# ldsc_f <- dir("../output/RSSp_snakemake")
+all_files <- dir("../output/RSSp_snakemake",full.names = T)
+sub_f <- ".+sim_(chr.+)_RA-CAD_RA-CAD_([TF])_(.+)_RSSp_res_NoConfoundSmallPVE_([0-9]+.*[0-9]*).txt.gz"
+all_res <- all_files[grepl(sub_f,all_files)]
+chr <- gsub(sub_f,"\\1",all_res)
+chunked <- gsub(sub_f,"\\2",all_res)=="T"
+meth <- gsub(sub_f,"\\3",all_res)
+pvv <- as.numeric(gsub(sub_f,"\\4",all_res))
+
+
+res_df <- pmap_dfr(list(fn=all_res,pv=pvv,m=meth,ch=chunked,chr),function(fn,pv,m,ch,chr){
+  read_delim(fn,delim="\t")%>% mutate(simulation=m,perc_var=pv,chunked=ch,chrom=chr)
+  })
+# n <- unique(res_df$n)
+# p <- unique(res_df$p)
+# quhf <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_genome_gwas_quh_chunk/RA-CAD_wtcc_NoConfoundSmaller_sim.h5"
+# 
+# ldsc_f <- "/home/nwknoblauch/Dropbox/PolygenicRSS/output/RSSp_snakemake/sim_RA-CAD_wtcc_gwas_ldsc_res_NoConfoundSmaller.txt.gz"
+tparam_df <- distinct(res_df,fgeneid,tpve,tsigu,chrom) %>%group_by(tpve) %>% mutate(pve_replicate=1:n()) %>% ungroup()
+
+idt <- distinct(res_df,fgeneid,tpve,tsigu) %>% group_by(tpve,tsigu) %>% summarise(n_replicates=n()) %>% rename(pve=tpve,sigma_u=tsigu) 
+# ldsc_df <- read_delim(ldscf,delim="\t") %>% rename(pve=Total_Observed_scale_h2) %>% mutate(simulation="LDSC") %>% inner_join(tparam_df)
+
+# gctaf <- "../output/RSSp_snakemake/gcta_h2_est/RA-CAD_seq_wtcc_NoConfoundSmaller_est.txt"
+# gcta_res <- read_delim(gctaf,delim="\t")  %>%
+    # filter(Source=="V(G)")%>% mutate(Source="gcta_pve",Variance=as.numeric(Variance)) %>% select(-SE) %>%spread(Source,Variance) %>% inner_join(tparam_df)
+```
+
+
+The simulation parameters were as follows
+```{r simulations}
+knitr::kable(idt,align="l")
+```
+
+
+## Chunking doesn't seem to matter
+
+To investigate the role that using `ldetect` LD blocks might have on the results, I calculated LD/EVD using `LDshrink` (i.e Wen-Stephens) either 1) within each `ldetect` boundary (`chunked=TRUE`), or 2) treating each chromosome as a boundary. I did this simulation for GWAS simulated from the whole genome `chr1-22`, as well as GWAS simulated frome one chromosome (`chr1`,`chr2`,...`chr22`).  
+
+
+##Single chromosome simulations
+
+I simulated GWAS effects from `chr2`, and then estimated PVE using LD/EVD calculated blockwise (`chunked=T`), or for the whole chromosome (`chunked=F`)
+
+```{r}
+res_df %>% filter(chrom=="chr2",perc_var==max(perc_var)) %>% ggplot(aes(x=tpve,y=pve,col=chunked))+geom_point()+geom_abline(intercept=0,slope=1)+ggtitle("Moderate inflation In PVE Estimate","Chromosome 2")
+```
+
+The rest of the single chromosome simulations show more or less the same pattern.
+
+```{r gwas_inflation}
+res_df  %>% filter(perc_var==max(perc_var),chrom!="chr1-22") %>% ggplot(aes(x=tpve,y=pve,col=chunked))+geom_point()+xlim(c(0,1))+ylim(c(0,1))+geom_abline(intercept=0,slope=1)+ggtitle("Inflation of PVE estimates")+xlab("True PVE")+ylab("PVE estimate")+facet_wrap(~chrom)
+```
+
+
+Plotting relative inflation ($\frac{\hat{\text{PVE}}-\text{PVE}}{\text{PVE}}$) vs the size of the simulation in number of SNPs, we see that there's a positive correlation
+
+```{r}
+res_df  %>% filter(perc_var==max(perc_var),chrom!="chr1-22") %>%mutate(true_pve=round(tpve,2))%>% ggplot(aes(x=p,y=(pve-tpve)/tpve,col=chunked))+geom_point()+ggtitle("Inflation of PVE estimates as a function of p")+xlab("Number of SNPs")+ylab(bquote(frac(hat(PVE)-PVE),PVE))+geom_smooth(method="lm")+facet_wrap(~true_pve)
+
+```
+
+
+Aggregating across all the single chromosome simulations, we see that chunking actually moderately improves PVE estimates.
+
+```{r}
+res_df %>% filter(perc_var==max(perc_var),chrom!="chr1-22") %>%mutate(true_pve=round(tpve,2))%>% ggplot(aes(x=chunked,y=abs(pve-tpve)/tpve,group=paste0(chunked),col=chunked))+geom_boxplot()+ggtitle("Chunking moderately improves estimation","Across single chromosome simulations")+facet_wrap(~true_pve)+ylab(bquote(frac(RMSE(PVE),PVE)))
+
+```
+
+
+
+## Genome-wide results
+
+In my "genome-wide" simulation, `chunked=FALSE` means using each chromosome as a chunk, while `chunked=TRUE` means using the `ldetect` chunks
+
+```{r}
+res_df  %>% filter(perc_var==max(perc_var),chrom=="chr1-22") %>% ggplot(aes(x=tpve,y=pve,col=chunked))+geom_point()+xlim(c(0,1))+ylim(c(0,1))+geom_abline(intercept=0,slope=1)+ggtitle("Inflation of PVE estimates","Whole genome")+xlab("True PVE")+ylab("PVE estimate")
+```
+
+
+
+
+
+## Distribution of eigenvalues with and without chunking
+```{r least_squares}
+library(EigenH5)
+library(broom)
+library(tidyverse)
+quhff <- dir("/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_genome_gwas_quh_chunk",full.names=T,pattern="chr[0-9]+_RA-CAD.+1.h5")
+gsf <- ".+chr([0-9]+)_RA-CAD_RA-CAD_([TF])_NoConfound.+1.h5"
+
+aD_df <- map_df(quhff,function(x){
+  chro=as.integer(gsub(gsf,"\\1",x))
+  chunked=gsub(gsf,"\\2",x)=="F"
+  return(data_frame(chrom=chro,chunked=chunked,D=read_vector_h5(x,"/","D")))
+})
+
+```
+
+```{r}
+ggplot(aD_df,aes(x=D,y=factor(chrom),col=chunked,fill=chunked))+geom_density_ridges()+facet_wrap(~chunked,labeller = "label_both")+ggtitle("Distribution of Eigenvalues With and Without Chunking","Log 10 scale")+xlab(bquote(lambda))+scale_x_log10()
+```
+
+
+```{r}
+av_df <- map_df(quhff,function(x){
+  chro=as.integer(gsub(gsf,"\\1",x))
+  tp_df <- read_df_h5(x,"SimulationInfo") %>% group_by(tpve) %>% mutate(pve_rep=1:n())%>% ungroup()
+  chunked=gsub(gsf,"\\2",x)=="F"
+  quhl <- read_matrix_h5(x,"/","quh") %>% as_data_frame() %>% map(~data_frame(v=.x))
+  tp_df <-mutate(tp_df,v=quhl) %>% unnest() %>% mutate(chrom=chro,chunked=chunked)
+  return(tp_df)
+})
+```
+
+
+
+```{r}
+t_df <- filter(av_df) %>% filter(tpve==max(tpve)|tpve==min(tpve)) %>% filter(pve_rep==1)
+```
+
+
+```{r}
+ggplot(t_df,aes(x=v^2,y=factor(chrom),col=chunked,fill=chunked))+geom_density_ridges()+facet_grid(tpve~chunked,labeller = "label_both")+ggtitle("Distribution of v With and Without Chunking","Log 10 scale")+scale_x_log10()
+
+```
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
