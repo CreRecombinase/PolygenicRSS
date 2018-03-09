@@ -14,7 +14,7 @@ chunksize <- 20000
 
 
 # tinpf <- inpf[1]
-snp_df <- read_SNPinfo_allel(tinpf)
+snp_df <- SeqSupport::read_SNPinfo_allel(tinpf)
 p<- nrow(snp_df)
 good_snp_df <-filter(snp_df,numalt==1,VT=="SNP") %>% arrange(chr,pos) %>% select(-svlen) %>% mutate(nsnp_id=1:n())
 np <- nrow(good_snp_df)

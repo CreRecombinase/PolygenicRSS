@@ -1,27 +1,21 @@
 
 rule gen_quh:
     input:
-        evdf=config["KG_DIRECTORY"]+"EVD_H5/{subseta}_{sub}_hapmap.h5",
-        uhf=config["KG_DIRECTORY"]+"RSSp_genome_gwas_uh/{subseta}_{sub}_{scen}_sim.h5"
+        evdf=config["EVD_DIR"]+"{snpset}_{dataseta}_{bdf}_hapmap.h5",
+        uhf=config["KG_DIRECTORY"]+"RSSp_genome_gwas_uh/{snpset}_{datasetb}_{scen}_sim.h5"
     params:
-        pvv="{pvv}"
+        pvv="{pvv}",
+        svd="{svd}"
     output:
-        quhf=config["KG_DIRECTORY"]+"RSSp_genome_gwas_quh_chunk/{subseta}_{sub}_{scen}_{pvv}.h5"
+        quhf=config["KG_DIRECTORY"]+"RSSp_genome_gwas_quh_chunk/{snpset}_{dataseta}_{datasetb}_{bdf}_{scen}_{pvv}_{svd}.h5"
     script:
         "../scripts/gen_quh_chunk_h5.R"
 
 rule RSSp_est:
     input:
-        rdsf=config["KG_DIRECTORY"]+"RSSp_genome_{gwas}_quh_chunk/{subseta}_{sub}_{scen}_{pvv}.h5"
+        rdsf=config["KG_DIRECTORY"]+"RSSp_genome_{gwas}_quh_chunk/{snpset}_{dataseta}_{datasetb}_{bdf}_{scen}_{pvv}_{svd}.h5"
     output:
-        dff=config["OUTPUT_DIR"]+"sim_{subseta}_{gwas}_RSSp_res_{sub}_{scen}_{pvv}.txt.gz"
+        dff=config["OUTPUT_DIR"]+"sim_{snpset}_{dataseta}_{datasetb}_{bdf}_{gwas}_RSSp_res_{scen}_{pvv}_{svd}.txt.gz"
     script:
         "../scripts/RSSp_est.R"
 
-rule RSSp_grid:
-    input:
-        rdsf=config["KG_DIRECTORY"]+"RSSp_genome_{gwas}_quh_chunk/{subseta}_{sub}_{scen}_{pvv}.h5"
-    output:
-        dff=config["OUTPUT_DIR"]+"sim_{subseta}_{gwas}_grid_RSSp_res_{sub}_{scen}_{pvv}.txt.gz"
-    script:
-        "../scripts/RSSp_grid_est.R"

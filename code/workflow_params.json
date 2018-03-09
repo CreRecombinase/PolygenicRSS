@@ -1,6 +1,7 @@
 {
     "KG_DIRECTORY": "../../../../Desktop/scratch/polyg_scratch/",
     "VCF_DIR": "../../../../Desktop/scratch/polyg_scratch/vcf/",
+    "EVD_DIR": "../../../../../../../run/media/nwknoblauch/Data/EVD_H5/",
     "VCF_ODIR": "../../../../../../../run/media/nwknoblauch/Data/wtcc_input/vcf/",
     "GDS_DIR": "../../../../Desktop/scratch/polyg_scratch/gds/",
     "SNPGDS_DIR": "../../../../Desktop/scratch/polyg_scratch/snpgds/",

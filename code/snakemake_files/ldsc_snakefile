@@ -5,7 +5,7 @@ rule ldsc_trait_chunk:
         evdf=config["KG_DIRECTORY"]+"EVD_H5/{subset}_{sub}_hapmap.h5"
     output:
         outf =expand(config["KG_DIRECTORY"]+"eur_w_ld_chr_{{subset}}_{{sub}}/{chrom}.l2.ldscore.gz",chrom=range(1,23)),
-        soutf=expand(config["KG_DIRECTORY"]+"eur_w_ld_chr_{{subset}}_{{sub}}/{chrom}.l2.M_5_50",chrom=range(1,23))#                proff=PROF_DIR+"ldsc_trait_chunk_{subset}.prof",
+        soutf=expand(config["KG_DIRECTORY"]+"eur_w_ld_chr_{{subset}}_{{sub}}/{chrom}.l2.M_5_50",chrom=range(1,23))
     script:
         "../scripts/ldsc_trait_chunk.R"        
 
@@ -15,7 +15,7 @@ rule prep_ldsc_uh:
         rdsf=config["KG_DIRECTORY"]+"RSSp_genome_{gwas}_uh/{subset}_{sub}_{scen}_sim.h5"
     params:
         fgeneid=FGENEID
-    output: ldscf=temp(expand(config["KG_DIRECTORY"]+"ldsc_sim_{{gwas}}_genome/{{subset}}_{{sub}}_sim_{fgeneid}_uh_{{scen}}.txt",fgeneid=FGENEID))#,        proff=PROF_DIR+"RSSp_oracle_est_{gwas}_{subset}.prof"
+    output: ldscf=temp(expand(config["KG_DIRECTORY"]+"ldsc_sim_{{gwas}}_genome/{{subset}}_{{sub}}_sim_{fgeneid}_uh_{{scen}}.txt",fgeneid=FGENEID))
     script:
         "../scripts/prep_ldsc_uh.R"
 
@@ -36,7 +36,7 @@ rule ldsc_trait_est:
         "envs/ldpred.yml"
     shell:
         "python2 ./ldsc/ldsc.py --h2 {input.sumstatf} --ref-ld-chr {params.ld_dir} --w-ld-chr {params.ld_dir} --out {params.out_pref}"
-                # "module load python/2.7.13; source activate ~/python2_project/bin/activate; ldsc/ldsc.py --h2 {input.sumstatf} --ref-ld-chr {params.ld_dir} --w-ld-chr {params.ld_dir} --out {params.out_pref}"                
+         
 
 
 rule ldsc_trait_parse:
@@ -50,16 +50,6 @@ rule ldsc_trait_parse:
         "../scripts/parse_ldsc.R"                
                 
         
-# rule ldsc_parse_est:
-#     input:
-#         logf=expand(config["KG_DIRECTORY"]+"ldsc_est_{{gwas}}_{{chrom}}/sim_{fgeneid}_{{scen}}.log",fgeneid=FGENEID),
-#         tparamf=expand(config["KG_DIRECTORY"]+"ldsc_sim_{{gwas}}_{{chrom}}/sim_{fgeneid}_tparam_{{scen}}.tsv",fgeneid=FGENEID)
-#     output:
-#         logf=config["KG_DIRECTORY"]+"ldsc_est_{gwas}_{chrom}/sim_results_{scen}.tsv"
-#     params:
-#         fgeneid=expand("{fgeneid}",fgeneid=FGENEID)
-#     script:
-#         "../scripts/parse_ldsc.R"
 
 rule get_ldsc:
     output:

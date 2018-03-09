@@ -1,28 +1,41 @@
 
+rule subsnp_chr:
+    input:
+        gdsf=config["HDF5_DIR"]+"ALL_RA-CAD_geno.h5"
+    params:
+        chrom="{chrom}"
+    output:
+        outf=config["INPUT_DIR"]+"chr{chrom}.txt.gz"
+    script:
+        "../scripts/subset_snp_chr.R"
+
+
 rule sim_pheno_RSSp:
     ''' This rule works very similarly to sim_pheno_w_Beta_RSSp, but doesn't require beta,
     and instead generates it on the fly.  This is the rule used in LD score regression/RSSp 
     comparisons
         '''
     input:
-        gdsf=config["HDF5_DIR"]+"{subset}_seq_{sub}_geno.h5"
+        gdsf=config["HDF5_DIR"]+"ALL_{dataset}_geno.h5",
+        subsnpf=config["INPUT_DIR"]+"{snpset}.txt.gz"
     params:
         fgeneid=expand("{fgeneid}",fgeneid=FGENEID),
         pve=PVE,
         bias=BIAS,
         nreps=NREPS
     output:
-        h5f=config["KG_DIRECTORY"]+"RSSp_sim_gwas_pheno/{subset}_{sub}_{scen}_trait.h5",
-        beta_hf=config["KG_DIRECTORY"]+"RSSp_sim_gwas_beta/{subset}_{sub}_{scen}_beta.h5"#,        proff=PROF_DIR+"sim_pheno_RSSp_{subset}.prof"
+        h5f=config["KG_DIRECTORY"]+"RSSp_sim_gwas_pheno/{snpset}_{dataset}_{scen}_trait.h5",
+        beta_hf=config["KG_DIRECTORY"]+"RSSp_sim_gwas_beta/{snpset}_{dataset}_{scen}_beta.h5"#,        proff=PROF_DIR+"sim_pheno_RSSp_{subset}.prof"
     script:
         "../scripts/gen_ty_block_RSSp.R"
 
 rule map_uh_RSSp:
     input:
         h5f=rules.sim_pheno_RSSp.input.gdsf,
-        ymatf=rules.sim_pheno_RSSp.output.h5f
+        ymatf=rules.sim_pheno_RSSp.output.h5f,
+        subsnpf=rules.sim_pheno_RSSp.input.subsnpf
     output:
-        uhf=config["KG_DIRECTORY"]+"RSSp_genome_gwas_uh/{subset}_{sub}_{scen}_sim.h5"
+        uhf=config["KG_DIRECTORY"]+"RSSp_genome_gwas_uh/{snpset}_{dataset}_{scen}_sim.h5"
     threads: 1
     script:
         "../scripts/map_uh_LDchunk_RSSp_h5.R"

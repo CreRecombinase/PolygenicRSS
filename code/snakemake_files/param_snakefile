@@ -30,15 +30,42 @@ def count_lines(fname):
             count += 1
         return count
 
-
+#List of WTCCC case datasets
 GWAS_NAMES = ["bd","cad","cd","ht","ra","t1d","t2d"]
-GWAS_NAMES = ["ra","cad"]    
-COMB_NAME="RA-CAD"
-SCEN="NoConfoundSmaller"
+#Combine 2 or more   
+COMB_NAME="T1D-T2D"
+#Come up with a unique name for the PVE+BIAS+NREPS combo (No underscores please)
+SCEN="XiangSmallPVE"
+#Number of replicates per PVE+BIAS combo
 NREPS =5
-PVE=list(8.9999*10**np.linspace(-1,-2.5,num=5))
+#PVE (must be between 0 and 1)
+PVE=[0.45,
+     0.17,
+     0.06,
+     0.02,
+     0.009]
+#Bias (must be nonnegative )
 BIAS=[0.0]
+#Don't change this
 TOT_SIM=NREPS*len(PVE)*len(BIAS)
-#TOT_SIM=1
+#Don't change this either
 FGENEID=range(1,TOT_SIM+1)
+
+#pvv controls the proportion of eigenvalues to keep
+#must be greater than 0 and less than 1
+pvv=1
+#To do single-chromosome simulations, uncomment the line below
+#tchr = ["chr"+str(x) for x in range(1,23)]
+#To do a subset of the genome, use commas to separate chromosomes you want
+#tchr=chr1,3,5,7
+#To do a range of the genome, use a hyphen
+tchr="chr1-22"
+#svd==F will use LDshrink+eigenvalue decomposition, while svd==T will perform singular value decomposition on the scaled genotype(haplotype) matrix
+svd = ["F"]
+#Don't change this
+TRAIT=COMB_NAME
+
+#To run direct simulations as well as gwas simulations, uncomment
+#METH=["gwas","direct"]
+METH="gwas"
 

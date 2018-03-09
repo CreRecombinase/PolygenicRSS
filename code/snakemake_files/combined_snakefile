@@ -7,20 +7,19 @@ GRM_PARTS=4
 # File that has the LDetect LD breakpoints
 #URL for that file is here #LD_break_file_url="https://bitbucket.org/nygcresearch/ldetect-data/raw/ac125e47bf7ff3e90be31f278a7b6a61daaba0dc/EUR/fourier_ls-all.bed"
         
-# rule vcf_idx_2:
-#     input:
-#         config["VCF_ODIR"]+"{gn}_19.vcf.gz"
-#     output:
-#         config["VCF_ODIR"]+"{gn}_19.vcf.gz.csi"
-#     threads: 9
-#     shell:
-#         "bcftools index {input} --threads {threads}"
+
+def mergefunc(wildcards):
+    subg=wildcards.ccn.split('-')
+    subg= [x.lower() for x in subg]
+    return {'input_vcf': [config["VCF_ODIR"]+ts+"_19.vcf.gz" for ts in subg],
+            'input_vcfi': [config["VCF_ODIR"]+ts+"_19.vcf.gz.csi" for ts in subg]}
+            
+
 
 
 rule vcf_merge:
-    input:
-        input_vcf=expand(config["VCF_ODIR"]+"{gn}_19.vcf.gz",gn=GWAS_NAMES),
-        input_vcfi=expand(config["VCF_ODIR"]+"{gn}_19.vcf.gz.csi",gn=GWAS_NAMES)
+    '''This rule uses the function 'mergefunc' which figures out which WTCCC datasets to merge'''
+    input: unpack(mergefunc)
     output:
         out_vcf=config["VCF_ODIR"]+"{ccn}_19.vcf.gz".format(ccn=COMB_NAME)
     threads: 9
@@ -29,6 +28,7 @@ rule vcf_merge:
 
 
 rule vcf2plink:
+    ''' This rule converts a vcf file to a plink file'''
     input:
         inf=config["VCF_ODIR"]+"{ccn}_19.vcf.gz".format(ccn=COMB_NAME)
     output:
@@ -43,6 +43,7 @@ rule vcf2plink:
 
 
 rule combine_grm:
+    '''This rule concatenates chunked GRMs'''
     input:
         grmfb=expand(config["PLINK_DIR"]+"{{cn}}_19.part_"+str(GRM_PARTS)+"_{p}.grm.bin",p=range(1,GRM_PARTS+1)),
         grmfi=expand(config["PLINK_DIR"]+"{{cn}}_19.part_"+str(GRM_PARTS)+"_{p}.grm.id",p=range(1,GRM_PARTS+1)),
@@ -57,6 +58,7 @@ rule combine_grm:
 
 
 rule grm_combined:
+    ''' This rule makes one of the GRM chunks'''
     input:
         in_bed=rules.vcf2plink.output.outf_bed,
         in_bim=rules.vcf2plink.output.outf_bim,
@@ -73,14 +75,6 @@ rule grm_combined:
     shell:
         "gcta64 --bfile {params.in_p} --make-grm-part "+str(GRM_PARTS)+" {params.p} --thread-num {threads} --out {params.out_p}"
         
-# rule gds_19:
-#     input:
-#         vcff=config["VCF_ODIR"]+"{cn}_19.vcf.gz"
-#     output:
-#         undup_gds=config["GDS_DIR"]+"{cn}_19.gds"
-#     threads: 9
-#     script:
-#         "../scripts/vcf2seq_gds.R"
         
         
 rule interp_map_wtcc:

@@ -2,7 +2,6 @@
 
 library(SeqSupport)
 library(EigenH5)
-# library(RSSp)
 library(tidyverse)
 library(LDshrink)
 
@@ -10,6 +9,11 @@ library(LDshrink)
 evdf <- snakemake@input[["evdf"]]
 traitf <- snakemake@input[["traitf"]]
 pvv <- as.numeric(snakemake@params[["pvv"]])
+svd <- snakemake@params[["svd"]]
+if(is.null(svd)){
+    svd <- "F"
+}
+svd <- svd=="T"
 quhf <- snakemake@output[["quhf"]]
 
 
@@ -17,9 +21,14 @@ tparam_df <-read_df_h5(traitf,"SimulationInfo")
 
 # D_df <- map_df(ld_grp,~data_frame(region_id=.x,D=read_vector_h5(evdf,paste0("EVD/",.x),"D")))
 #It doesn't actually matter what order D is in
-#D <- purrr::map(ld_grp,~read_vector_h5(evdf,paste0("EVD/",.x),"D")) %>% purrr::flatten_dbl()
-ld_grp <-get_objs_h5(evdf,"EVD")
-D_df <- map_df(ld_grp,~data_frame(region_id=as.integer(.x),D=read_vector_h5(evdf,paste0("EVD/",.x),"D")))
+                                        #D <- purrr::map(ld_grp,~read_vector_h5(evdf,paste0("EVD/",.x),"D")) %>% purrr::flatten_dbl()
+ld_gpn <- ifelse(svd,"SVD","EVD")
+ld_dn <- ifelse(svd,"d","D")
+ld_grp <-get_objs_h5(evdf,ld_gpn)
+D_df <- map_df(ld_grp,~data_frame(region_id=as.integer(.x),D=read_vector_h5(evdf,paste0(ld_gpn,"/",.x),ld_dn))) %>% arrange(as.integer(region_id))
+if(svd){
+    D_df <- mutate(D_df,D=D^2)
+}
 
 sub_D_pvv <- filter_pvv(D_df,pvv)
 D <- sub_D_pvv$D

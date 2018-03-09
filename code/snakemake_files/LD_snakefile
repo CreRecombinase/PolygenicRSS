@@ -1,13 +1,33 @@
-
 rule ld_chunk_1kg:
     input:
-        hdff=config["HDF5_DIR"]+"{subset}_seq_{sub}_geno.h5",
+        hdff=config["HDF5_DIR"]+"ALL_{dataset}_geno.h5",
+        subsnpf=config["INPUT_DIR"]+"{snpset}.txt.gz",
+        bdf=config["INPUT_DIR"]+"ldetect_{bdf}.txt.gz",
         mapf=config["KG_MAPDIR"]+"interpolated_hapmap.h5"
     output:
-        evdf=config["KG_DIRECTORY"]+"EVD_H5/{subset}_{sub}_hapmap.h5"
+        evdf=config["EVD_DIR"]+"{snpset}_{dataset}_{bdf}_hapmap.h5"
     script:
         "../scripts/evd_1kg_h5.R"
 
+rule ldetect_gen:
+    input:
+        ldetectf=config["LDETECT_BREAK_FILE"]
+    params:
+        allchr="T"
+    output:
+        bdf=config["INPUT_DIR"]+"ldetect_T.txt.gz"
+    script:
+        "../scripts/break_df.R"
+
+rule ldetect_chr:
+    input:
+        ldetectf=config["LDETECT_BREAK_FILE"]
+    params:
+        allchr="F"
+    output:
+        bdf=config["INPUT_DIR"]+"ldetect_F.txt.gz"
+    script:
+        "../scripts/break_df.R"
 
 
 rule dl_map_h5:
@@ -48,6 +68,8 @@ rule vcf_2_allel:
     output:
         legf=config["VCF_DIR"]+"../impute/EUR.chr{chr}.h5"
     threads: 1
+    conda:
+        "envs/rssp.yml"
     script:
         "../scripts/vcf2allel.py"
 
@@ -60,28 +82,3 @@ rule allel2haplotype:
     script:
         "../scripts/allel2haplo_h5.R"
 
-# rule impute2hdf5:
-#     input:
-#         hapf=temp(config["VCF_DIR"]+"../impute/ALL.chr{chr}_maf_01.impute.hap"),
-#         legf=temp(config["VCF_DIR"]+"../impute/ALL.chr{chr}_maf_01.impute.legend")
-#     params:
-#         chrom="{chr}"
-#     output:
-#         hdff=config["KG_DIRECTORY"]+"../hdf5/1kg{chr}_seq_{sub}_geno.h5"
-#     script:
-#         "../scripts/impute2h5.R"
-
-
-# rule impute_2_snpgds:
-#     input:
-#         hapf=KG_dir+"impute/ALL.chr{chr}.impute.hap",
-#         legf=KG_dir+"impute/ALL.chr{chr}.impute.legend",
-#         mapf=KG_dir+"1000-genomes-genetic-maps/interpolated_hapmap/chr{chr}.interpolated_genetic_map.gz",
-#         filt_f="EUR.samples"
-#     params:
-#         chrom="{chr}"
-#     output:
-#         gdsf=KG_dir+"gds/ALL.chr{chr}.gds",
-#         geno_gdsf=KG_dir+"gds/ALL.chr{chr}_geno.gds"
-#     script:
-#         "../scripts/impute_2_seqgds.R"

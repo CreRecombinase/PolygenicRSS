@@ -9,23 +9,14 @@ include: "grm_snakefile"
 include: "direct_snakefile"
 
 
-TRAIT=COMB_NAME
-
-METH="gwas"
-
-
-
-
-pvv=np.linspace(0.5,1,num=5)
-shr=list(10**np.linspace(-2.5,-3.5,num=5))[-1]
-#GWAS_NAMES = ["bd","cad","cd","ht","ra","t1d","t2d","combined"]
-#GWAS_NAMES = ["combined"]
-
-TRAIT=COMB_NAME
 rule all:
     input:
-        expand(config["KG_DIRECTORY"]+"EVD_H5/1KG{chr}_1kg_hapmap.h5",chr=range(1,23))
-#        expand(config["OUTPUT_DIR"]+"sim_{subseta}_{gwas}_RSSp_res_{sub}_{scen}_{pvv}.txt.gz",subseta=TRAIT,gwas=["gwas","direct"],sub="wtcc",scen=SCEN,pvv=pvv)
-        #expand(config["OUTPUT_DIR"]+"sim_{subseta}_{gwas}_grid_RSSp_res_{sub}_{scen}_{pvv}.txt.gz",subseta=TRAIT,gwas=METH,sub="wtcc",scen=SCEN,pvv=pvv)
-        #config["OUTPUT_DIR"]+"gcta_h2_est/{subset}_seq_{sub}_{scen}_est.txt".format(subset=TRAIT,sub="wtcc",scen=SCEN)
-        #config["OUTPUT_DIR"]+"sim_{subset}_{sub}_{gwas}_ldsc_res_{scen}.txt.gz".format(subset=TRAIT,sub="wtcc",gwas=METH,scen=SCEN),
+        expand(config["OUTPUT_DIR"]+"sim_{snpset}_{dataseta}_{datasetb}_{bdf}_{gwas}_RSSp_res_{scen}_{pvv}_{svd}.txt.gz",
+               snpset=tchr,
+               dataseta="RA-CAD",
+               datasetb="RA-CAD",
+               bdf=["F","T"],
+               gwas=["gwas"],
+               scen=SCEN,
+               pvv=pvv,
+               svd=svd)
