@@ -20,3 +20,4 @@ output: html_document
 * [Standardized Effect Size Simulation](simulation.html)
 * [Diagnosing inflation at large sample size](RSSp_Large_Simulation.html)
 * [Influece of chunk size on PVE inflation](RSSp_Chunksize_Investigation.html)
+* [Detailed summary of simulation/data](SimulationPipeline.html)

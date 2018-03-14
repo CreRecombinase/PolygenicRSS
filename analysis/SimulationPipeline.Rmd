@@ -1,0 +1,443 @@
+---
+title: "RSSp Simulation In Depth"
+author: "Nicholas Knoblauch"
+date: 2017-03-14
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+# Introduction
+
+
+First I will show how to look at the data using `EigenH5`, then I'll outline how the pipeline is actually run
+
+
+# Key `EigenH5` commands
+
+1) `read_matrix_h5`
+Read matrix from HDF5 file, syntax is described below
+2) `read_vector_h5`
+Read vector from HDF5 file, syntax is the same as for `read_matrix_h5`
+3) `read_df_h5`
+Read a dataframe from an HDF5 file. See usages below
+4) `get_objs_h5`
+List the "objects" in a HDF5 file, an object is either a group (think of it like a directory), or a dataset.
+The default lists the objects in the "root" group, but you can list the objects in a subgroup(s) using the syntax
+`get_objs_h5("some_file.h5","somegroupA/somegroupB/...")`
+5) `get_dims_h5()` get the dimensions of a HDF5 dataset. This has the same syntax as the `read_matrix_h5` and `read_vector_h5`
+
+# Looking at the Data
+
+## Genotype data
+
+The file `ALL_T1D-T2D_geno.h5` has the SNP data. you can get info about the SNPs by reading in the dataframe:
+```{r,eval=F,echo=T}
+snp_info <- EigenH5::read_df_h5(h5filepath = "ALL_T1D-T2D_geno.h5",groupname = "SNPinfo")
+```
+
+
+
+## Phenotype & True Effects
+
+### Phenotype
+The file `chr1-22_T1D-T2D_XiangSmallPVE_trait.h5` has two `HDF5` objects, the matrix `ymat` has trait values as column vectors.  It can be read in like this:
+
+```{r,eval=FALSE,echo=TRUE}
+trait_mat <- EigenH5::read_matrix_h5(filename = "chr1-22_T1D-T2D_XiangSmallPVE_trait.h5",groupname = "trait",dataname = "ymat")
+```
+
+to read in only the first 3 traits:
+```{r,eval=FALSE,echo=TRUE}
+trait_mat <- EigenH5::read_matrix_h5(filename = "chr1-22_T1D-T2D_XiangSmallPVE_trait.h5",groupname = "trait",dataname = "ymat",subset_cols = c(1:3))
+```
+
+The second object is a dataframe with all the true parameters for the traits,it can be read in like this:
+
+```{r,eval=FALSE,echo=TRUE}
+trait_df <- EigenH5::read_df_h5(filename = "chr1-22_T1D-T2D_XiangSmallPVE_trait.h5","SimulationInfo")
+```
+The important colums are `tpve` (true $PVE$) and  `tsigu` (true $\sigma_u$). Each row of this dataframe corresponds to a column of `ymat`
+
+### True Effects
+
+The file `chr1-22_T1D-T2D_XiangSmallPVE_beta.h5` has two groups. `Beta` is a matrix where each row vector represents the true effect, and the number of rows is equal to the number of traits simulated. `S` is a vector for relating $\beta$ to $U$ ($u_i=\frac{\beta_i}{s_i}$)
+
+Reading in the first 3 traits from `Beta`, and reading in `S`
+```{r,eval=FALSE,echo=TRUE}
+beta_mat <- EigenH5::read_matrix_h5(filename = "chr1-22_T1D-T2D_XiangSmallPVE_beta.h5",groupname = "/",dataname = "Beta",subset_rows = c(1:3))
+S <- EigenH5::read_vector_h5("chr1-22_T1D-T2D_XiangSmallPVE_beta.h5","/","S")
+```
+
+
+## Summary Stats
+
+The file `chr1-22_T1D-T2D_XiangSmallPVE_sim.h5` has 4 datasets `SNPinfo`, a dataframe with info about SNPs, `SimulationInfo`, the same dataframe as described above, `se`, a matrix of gwas standard errors, and `uh`, a matrix of $\hat{u}$'s.
+
+
+```{r,eval=FALSE,echo=TRUE}
+library(Eigen)
+sum_statf <- "chr1-22_T1D-T2D_XiangSmallPVE_sim.h5"
+snp_df <- read_df_h5(sum_statf,"SNPinfo")
+#Only read in the first 3 rows, corresponding to the first 3 trait simulations
+trait_df <- read_df_h5(sum_statf,"SimulationInfo",filtervec=c(1:3))
+se_mat <- read_matrix_h5(sum_statf,"/","se",subset_cols = c(1:3))
+```
+
+
+## LD/EVD data
+
+The file `chr1-22_T1D-T2D_T_hapmap.h5` and `chr1-22_T1D-T2D_T_hapmap.h5` have LD/EVD/LD data, stored chunkwise. `chr1-22_T1D-T2D_T_hapmap.h5` has one chunk per chromosome, and `chr1-22_T1D-T2D_F_hapmap.h5` has one chunk per ldetect block.
+
+
+A mapping of SNPs to chunks can be found in the dataframe `LDinfo`.  The column `region_id` specifies the chunk
+
+```{r,echo=T}
+library(EigenH5)
+setwd("/run/media/nwknoblauch/Data/EVD_H5")
+ldf <- "chr1-22_T1D-T2D_F_hapmap.h5"
+#Read in LD info
+ld_df <- read_df_h5(ldf,"LDinfo")
+head(ld_df)
+#read in eigenvalues for region_id=9
+D_9 <- read_vector_h5(ldf,"EVD/9","D")
+#read in eigenvectors for region_id=9
+Q_9 <- read_matrix_h5(ldf,"EVD/9","Q")
+#read in the Wen-Stephens LD matrix for region_id=9
+R_9 <- read_matrix_h5(ldf,"LD/9","R")
+
+```
+## quh data
+
+The file `chr1-22_T1D-T2D_T1D-T2D_F_XiangSmallPVE_1_F.h5` has a matrix `quh` with $Q^{T}\hat{u}$, a vector `D` with eigenvalues, and copies of `SNPinfo` and `SimulationInfo`
+
+Run `RSSp` on one trait
+```{r,echo=T,eval=F}
+library(EigenH5)
+library(RSSp)
+library(dplyr)
+setwd("/run/media/nwknoblauch/Data/")
+quhf <- "chr1-22_T1D-T2D_T1D-T2D_F_XiangSmallPVE_1_F.h5"
+#Read in eigenvalues
+D <- read_vector_h5(quhf,"/","D")
+#read in "v"
+quh <- read_matrix_h5(quhf,"/","quh",subset_cols = c(1))
+#we need to get p & n to get the bounds for the optimizer, lets' get N from the phenotype simulation
+phenof <- "chr1-22_T1D-T2D_XiangSmallPVE_trait.h5"
+#remind ourselves which objects are in this file using 
+get_objs_h5(phenof)
+#remind ourselves of which objects are in the group "trait"
+get_objs_h5(phenof,groupname = "trait")
+trait_dims<- get_dims_h5(phenof,groupname = "trait",dataname = "ymat")
+N <- trait_dims[1]
+#we need to get p & n to get the bounds for the optimizer, lets' get p from the quh file
+quh_dims <- get_dims_h5(quhf,"/","quh")
+p <- quh_dims[1]
+
+#ensure that p is the same as the length of D
+stopifnot(length(D)==p)
+#make our input dataframe
+data_df <- data_frame(fgeneid=1,quh=quh,D=D,p_n=p/n)
+#Estimate RSSp with no confounding parameter
+rssp_results <- RSSp_estimate(data_df,doConfound = F)
+```
+
+
+
+
+# Running Simulations
+
+
+There are 5 steps to running the `RSSp` simulation pipeline:
+1) Simulating true effects & phenotypes for given genotypes, and true $PVE$
+2) Generating summary stats using phenotype data and genotype data
+3) Calculating LD/EVD using genotype(haplotype) data and a set of breakpoints
+4) Computing $Q^{T}\hat{u}$ from the eigenvectors and summary stats
+5) Running `RSSp`
+
+
+This is conveniently automated in a snakemake pipeline.  The Snakemake rules can be found in `analysis/code/snakemake_files`, and the scripts can be found in `analysis/code/scripts/`
+
+
+
+## Simulating true effects and phenotypes
+
+The Snakemake file `trait_snakefile` contains the rule `sim_pheno_RSSp` for simulating true effects and phenotypes. It runs the R script `gen_ty_block_RSSp.R`. The most important part of this script is a call to the function ` gen_sim_phenotype_h5` (in the package I wrote called `SeqSupport`) the following `RcppEigen` chunk shows how it works:
+
+```{r engine='Rcpp',eval=FALSE,echo=T}
+// First we simualate $\Beta$ and $U$ are simulated. $Y$ is also generated, but on the $X\Beta$ part, the $\epsilon$ part comes later
+//loop over all the SNPs in chunks
+ for(auto m_it=input_f.chunk_map.begin();m_it!=input_f.chunk_map.end();m_it++){
+   
+    int chunk_id = m_it->first;
+   
+   //Read in genotype
+    input_f.read_chunk(chunk_id,"dosage",X);
+    
+    //Ensure that genotype is NxP
+    if(X.rows()!=N){
+      X.transposeInPlace();
+    }
+    
+    // Center genotype
+    X = X.rowwise()-X.colwise().mean();
+    
+    // calculate S, which relates U to Beta
+    S = (1/(X.array().square().colwise().sum()/(N-1)).sqrt())*(1/std::sqrt(N-1));
+    
+    // Write S
+    output_f.write_chunk(chunk_id,"S",S);
+    
+    // Simulate U as multivariate normal, using a vector of sigma_u values
+    U=sim_U(N,tsigu.square());
+    
+    // Calculate Beta from U and S
+    Beta=U.array().colwise()*S.array();
+    
+    // Update Y
+    Y=Y+X*Beta;
+    
+    //Write Beta
+    Beta.transposeInPlace();
+    output_f.write_chunk(chunk_id,"Beta",Beta);
+  }
+ //return Y
+  return(Y);
+```
+
+This R function handles the residuals
+
+```{r,eval=FALSE,echo=T}
+#' calculate the scale of residuals, given X*Beta and the target PVE
+#' @param vy vector with the variance of y (length is equal to the number of traits)
+#' @param PVE vector specifying the target PVE (length should be the same as the number of traits)
+gen_ti <- function(vy, PVE){
+  stopifnot(length(vy)==length(PVE))
+  return(vy*(1/PVE-1))
+}
+
+
+gen_sim_resid <- function(ty,tparam_df){
+  #calculate the variance for each trait (column)
+  vy <- apply(ty, 2, var)
+  #calculate the number of individuals
+  n <- nrow(ty)
+  #make sure number of traits matches
+  stopifnot(ncol(ty)==nrow(tparam_df))
+  #calculate the scale of the residuals
+  residvec <- gen_ti(vy, tparam_df$tpve)
+  #simulate residuals
+  residmat <- sapply(residvec, function(ti, n){rnorm(n=n, mean=0, sd=sqrt(ti))}, n=n)
+  #add residuals and center Y
+  ymat <- scale(ty+residmat, center=T, scale=F)
+  return(ymat)
+}
+```
+
+
+## Generating summary stats
+
+The Snakemake file `trait_snakefile` contains the rule `map_uh_RSSp`. It runs the R script `map_uh_LDchunk_RSSp_h5.R`.
+The core of the script is summarized here:
+
+
+```{r engine='Rcpp',eval=FALSE,echo=TRUE}
+
+// loop over EXP (traits) in chunks
+ for(int i=0;i<exp_rsize;i++){
+   //Read in a chunk of traits, and ensure that it's NxP
+    EXP_f.read(i,EXP_chunk);
+    if(EXP_first){
+      EXP_chunk.transposeInPlace();
+    }
+    //g is number of traits
+    const int g=EXP_chunk.cols();
+    //N is number of samples
+    const int N=EXP_chunk.rows();
+    //Center trait values
+    EXP_chunk = EXP_chunk.rowwise()-EXP_chunk.colwise().mean();
+    //calculate sum of squares for Y
+    sy2=EXP_chunk.array().square().colwise().sum();
+    // Loop over SNPs in chunks
+    for(int j=0;j<snp_rsize;j++){
+      
+      //Read in a chunk of SNPs, ensure that it's NxP
+      SNP_f.read(j,SNP_chunk);
+      if(SNP_first){
+        SNP_chunk.transposeInPlace();
+      }
+      
+      const int snp_chunksize=SNP_chunk.cols();
+      // Center SNP data
+      SNP_chunk = SNP_chunk.rowwise()-SNP_chunk.colwise().mean();
+      //calculate sum of square for X
+      sx2=SNP_chunk.array().square().colwise().sum();
+      // create the \hat{beta} part of the matrix \hat{u},
+      // each element of the matrix is equal to (X_i^{T}y_j)/sum(X_i^2) where i is the ith SNP, and 
+      // j is the jth trait
+      UH_chunk=(SNP_chunk.transpose()*EXP_chunk).array().colwise()/sx2;
+      se_chunk.resize(snp_chunksize,g);
+      for(int l=0; l<snp_chunksize;l++){
+        for(int k=0; k<g;k++){
+          //calculating std error.
+          //EXP_chunk.col(k) is the kth trait, and SNP+chunk.col(l)*UH_chunk(l,k) is the fitted value of the l,k model.
+          se_chunk(l,k)=std::sqrt((1/(static_cast<double>(N-1)*sx2(l)))*(EXP_chunk.col(k)-(SNP_chunk.col(l)*UH_chunk(l,k))).array().square().sum());
+        }
+      }
+      //divide \hat{beta} by standard error (element-wise)
+      UH_chunk=UH_chunk.array()/se_chunk.array();
+      // write \hat{U}
+      uh_f.write(rk,UH_chunk);
+      // write std-error
+      se_f.write(rk,se_chunk);
+      rk++;
+      prog_bar.increment();
+    }
+  }
+```
+
+## Calculating LD/EVD using genotype(haplotype) data and a set of breakpoints
+
+The Snakemake file `LD_snakefile` contains the rule `ld_chunk_1kg`. It runs the R script `evd_1kg_h5.R`. The "meat" of the  LDshrink implementation is below:
+
+
+
+```{r engine='Rcpp',eval=FALSE,echo=TRUE}
+ 
+ double dosage_max=hmata.maxCoeff();
+bool isGeno=dosage_max>1; 
+//m=85, so theta =0.001029112
+double theta=calc_theta(m);
+//center haplotye/genotype
+  hmata = hmata.rowwise()-hmata.colwise().mean();
+  //calculate covariance, store it in the matrix S
+  calc_cov_s(hmata,S);
+  //Apply correction for genotype
+  if(isGeno){
+    S*=0.5;
+  }
+  int numSNP=S.rows();
+  //Set lower triangular part the matrix to be 0
+  auto nts=S.template triangularView<Eigen::StrictlyLower>().setZero();
+
+  if(!is_sorted(mapa.begin(),mapa.end(),std::less<double>())){
+    Rcpp::stop("Recombination map must be non-decreasing\n");
+  }
+  double tj=0;
+  double ti=0;
+  double rho=0;
+  double tshrinkage;
+//Do shrinkage
+  for(int i=0; i<numSNP;i++){
+    ti=mapa[i];
+    for(int j=i+1; j<numSNP;j++){
+      tj=mapa[j];
+      rho = 4*Ne*(tj-ti)/100;
+      rho=-rho/(2*m);
+      tshrinkage=std::exp(rho);
+      if(tshrinkage<cutoff){
+        tshrinkage=0;
+      }
+      S(i,j)=tshrinkage*S(i,j);
+    }
+  }
+  //Flip upper triangular portion onto lower triangular portion
+  S.template triangularView<Eigen::StrictlyLower>()=S.transpose();
+
+  //Apply adjustment
+  S = ((1-theta)*(1-theta))*S.array();
+  for(int i=0; i<numSNP;i++){
+    S(i,i)+=0.5*theta * (1-0.5*theta);
+  }
+  //Convert covariance matrix to correlation matrix
+  cov_2_cor(S);
+```
+
+LD scores are then calculated as `Rsq=S.array().square().colwise().sum()-1;`.  Eigenvalue decomposition is performed using `LAPACKE_dsyevr` from the Intel MKL.
+
+## Computing $Q^{T}\hat{u}$ from the eigenvectors and summary stats
+
+The Snakemake file `rssp_snakefile` contains the rule `gen_quh`. It runs the R script `gen_quh_chunk_h5.R`. In the "default" mode, all this script does is take the eigenvectors $Q$ for each LD region, take the summary stats $\hat{u}$ in that region, and compute $v=Q^{T}\hat{u}$. In the end, for each trait, there is a length $p$ vector $v$ (called `quh` in the pipeline), and a length $p$ vector $\lambda$ (called `D`) in the pipeline. 
+
+## Running `RSSp`
+
+The Snakemake file `rssp_snakefile` contains the rule `RSSp_est`. It runs the R script `RSSp_est.R`.  This script takes in the vectors $v$ and $\lambda$ computed in the previous step, and generates a heritability estimate. The most important function `RSSp_estimate` has a lot of different parameters, but the important part is a 1d optimization of the negative of the function `evd_dnorm` , optimization is (in theory) accelerated by also providing the gradient function `evd_dnorm_grad`.
+
+```{r engine='Rcpp',eval=FALSE,echo=TRUE}
+//' This function computes the RSSp negative log likelihood
+//' @param par a length 2 numeric vector.  `par[1]` corresponds to the sigma_u^2 parameter, and `par[2]` corresponds to the confounding parameter. 
+//' If the model does not include confounding, `par` can be a length one vector.
+//' @param dvec. The eigenvalues of the LD matrix, passed as a length `p` vector 
+//' @param quh The precomputed matrix vector product `crossprod(Q,u_hat)` (passed as a  length `p` vector)
+double evd_dnorm(const MapA par,const MapA dvec, const MapA quh){
+  const double varu=par(0);
+  const double a=(par.size()>1)?par(1):0;
+  const double tsum = ((dvec*dvec*varu+dvec+a).log()).sum();
+  const double tprod = (quh*(1/(dvec*dvec*varu+dvec+a))*quh).sum();
+  return -0.5*(tsum+tprod);
+}
+
+
+//' evd_dnorm_grad
+//' 
+//' This function computes the RSSp negative log likelihood gradient
+//' @param par a length 2 numeric vector.  `par[1]` corresponds to the sigma_u^2 parameter, and `par[2]` corresponds to the confounding parameter. 
+//' If the model does not include confounding, `par` can be a length one vector.
+//' @param dvec. The eigenvalues of the LD matrix, passed as a length `p` vector 
+//' @param quh The precomputed matrix vector product `crossprod(Q,u_hat)` (passed as a  length `p` vector)
+//[[Rcpp::export]]
+Eigen::ArrayXd evd_dnorm_grad(const MapA par,const MapA dvec, const MapA quh){
+  const bool useConfound = par.size()>1;
+  const double varu=par(0);
+  const double a=useConfound?par(1):0;
+  
+  const double sgrad = (-(dvec.square()*(a + dvec + dvec.square()*varu - quh.square()))/(2*(a + dvec + dvec.square()*varu).square())).sum();
+  const double  agrad = (-(a+dvec.square()*varu+dvec-quh.square())/(2*(a+dvec.square()*varu+dvec).square())).sum();
+  
+  
+  Eigen::ArrayXd retvec(useConfound?2:1);
+  retvec(0)=sgrad;
+  if(useConfound){
+    retvec(1)=agrad;
+  }
+  return(retvec);
+}
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
