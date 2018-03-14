@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Nicholas Knoblauch" />
+
+<meta name="date" content="2017-03-14" />
+
+<title>RSSp Simulation In Depth</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">PolygenicRSS</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">RSSp Simulation In Depth</h1>
+<h4 class="author"><em>Nicholas Knoblauch</em></h4>
+<h4 class="date"><em>2017-03-14</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-03-14</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 60684d5</p>
+<!-- Add your analysis here -->
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>First I will show how to look at the data using <code>EigenH5</code>, then I’ll outline how the pipeline is actually run</p>
+</section>
+<section id="key-eigenh5-commands" class="level1">
+<h1>Key <code>EigenH5</code> commands</h1>
+<ol type="1">
+<li><code>read_matrix_h5</code> Read matrix from HDF5 file, syntax is described below</li>
+<li><code>read_vector_h5</code> Read vector from HDF5 file, syntax is the same as for <code>read_matrix_h5</code></li>
+<li><code>read_df_h5</code> Read a dataframe from an HDF5 file. See usages below</li>
+<li><code>get_objs_h5</code> List the “objects” in a HDF5 file, an object is either a group (think of it like a directory), or a dataset. The default lists the objects in the “root” group, but you can list the objects in a subgroup(s) using the syntax <code>get_objs_h5(&quot;some_file.h5&quot;,&quot;somegroupA/somegroupB/...&quot;)</code></li>
+<li><code>get_dims_h5()</code> get the dimensions of a HDF5 dataset. This has the same syntax as the <code>read_matrix_h5</code> and <code>read_vector_h5</code></li>
+</ol>
+</section>
+<section id="looking-at-the-data" class="level1">
+<h1>Looking at the Data</h1>
+<section id="genotype-data" class="level2">
+<h2>Genotype data</h2>
+<p>The file <code>ALL_T1D-T2D_geno.h5</code> has the SNP data. you can get info about the SNPs by reading in the dataframe:</p>
+<pre class="r"><code>snp_info &lt;- EigenH5::read_df_h5(h5filepath = &quot;ALL_T1D-T2D_geno.h5&quot;,groupname = &quot;SNPinfo&quot;)</code></pre>
+</section>
+<section id="phenotype-true-effects" class="level2">
+<h2>Phenotype &amp; True Effects</h2>
+<section id="phenotype" class="level3">
+<h3>Phenotype</h3>
+<p>The file <code>chr1-22_T1D-T2D_XiangSmallPVE_trait.h5</code> has two <code>HDF5</code> objects, the matrix <code>ymat</code> has trait values as column vectors. It can be read in like this:</p>
+<pre class="r"><code>trait_mat &lt;- EigenH5::read_matrix_h5(filename = &quot;chr1-22_T1D-T2D_XiangSmallPVE_trait.h5&quot;,groupname = &quot;trait&quot;,dataname = &quot;ymat&quot;)</code></pre>
+<p>to read in only the first 3 traits:</p>
+<pre class="r"><code>trait_mat &lt;- EigenH5::read_matrix_h5(filename = &quot;chr1-22_T1D-T2D_XiangSmallPVE_trait.h5&quot;,groupname = &quot;trait&quot;,dataname = &quot;ymat&quot;,subset_cols = c(1:3))</code></pre>
+<p>The second object is a dataframe with all the true parameters for the traits,it can be read in like this:</p>
+<pre class="r"><code>trait_df &lt;- EigenH5::read_df_h5(filename = &quot;chr1-22_T1D-T2D_XiangSmallPVE_trait.h5&quot;,&quot;SimulationInfo&quot;)</code></pre>
+<p>The important colums are <code>tpve</code> (true <span class="math inline">\(PVE\)</span>) and <code>tsigu</code> (true <span class="math inline">\(\sigma_u\)</span>). Each row of this dataframe corresponds to a column of <code>ymat</code></p>
+</section>
+<section id="true-effects" class="level3">
+<h3>True Effects</h3>
+<p>The file <code>chr1-22_T1D-T2D_XiangSmallPVE_beta.h5</code> has two groups. <code>Beta</code> is a matrix where each row vector represents the true effect, and the number of rows is equal to the number of traits simulated. <code>S</code> is a vector for relating <span class="math inline">\(\beta\)</span> to <span class="math inline">\(U\)</span> (<span class="math inline">\(u_i=\frac{\beta_i}{s_i}\)</span>)</p>
+<p>Reading in the first 3 traits from <code>Beta</code>, and reading in <code>S</code></p>
+<pre class="r"><code>beta_mat &lt;- EigenH5::read_matrix_h5(filename = &quot;chr1-22_T1D-T2D_XiangSmallPVE_beta.h5&quot;,groupname = &quot;/&quot;,dataname = &quot;Beta&quot;,subset_rows = c(1:3))
+S &lt;- EigenH5::read_vector_h5(&quot;chr1-22_T1D-T2D_XiangSmallPVE_beta.h5&quot;,&quot;/&quot;,&quot;S&quot;)</code></pre>
+</section>
+</section>
+<section id="summary-stats" class="level2">
+<h2>Summary Stats</h2>
+<p>The file <code>chr1-22_T1D-T2D_XiangSmallPVE_sim.h5</code> has 4 datasets <code>SNPinfo</code>, a dataframe with info about SNPs, <code>SimulationInfo</code>, the same dataframe as described above, <code>se</code>, a matrix of gwas standard errors, and <code>uh</code>, a matrix of <span class="math inline">\(\hat{u}\)</span>’s.</p>
+<pre class="r"><code>library(Eigen)
+sum_statf &lt;- &quot;chr1-22_T1D-T2D_XiangSmallPVE_sim.h5&quot;
+snp_df &lt;- read_df_h5(sum_statf,&quot;SNPinfo&quot;)
+#Only read in the first 3 rows, corresponding to the first 3 trait simulations
+trait_df &lt;- read_df_h5(sum_statf,&quot;SimulationInfo&quot;,filtervec=c(1:3))
+se_mat &lt;- read_matrix_h5(sum_statf,&quot;/&quot;,&quot;se&quot;,subset_cols = c(1:3))</code></pre>
+</section>
+<section id="ldevd-data" class="level2">
+<h2>LD/EVD data</h2>
+<p>The file <code>chr1-22_T1D-T2D_T_hapmap.h5</code> and <code>chr1-22_T1D-T2D_T_hapmap.h5</code> have LD/EVD/LD data, stored chunkwise. <code>chr1-22_T1D-T2D_T_hapmap.h5</code> has one chunk per chromosome, and <code>chr1-22_T1D-T2D_F_hapmap.h5</code> has one chunk per ldetect block.</p>
+<p>A mapping of SNPs to chunks can be found in the dataframe <code>LDinfo</code>. The column <code>region_id</code> specifies the chunk</p>
+<pre class="r"><code>library(EigenH5)
+setwd(&quot;/run/media/nwknoblauch/Data/EVD_H5&quot;)
+ldf &lt;- &quot;chr1-22_T1D-T2D_F_hapmap.h5&quot;
+#Read in LD info
+ld_df &lt;- read_df_h5(ldf,&quot;LDinfo&quot;)
+head(ld_df)</code></pre>
+<pre><code># A tibble: 6 x 11
+    MAF     SNP allele   chr  info ld_snp_id   map    pos region_id     rs
+  &lt;dbl&gt;   &lt;int&gt; &lt;chr&gt;  &lt;int&gt; &lt;dbl&gt;     &lt;int&gt; &lt;dbl&gt;  &lt;int&gt;     &lt;int&gt;  &lt;int&gt;
+1 0.838  3.09e⁶ G,A        1   NaN         1  2.01 7.53e⁵         1 3.09e⁶
+2 0.845  2.98e⁶ T,C        1   NaN         2  2.03 7.86e⁵         1 2.98e⁶
+3 0.721  4.08e⁶ C,T        1   NaN         3  2.91 1.14e⁶         1 4.08e⁶
+4 0.908  1.09e⁷ G,A        1   NaN         4  3.01 1.26e⁶         1 1.09e⁷
+5 0.832  2.89e⁶ G,T        1   NaN         5  3.02 1.29e⁶         1 2.89e⁶
+6 0.891  6.60e⁶ A,G        1   NaN         6  3.02 1.29e⁶         1 6.60e⁶
+# ... with 1 more variable: snp_id &lt;int&gt;</code></pre>
+<pre class="r"><code>#read in eigenvalues for region_id=9
+D_9 &lt;- read_vector_h5(ldf,&quot;EVD/9&quot;,&quot;D&quot;)
+#read in eigenvectors for region_id=9
+Q_9 &lt;- read_matrix_h5(ldf,&quot;EVD/9&quot;,&quot;Q&quot;)
+#read in the Wen-Stephens LD matrix for region_id=9
+R_9 &lt;- read_matrix_h5(ldf,&quot;LD/9&quot;,&quot;R&quot;)</code></pre>
+</section>
+<section id="quh-data" class="level2">
+<h2>quh data</h2>
+<p>The file <code>chr1-22_T1D-T2D_T1D-T2D_F_XiangSmallPVE_1_F.h5</code> has a matrix <code>quh</code> with <span class="math inline">\(Q^{T}\hat{u}\)</span>, a vector <code>D</code> with eigenvalues, and copies of <code>SNPinfo</code> and <code>SimulationInfo</code></p>
+<p>Run <code>RSSp</code> on one trait</p>
+<pre class="r"><code>library(EigenH5)
+library(RSSp)
+library(dplyr)
+setwd(&quot;/run/media/nwknoblauch/Data/&quot;)
+quhf &lt;- &quot;chr1-22_T1D-T2D_T1D-T2D_F_XiangSmallPVE_1_F.h5&quot;
+#Read in eigenvalues
+D &lt;- read_vector_h5(quhf,&quot;/&quot;,&quot;D&quot;)
+#read in &quot;v&quot;
+quh &lt;- read_matrix_h5(quhf,&quot;/&quot;,&quot;quh&quot;,subset_cols = c(1))
+#we need to get p &amp; n to get the bounds for the optimizer, lets&#39; get N from the phenotype simulation
+phenof &lt;- &quot;chr1-22_T1D-T2D_XiangSmallPVE_trait.h5&quot;
+#remind ourselves which objects are in this file using 
+get_objs_h5(phenof)
+#remind ourselves of which objects are in the group &quot;trait&quot;
+get_objs_h5(phenof,groupname = &quot;trait&quot;)
+trait_dims&lt;- get_dims_h5(phenof,groupname = &quot;trait&quot;,dataname = &quot;ymat&quot;)
+N &lt;- trait_dims[1]
+#we need to get p &amp; n to get the bounds for the optimizer, lets&#39; get p from the quh file
+quh_dims &lt;- get_dims_h5(quhf,&quot;/&quot;,&quot;quh&quot;)
+p &lt;- quh_dims[1]
+
+#ensure that p is the same as the length of D
+stopifnot(length(D)==p)
+#make our input dataframe
+data_df &lt;- data_frame(fgeneid=1,quh=quh,D=D,p_n=p/n)
+#Estimate RSSp with no confounding parameter
+rssp_results &lt;- RSSp_estimate(data_df,doConfound = F)</code></pre>
+</section>
+</section>
+<section id="running-simulations" class="level1">
+<h1>Running Simulations</h1>
+<p>There are 5 steps to running the <code>RSSp</code> simulation pipeline: 1) Simulating true effects &amp; phenotypes for given genotypes, and true <span class="math inline">\(PVE\)</span> 2) Generating summary stats using phenotype data and genotype data 3) Calculating LD/EVD using genotype(haplotype) data and a set of breakpoints 4) Computing <span class="math inline">\(Q^{T}\hat{u}\)</span> from the eigenvectors and summary stats 5) Running <code>RSSp</code></p>
+<p>This is conveniently automated in a snakemake pipeline. The Snakemake rules can be found in <code>analysis/code/snakemake_files</code>, and the scripts can be found in <code>analysis/code/scripts/</code></p>
+<section id="simulating-true-effects-and-phenotypes" class="level2">
+<h2>Simulating true effects and phenotypes</h2>
+<p>The Snakemake file <code>trait_snakefile</code> contains the rule <code>sim_pheno_RSSp</code> for simulating true effects and phenotypes. It runs the R script <code>gen_ty_block_RSSp.R</code>. The most important part of this script is a call to the function <code>gen_sim_phenotype_h5</code> (in the package I wrote called <code>SeqSupport</code>) the following <code>RcppEigen</code> chunk shows how it works:</p>
+<pre class="cpp"><code>// First we simualate $\Beta$ and $U$ are simulated. $Y$ is also generated, but on the $X\Beta$ part, the $\epsilon$ part comes later
+//loop over all the SNPs in chunks
+ for(auto m_it=input_f.chunk_map.begin();m_it!=input_f.chunk_map.end();m_it++){
+   
+    int chunk_id = m_it-&gt;first;
+   
+   //Read in genotype
+    input_f.read_chunk(chunk_id,&quot;dosage&quot;,X);
+    
+    //Ensure that genotype is NxP
+    if(X.rows()!=N){
+      X.transposeInPlace();
+    }
+    
+    // Center genotype
+    X = X.rowwise()-X.colwise().mean();
+    
+    // calculate S, which relates U to Beta
+    S = (1/(X.array().square().colwise().sum()/(N-1)).sqrt())*(1/std::sqrt(N-1));
+    
+    // Write S
+    output_f.write_chunk(chunk_id,&quot;S&quot;,S);
+    
+    // Simulate U as multivariate normal, using a vector of sigma_u values
+    U=sim_U(N,tsigu.square());
+    
+    // Calculate Beta from U and S
+    Beta=U.array().colwise()*S.array();
+    
+    // Update Y
+    Y=Y+X*Beta;
+    
+    //Write Beta
+    Beta.transposeInPlace();
+    output_f.write_chunk(chunk_id,&quot;Beta&quot;,Beta);
+  }
+ //return Y
+  return(Y);</code></pre>
+<p>This R function handles the residuals</p>
+<pre class="r"><code>#&#39; calculate the scale of residuals, given X*Beta and the target PVE
+#&#39; @param vy vector with the variance of y (length is equal to the number of traits)
+#&#39; @param PVE vector specifying the target PVE (length should be the same as the number of traits)
+gen_ti &lt;- function(vy, PVE){
+  stopifnot(length(vy)==length(PVE))
+  return(vy*(1/PVE-1))
+}
+
+
+gen_sim_resid &lt;- function(ty,tparam_df){
+  #calculate the variance for each trait (column)
+  vy &lt;- apply(ty, 2, var)
+  #calculate the number of individuals
+  n &lt;- nrow(ty)
+  #make sure number of traits matches
+  stopifnot(ncol(ty)==nrow(tparam_df))
+  #calculate the scale of the residuals
+  residvec &lt;- gen_ti(vy, tparam_df$tpve)
+  #simulate residuals
+  residmat &lt;- sapply(residvec, function(ti, n){rnorm(n=n, mean=0, sd=sqrt(ti))}, n=n)
+  #add residuals and center Y
+  ymat &lt;- scale(ty+residmat, center=T, scale=F)
+  return(ymat)
+}</code></pre>
+</section>
+<section id="generating-summary-stats" class="level2">
+<h2>Generating summary stats</h2>
+<p>The Snakemake file <code>trait_snakefile</code> contains the rule <code>map_uh_RSSp</code>. It runs the R script <code>map_uh_LDchunk_RSSp_h5.R</code>. The core of the script is summarized here:</p>
+<pre class="cpp"><code>
+// loop over EXP (traits) in chunks
+ for(int i=0;i&lt;exp_rsize;i++){
+   //Read in a chunk of traits, and ensure that it&#39;s NxP
+    EXP_f.read(i,EXP_chunk);
+    if(EXP_first){
+      EXP_chunk.transposeInPlace();
+    }
+    //g is number of traits
+    const int g=EXP_chunk.cols();
+    //N is number of samples
+    const int N=EXP_chunk.rows();
+    //Center trait values
+    EXP_chunk = EXP_chunk.rowwise()-EXP_chunk.colwise().mean();
+    //calculate sum of squares for Y
+    sy2=EXP_chunk.array().square().colwise().sum();
+    // Loop over SNPs in chunks
+    for(int j=0;j&lt;snp_rsize;j++){
+      
+      //Read in a chunk of SNPs, ensure that it&#39;s NxP
+      SNP_f.read(j,SNP_chunk);
+      if(SNP_first){
+        SNP_chunk.transposeInPlace();
+      }
+      
+      const int snp_chunksize=SNP_chunk.cols();
+      // Center SNP data
+      SNP_chunk = SNP_chunk.rowwise()-SNP_chunk.colwise().mean();
+      //calculate sum of square for X
+      sx2=SNP_chunk.array().square().colwise().sum();
+      // create the \hat{beta} part of the matrix \hat{u},
+      // each element of the matrix is equal to (X_i^{T}y_j)/sum(X_i^2) where i is the ith SNP, and 
+      // j is the jth trait
+      UH_chunk=(SNP_chunk.transpose()*EXP_chunk).array().colwise()/sx2;
+      se_chunk.resize(snp_chunksize,g);
+      for(int l=0; l&lt;snp_chunksize;l++){
+        for(int k=0; k&lt;g;k++){
+          //calculating std error.
+          //EXP_chunk.col(k) is the kth trait, and SNP+chunk.col(l)*UH_chunk(l,k) is the fitted value of the l,k model.
+          se_chunk(l,k)=std::sqrt((1/(static_cast&lt;double&gt;(N-1)*sx2(l)))*(EXP_chunk.col(k)-(SNP_chunk.col(l)*UH_chunk(l,k))).array().square().sum());
+        }
+      }
+      //divide \hat{beta} by standard error (element-wise)
+      UH_chunk=UH_chunk.array()/se_chunk.array();
+      // write \hat{U}
+      uh_f.write(rk,UH_chunk);
+      // write std-error
+      se_f.write(rk,se_chunk);
+      rk++;
+      prog_bar.increment();
+    }
+  }</code></pre>
+</section>
+<section id="calculating-ldevd-using-genotypehaplotype-data-and-a-set-of-breakpoints" class="level2">
+<h2>Calculating LD/EVD using genotype(haplotype) data and a set of breakpoints</h2>
+<p>The Snakemake file <code>LD_snakefile</code> contains the rule <code>ld_chunk_1kg</code>. It runs the R script <code>evd_1kg_h5.R</code>. The “meat” of the LDshrink implementation is below:</p>
+<pre class="cpp"><code> 
+ double dosage_max=hmata.maxCoeff();
+bool isGeno=dosage_max&gt;1; 
+//m=85, so theta =0.001029112
+double theta=calc_theta(m);
+//center haplotye/genotype
+  hmata = hmata.rowwise()-hmata.colwise().mean();
+  //calculate covariance, store it in the matrix S
+  calc_cov_s(hmata,S);
+  //Apply correction for genotype
+  if(isGeno){
+    S*=0.5;
+  }
+  int numSNP=S.rows();
+  //Set lower triangular part the matrix to be 0
+  auto nts=S.template triangularView&lt;Eigen::StrictlyLower&gt;().setZero();
+
+  if(!is_sorted(mapa.begin(),mapa.end(),std::less&lt;double&gt;())){
+    Rcpp::stop(&quot;Recombination map must be non-decreasing\n&quot;);
+  }
+  double tj=0;
+  double ti=0;
+  double rho=0;
+  double tshrinkage;
+//Do shrinkage
+  for(int i=0; i&lt;numSNP;i++){
+    ti=mapa[i];
+    for(int j=i+1; j&lt;numSNP;j++){
+      tj=mapa[j];
+      rho = 4*Ne*(tj-ti)/100;
+      rho=-rho/(2*m);
+      tshrinkage=std::exp(rho);
+      if(tshrinkage&lt;cutoff){
+        tshrinkage=0;
+      }
+      S(i,j)=tshrinkage*S(i,j);
+    }
+  }
+  //Flip upper triangular portion onto lower triangular portion
+  S.template triangularView&lt;Eigen::StrictlyLower&gt;()=S.transpose();
+
+  //Apply adjustment
+  S = ((1-theta)*(1-theta))*S.array();
+  for(int i=0; i&lt;numSNP;i++){
+    S(i,i)+=0.5*theta * (1-0.5*theta);
+  }
+  //Convert covariance matrix to correlation matrix
+  cov_2_cor(S);</code></pre>
+<p>LD scores are then calculated as <code>Rsq=S.array().square().colwise().sum()-1;</code>. Eigenvalue decomposition is performed using <code>LAPACKE_dsyevr</code> from the Intel MKL.</p>
+</section>
+<section id="computing-qthatu-from-the-eigenvectors-and-summary-stats" class="level2">
+<h2>Computing <span class="math inline">\(Q^{T}\hat{u}\)</span> from the eigenvectors and summary stats</h2>
+<p>The Snakemake file <code>rssp_snakefile</code> contains the rule <code>gen_quh</code>. It runs the R script <code>gen_quh_chunk_h5.R</code>. In the “default” mode, all this script does is take the eigenvectors <span class="math inline">\(Q\)</span> for each LD region, take the summary stats <span class="math inline">\(\hat{u}\)</span> in that region, and compute <span class="math inline">\(v=Q^{T}\hat{u}\)</span>. In the end, for each trait, there is a length <span class="math inline">\(p\)</span> vector <span class="math inline">\(v\)</span> (called <code>quh</code> in the pipeline), and a length <span class="math inline">\(p\)</span> vector <span class="math inline">\(\lambda\)</span> (called <code>D</code>) in the pipeline.</p>
+</section>
+<section id="running-rssp" class="level2">
+<h2>Running <code>RSSp</code></h2>
+<p>The Snakemake file <code>rssp_snakefile</code> contains the rule <code>RSSp_est</code>. It runs the R script <code>RSSp_est.R</code>. This script takes in the vectors <span class="math inline">\(v\)</span> and <span class="math inline">\(\lambda\)</span> computed in the previous step, and generates a heritability estimate. The most important function <code>RSSp_estimate</code> has a lot of different parameters, but the important part is a 1d optimization of the negative of the function <code>evd_dnorm</code> , optimization is (in theory) accelerated by also providing the gradient function <code>evd_dnorm_grad</code>.</p>
+<pre class="cpp"><code>//&#39; This function computes the RSSp negative log likelihood
+//&#39; @param par a length 2 numeric vector.  `par[1]` corresponds to the sigma_u^2 parameter, and `par[2]` corresponds to the confounding parameter. 
+//&#39; If the model does not include confounding, `par` can be a length one vector.
+//&#39; @param dvec. The eigenvalues of the LD matrix, passed as a length `p` vector 
+//&#39; @param quh The precomputed matrix vector product `crossprod(Q,u_hat)` (passed as a  length `p` vector)
+double evd_dnorm(const MapA par,const MapA dvec, const MapA quh){
+  const double varu=par(0);
+  const double a=(par.size()&gt;1)?par(1):0;
+  const double tsum = ((dvec*dvec*varu+dvec+a).log()).sum();
+  const double tprod = (quh*(1/(dvec*dvec*varu+dvec+a))*quh).sum();
+  return -0.5*(tsum+tprod);
+}
+
+
+//&#39; evd_dnorm_grad
+//&#39; 
+//&#39; This function computes the RSSp negative log likelihood gradient
+//&#39; @param par a length 2 numeric vector.  `par[1]` corresponds to the sigma_u^2 parameter, and `par[2]` corresponds to the confounding parameter. 
+//&#39; If the model does not include confounding, `par` can be a length one vector.
+//&#39; @param dvec. The eigenvalues of the LD matrix, passed as a length `p` vector 
+//&#39; @param quh The precomputed matrix vector product `crossprod(Q,u_hat)` (passed as a  length `p` vector)
+//[[Rcpp::export]]
+Eigen::ArrayXd evd_dnorm_grad(const MapA par,const MapA dvec, const MapA quh){
+  const bool useConfound = par.size()&gt;1;
+  const double varu=par(0);
+  const double a=useConfound?par(1):0;
+  
+  const double sgrad = (-(dvec.square()*(a + dvec + dvec.square()*varu - quh.square()))/(2*(a + dvec + dvec.square()*varu).square())).sum();
+  const double  agrad = (-(a+dvec.square()*varu+dvec-quh.square())/(2*(a+dvec.square()*varu+dvec).square())).sum();
+  
+  
+  Eigen::ArrayXd retvec(useConfound?2:1);
+  retvec(0)=sgrad;
+  if(useConfound){
+    retvec(1)=agrad;
+  }
+  return(retvec);
+}
+</code></pre>
+</section>
+<section id="session-information" class="level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Manjaro Linux
+
+Matrix products: default
+BLAS/LAPACK: /opt/intel/compilers_and_libraries_2018.1.163/linux/mkl/lib/intel64_lin/libmkl_gf_lp64.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] EigenH5_1.0
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.15        knitr_1.19          magrittr_1.5       
+ [4] lattice_0.20-35     rlang_0.2.0         stringr_1.2.0      
+ [7] tools_3.4.3         grid_3.4.3          utf8_1.1.3         
+[10] cli_1.0.0           git2r_0.21.0        htmltools_0.3.6    
+[13] yaml_2.1.16         rprojroot_1.3-2     digest_0.6.15      
+[16] assertthat_0.2.0    tibble_1.4.2        RcppEigen_0.3.3.3.1
+[19] crayon_1.3.4        Matrix_1.2-12       codetools_0.2-15   
+[22] evaluate_0.10.1     rmarkdown_1.8       stringi_1.1.6      
+[25] compiler_3.4.3      pillar_1.1.0        libblosc_1.12.1    
+[28] backports_1.1.2    </code></pre>
+</section>
+</section>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
