@@ -1,0 +1,9 @@
+rule eur_concat:
+    input:
+        vcff=expand(config["KG_VCFDIR"]+"EUR.chr{chr}_maf_01.vcf.gz",chr=range(1,23))
+    output:
+        vcff=config["KG_VCFDIR"]+"EUR.ALL_maf_01.vcf.gz"
+    threads:
+        11
+    shell:
+        "bcftools concat {input.vcff} -D -Oz -o {output.vcff} --threads {threads}"

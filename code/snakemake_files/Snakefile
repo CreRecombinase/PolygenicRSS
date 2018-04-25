@@ -1,22 +1,59 @@
 include: "param_snakefile"
 include: "wtcc_snakefile"
-include: "combined_snakefile"
+#include: "combined_snakefile"
 include: "trait_snakefile"
 include: "LD_snakefile"
+include: "direct_snakefile"
 include: "ldsc_snakefile"
 include: "rssp_snakefile"
 include: "grm_snakefile"
-include: "direct_snakefile"
 
 
+wildcard_constraints:
+    gn="[0-9a-z]+"
+
+
+
+#all_dgn = ["genred","genred2"]
+#all_tn = '-'.join(all_dgn).upper()
+#all_tn='-'.join(GWAS_NAMES).upper()
+#all_tn=GWAS_NAMES
+#all_tn=["genred"]
+#dsp=['_'.join([x,x]) for x in GWAS_NAMES]
+#dsp=["genred_genred"]
+#dsp=[all_tn+"_"+all_tn]
 rule all:
     input:
-        expand(config["OUTPUT_DIR"]+"sim_{snpset}_{dataseta}_{datasetb}_{bdf}_{gwas}_RSSp_res_{scen}_{pvv}_{svd}.txt.gz",
-               snpset=tchr,
-               dataseta="RA-CAD",
-               datasetb="RA-CAD",
-               bdf=["F","T"],
-               gwas=["gwas"],
+        expand("rssp_ldsc_report/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{pvv}_{lds}_{cf}.html",
+               snpset="chr1-22",
+               dataset="bd",
+               hm=["omni"],
+               bdf=["T"],
                scen=SCEN,
-               pvv=pvv,
-               svd=svd)
+               pvv=["1"],
+               lds=["F","T"],
+        cf=["F"])
+rule ldsc_rss_report:
+    input:
+        rssprf_gwas=config["OUTPUT_DIR"]+"sim_{snpset}_{dataset}_{dataset}_{bdf}_{hm}_gwas_RSSp_res_{scen}_{pvv}_{lds}_{cf}.txt.gz",
+        rssprf_direct=config["OUTPUT_DIR"]+"sim_{snpset}_{dataset}_{dataset}_{bdf}_{hm}_direct_RSSp_res_{scen}_{pvv}_{lds}_{cf}.txt.gz",
+        ldscrf_direct=config["OUTPUT_DIR"]+"ldsc_res/sim_{snpset}_{dataset}_{bdf}_{hm}_gwas_ldsc_res_{scen}_{lds}_{dointer}.txt.gz",
+        ldscrf_gwas=config["OUTPUT_DIR"]+"ldsc_res/sim_{snpset}_{dataset}_{bdf}_{hm}_direct_ldsc_res_{scen}_{lds}_{dointer}.txt.gz",
+        quhf_direct=config["KG_DIRECTORY"]+"RSSp_genome_direct_quh/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{lds}.h5",
+        quhf_gwas=config["KG_DIRECTORY"]+"RSSp_genome_gwas_quh/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{lds}.h5",
+        uhf_gwas=config["KG_DIRECTORY"]+"RSSp_genome_gwas_uh/{snpset}_{dataset}_{scen}_sim.h5",
+        uhf_direct=config["KG_DIRECTORY"]+"RSSp_genome_direct_uh/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{lds}.h5",
+        evdf=config["EVD_DIR"]+"{snpset}_{dataset}_{bdf}_{hm}_{lds}.h5"
+    params:
+        snpset="{snpset}",
+        dataset="{dataset}",
+        usesLDetect="{bdf}",
+        panel_map="{hm}",
+        jobName="{scen}",
+        percent_ev="{pvv}",
+        usesLDshrink="{lds}",
+        confoundingRSS="{cf}"
+    output:
+        reportf="rssp_ldsc_report/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{pvv}_{lds}_{cf}.html"
+    script:
+        "../scripts/ldsc_rssp.Rmd"

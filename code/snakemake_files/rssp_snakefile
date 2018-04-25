@@ -1,21 +1,24 @@
 
 rule gen_quh:
     input:
-        evdf=config["EVD_DIR"]+"{snpset}_{dataseta}_{bdf}_hapmap.h5",
+        evdf=config["EVD_DIR"]+"{snpset}_{dataseta}_{bdf}_{hm}_{lds}.h5",
         uhf=config["KG_DIRECTORY"]+"RSSp_genome_gwas_uh/{snpset}_{datasetb}_{scen}_sim.h5"
-    params:
-        pvv="{pvv}",
-        svd="{svd}"
     output:
-        quhf=config["KG_DIRECTORY"]+"RSSp_genome_gwas_quh_chunk/{snpset}_{dataseta}_{datasetb}_{bdf}_{scen}_{pvv}_{svd}.h5"
+        quhf=config["KG_DIRECTORY"]+"RSSp_genome_gwas_quh/{snpset}_{dataseta}_{datasetb}_{bdf}_{hm}_{scen}_{lds}.h5"
+    resources:
+        fh5=1
     script:
         "../scripts/gen_quh_chunk_h5.R"
 
 rule RSSp_est:
     input:
-        rdsf=config["KG_DIRECTORY"]+"RSSp_genome_{gwas}_quh_chunk/{snpset}_{dataseta}_{datasetb}_{bdf}_{scen}_{pvv}_{svd}.h5"
+        rdsf=config["KG_DIRECTORY"]+"RSSp_genome_{gwas}_quh/{snpset}_{dataseta}_{datasetb}_{bdf}_{hm}_{scen}_{lds}.h5"
     output:
-        dff=config["OUTPUT_DIR"]+"sim_{snpset}_{dataseta}_{datasetb}_{bdf}_{gwas}_RSSp_res_{scen}_{pvv}_{svd}.txt.gz"
+        dff=config["OUTPUT_DIR"]+"sim_{snpset}_{dataseta}_{datasetb}_{bdf}_{hm}_{gwas}_RSSp_res_{scen}_{pvv}_{lds}_{cf}.txt.gz"
+    params:
+        doConfound="{cf}",
+        doMoM="F",
+        pvv="{pvv}"
     script:
         "../scripts/RSSp_est.R"
 

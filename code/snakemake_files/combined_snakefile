@@ -1,4 +1,6 @@
-
+wildcard_constraints:
+    gn="[0-9a-z]+"
+    
 GRM_PARTS=4
 #Genetic Maps
 #ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20130507_omni_recombination_rates/
@@ -11,9 +13,47 @@ GRM_PARTS=4
 def mergefunc(wildcards):
     subg=wildcards.ccn.split('-')
     subg= [x.lower() for x in subg]
+    [print(x) for x in subg]
     return {'input_vcf': [config["VCF_ODIR"]+ts+"_19.vcf.gz" for ts in subg],
             'input_vcfi': [config["VCF_ODIR"]+ts+"_19.vcf.gz.csi" for ts in subg]}
             
+
+rule vcf_sample_list:
+    input:
+        inf=config["VCF_ODIR"]+"{ccn}_c_19.vcf.gz"
+    output:
+        outf=temp("{ccn}_c_sample_l.txt")
+    shell:
+        "bcftools query -l {input.inf} > {output.outf}"
+
+rule vcf_sample_df:
+    input:
+        inf="{ccn}_c_sample_l.txt"
+    output:
+        outf="{ccn}_sample_df.txt"
+    script:
+        "../scripts/gen_sample_df.R"
+
+rule vcf_sample_num:
+    input:
+        inf="{ccn}_sample_df.txt"
+    params:
+        sample_n="{N}"
+    output:
+        outf="{ccn}_samplesubset_{N}.txt"
+    script:
+        "../scripts/gen_sample_df_n.R"
+
+
+rule vcf_subset_n:
+    input:
+        inf=config["VCF_ODIR"]+"{ccn}_c_19.vcf.gz",
+        samplen="{ccn}_samplesubset_{N}.txt"
+    output:
+        outf=config["VCF_ODIR"]+"{ccn}_{N}_19.vcf.gz"
+    threads: 11
+    shell:
+        "bcftools view {input.inf} -S {input.samplen} -Oz -o {output.outf} --threads {threads}"
 
 
 
@@ -21,7 +61,7 @@ rule vcf_merge:
     '''This rule uses the function 'mergefunc' which figures out which WTCCC datasets to merge'''
     input: unpack(mergefunc)
     output:
-        out_vcf=config["VCF_ODIR"]+"{ccn}_19.vcf.gz".format(ccn=COMB_NAME)
+        out_vcf=config["VCF_ODIR"]+"{ccn}_c_19.vcf.gz"
     threads: 9
     shell:
         "bcftools merge --force-samples {input.input_vcf} --threads {threads} -Ou | bcftools view --genotype \"^miss\" -Oz --threads {threads} -o {output.out_vcf} --types snps --min-af 0.05 --min-ac 1:minor"
@@ -30,13 +70,13 @@ rule vcf_merge:
 rule vcf2plink:
     ''' This rule converts a vcf file to a plink file'''
     input:
-        inf=config["VCF_ODIR"]+"{ccn}_19.vcf.gz".format(ccn=COMB_NAME)
+        inf=config["VCF_ODIR"]+"{ccn}_c_19.vcf.gz"
     output:
-        outf_fam=temp(config["PLINK_DIR"]+"{ccn}_19.fam".format(ccn=COMB_NAME)),
-        outf_bim=temp(config["PLINK_DIR"]+"{ccn}_19.bim".format(ccn=COMB_NAME)),
-        outf_bed=temp(config["PLINK_DIR"]+"{ccn}_19.bed".format(ccn=COMB_NAME))
+        outf_fam=temp(config["PLINK_DIR"]+"{ccn}_19.fam"),
+        outf_bim=temp(config["PLINK_DIR"]+"{ccn}_19.bim"),
+        outf_bed=temp(config["PLINK_DIR"]+"{ccn}_19.bed")
     params:
-        out_pref=config["PLINK_DIR"]+"{ccn}_19".format(ccn=COMB_NAME)
+        out_pref=config["PLINK_DIR"]+"{ccn}_19"
     threads: 9
     shell:
         "plink --vcf {input.inf} --double-id --make-bed --out {params.out_pref} --threads {threads}"        
@@ -75,13 +115,24 @@ rule grm_combined:
     shell:
         "gcta64 --bfile {params.in_p} --make-grm-part "+str(GRM_PARTS)+" {params.p} --thread-num {threads} --out {params.out_p}"
         
+
+
+rule gds_c_19:
+    ''' This rule converts a vcf file to SNPrelate format'''
+    input:
+        vcff=config["VCF_ODIR"]+"{cn}_c_19.vcf.gz"
+    output:
+        temp_gds=config["GDS_DIR"]+"{cn}_c_19.gds"
+    threads: 9
+    script:
+        "../scripts/vcf2seq_gds.R"
         
         
 rule interp_map_wtcc:
     ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are rearranged)'''
     input:
-        input_gds=config["GDS_DIR"]+"{cn}_19.gds",
+        input_gds=config["GDS_DIR"]+"{cn}_c_19.gds",
     output:
-        outf=config["HDF5_DIR"]+"{cn}_seq_wtcc_geno.h5"
+        outf=config["HDF5_DIR"]+"ALL_{cn}_geno.h5"
     script:
         "../scripts/gds2h5.R"        

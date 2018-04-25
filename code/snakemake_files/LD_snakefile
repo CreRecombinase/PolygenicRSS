@@ -1,29 +1,56 @@
 rule ld_chunk_1kg:
     input:
-        hdff=config["HDF5_DIR"]+"ALL_{dataset}_geno.h5",
-        subsnpf=config["INPUT_DIR"]+"{snpset}.txt.gz",
+        input_file=config["HDF5_DIR"]+"ALL_{dataset}_geno.h5",
+        subsnpf=config["INPUT_DIR"]+"{snpset}_{dataset}.txt.gz",
         bdf=config["INPUT_DIR"]+"ldetect_{bdf}.txt.gz",
-        mapf=config["KG_MAPDIR"]+"interpolated_hapmap.h5"
+        mapf=config["KG_MAPDIR"]+"interpolated_{hm}.h5"
+    params:
+        useLDshrink="{lds}"
     output:
-        evdf=config["EVD_DIR"]+"{snpset}_{dataset}_{bdf}_hapmap.h5"
+        evdf=config["EVD_DIR"]+"{snpset}_{dataset}_{bdf}_{hm}_{lds}.h5"
+    threads: 11
+    resources:
+        fh5=1
     script:
         "../scripts/evd_1kg_h5.R"
 
-rule ldetect_gen:
+
+# rule ldshrink_cv:
+#     input:
+#         hdff=config["HDF5_DIR"]+"ALL_{dataset}_geno.h5",
+#         subsnpf=config["INPUT_DIR"]+"{snpset}.txt.gz",
+#         bdf=config["INPUT_DIR"]+"ldetect_{bdf}.txt.gz",
+#         mapf=config["KG_MAPDIR"]+"interpolated_{hm}.h5"
+#     params:
+#         m="{m}",
+#         mapsource="{hm}",
+#         ldetect="{bdf}",
+#         dataset="{dataset}",
+#         snpset="{snpset}",
+#         Ne="{Ne}",
+#         cutoff="{cutoff}"
+#     output:
+#         evdf=config["OUTPUT_DIR"]+"cv_ld/{snpset}_{dataset}_{bdf}_{hm}_{m}_{Ne}_{cutoff}.txt"
+#     resources:
+#         fh5=1
+#     script:
+#         "../scripts/ldshrink_cv.R"
+
+rule with_ldetect_breakpoints:
     input:
         ldetectf=config["LDETECT_BREAK_FILE"]
     params:
-        allchr="T"
+        use_ldetect="T"
     output:
         bdf=config["INPUT_DIR"]+"ldetect_T.txt.gz"
     script:
         "../scripts/break_df.R"
 
-rule ldetect_chr:
+rule without_ldetect_breakpoints:
     input:
         ldetectf=config["LDETECT_BREAK_FILE"]
     params:
-        allchr="F"
+        use_ldetect="F"
     output:
         bdf=config["INPUT_DIR"]+"ldetect_F.txt.gz"
     script:
@@ -46,18 +73,32 @@ rule gen_map_h5:
         chrom=range(1,23)
     output:
         mapf=config["KG_MAPDIR"]+"interpolated_hapmap.h5"
+    resources:
+        fh5=1
     script:
         "../scripts/map2RDS.R"
+
+rule gen_omni_h5:
+    input:
+        mapf=expand(config["KG_MAPDIR"]+"interpolated_OMNI/chr{chrom}.OMNI.interpolated_genetic_map.gz",chrom=range(1,23))
+    params:
+        chrom=range(1,23)
+    output:
+        mapf=config["KG_MAPDIR"]+"interpolated_omni.h5"
+    resources:
+        fh5=1
+    script:
+        "../scripts/map2RDS.R"        
 
 
 rule vcf_2_clean:
     input:
-        vcff=config["VCF_DIR"]+"ALL.chr{chr}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
+        vcff=config["KG_VCFDIR"]+"ALL.chr{chr}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
         filt_f="EUR.samples"
     params:
-        out_pref=config["VCF_DIR"]+"EUR.chr{chr}_maf_01.vcf.gz"
+        out_pref=config["KG_VCFDIR"]+"EUR.chr{chr}_maf_01.vcf.gz"
     output:
-        vcff=config["VCF_DIR"]+"EUR.chr{chr}_maf_01.vcf.gz"
+        vcff=config["KG_VCFDIR"]+"EUR.chr{chr}_maf_01.vcf.gz"
     threads: 2
     shell:
         "bcftools view {input.vcff} -Oz -o {params.out_pref} -S {input.filt_f} --min-alleles 2 --max-alleles 2 --min-af 0.01 --threads {threads}"
@@ -67,7 +108,9 @@ rule vcf_2_allel:
         vcff=config["VCF_DIR"]+"EUR.chr{chr}_maf_01.vcf.gz"
     output:
         legf=config["VCF_DIR"]+"../impute/EUR.chr{chr}.h5"
-    threads: 1
+    threads: 10
+    resources:
+        fh5=1
     conda:
         "envs/rssp.yml"
     script:
@@ -79,6 +122,8 @@ rule allel2haplotype:
         legf=config["VCF_DIR"]+"../impute/EUR.chr{chr}.h5"
     output:
         h5f=config["HDF5_DIR"]+"1KG{chr}_seq_1kg_geno.h5"
+    resources:
+        fh5=1
     script:
         "../scripts/allel2haplo_h5.R"
 

@@ -1,15 +1,23 @@
 
+
 rule gen_quh_chunk_direct:
     input:
-        evdf=config["EVD_DIR"]+"{snpset}_{dataset}_{bdf}_hapmap.h5",
+        evdf=config["EVD_DIR"]+"{snpset}_{dataset}_{bdf}_{hm}_{lds}.h5",
         traitf=config["KG_DIRECTORY"]+"RSSp_sim_gwas_pheno/{snpset}_{dataset}_{scen}_trait.h5"
-    params:
-        pvv="{pvv}",
-        svd="{svd}"
     output:
-        quhf=config["KG_DIRECTORY"]+"RSSp_genome_direct_quh_chunk/{snpset}_{dataset}_{dataset}_{bdf}_{scen}_{pvv}_{svd}.h5"
+        quhf=config["KG_DIRECTORY"]+"RSSp_genome_direct_quh/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{lds}.h5"
+    resources:
+        fh5=1
     script:
         "../scripts/gen_quh_chunk_direct.R"
 
-
-        
+rule gen_uh_direct:
+    input:
+        evdf=config["EVD_DIR"]+"{snpset}_{dataset}_{bdf}_{hm}_{lds}.h5",
+        quhf=config["KG_DIRECTORY"]+"RSSp_genome_direct_quh/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{lds}.h5"
+    output:
+        uhf=config["KG_DIRECTORY"]+"RSSp_genome_direct_uh/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{lds}.h5"
+    resources:
+        fh5=1
+    script:
+        "../scripts/gen_uh_chunk_direct.R"

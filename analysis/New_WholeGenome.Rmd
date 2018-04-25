@@ -1,0 +1,105 @@
+---
+title: "New Whole-Genome Simulations"
+author: "Nicholas Knoblauch"
+date: 2018-04-12
+output: workflowr::wflow_html
+---
+
+
+# Since Last Time
+
+## Bug Fixes
+
+It looks like there was a bug in the code performing the $Q^T\hat{u}$ step.  This is part of why both `ldsc` and the `direct` simulations performed so well.
+
+## MHC
+
+It also came to my attention (thanks to Xiang), that the MHC locus was included in the simulations.  SNPs in that region are now removed before simulation begins.
+
+
+## New data
+
+To make sure the whole pipeline is working consistently, I've added incorporated the GENRED2 genotype data (`342,252` SNPs, `2226` individuals) to the repetoire of simulations. The GENRED2 data represents a superset of the  SNP data used in the DGN eQTL study.
+
+## New simulation scenarios
+
+I've made some changes to the simulations and estimation procedures for LD score regression.  I now run LD score regression with an intercept fixed at `1` (`useIntercept=FALSE`), as well an intercept that is allowed to vary (`useIntercept=TRUE`).  I also now have a "direct" simulation that is run through LD score regression.  After simulating $\hat{v}_i \sim N(0,\sigma_u^2 \lambda_i^2+\lambda_i)$, I multiply by $Q$ to obtain $Q\hat{v}=QQ^{T}\hat{u}=\hat{u}$, which I can then input to LD score regression as usual. 
+
+
+```{r,echo=F,message=F,warnings=F}
+library(EigenH5)
+library(tidyverse)
+```
+
+# RSSp results
+
+RSSp still shows moderate inflation, but it's not nearly as bad as it was with the bug.
+```{r,echo=F,message=F,warnings=F}
+res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",pattern="genred2",full.names = T)
+# res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",pattern="ra",full.names = T)
+
+res_df <- map_df(res_d_rssp,read_delim,delim="\t") %>% filter(!is.na(simulation),!is.na(useLDshrink)) 
+tparam_df <- distinct(res_df,fgeneid,tsigu,tpve,p,n)
+
+rss_res <- select(res_df,fgeneid,tpve,pve,simulation,useLDshrink) %>% mutate(RSSp=tpve-pve) %>% select(-pve)
+```
+
+```{r,echo=F}
+ggplot(res_df,aes(x=tpve,y=pve))+geom_point()+geom_smooth(method="lm",formula=y~x+0)+geom_abline(slope=1,intercept=0)+facet_grid(useLDshrink~simulation,labeller = "label_both")+ggtitle("RSSp",paste0("p=",unique(tparam_df$p),",N=",unique(tparam_df$n)))+xlab("PVE")+ylab(bquote(hat(PVE)))
+```
+
+
+If we plot $\frac{\hat{\text{PVE}}-\text{PVE}}{\text{PVE}}$  as a function of $\text{PVE}$, which can be thought of as "relative inflation", we see that the effect is much worse at low PVE, and that it actually trends down as true PVE increases.  To better visualize this, I've changed the X axis to a log10 scale.
+```{r,echo=F,message=F,warning=F}
+ggplot(res_df,aes(x=tpve,y=(pve-tpve)/tpve))+geom_point()+geom_smooth(method="lm",formula=y~x+0)+facet_grid(useLDshrink~simulation,labeller = "label_both")+ggtitle("RSSp Relative Inflation",paste0("p=",unique(tparam_df$p),",N=",unique(tparam_df$n)))+xlab("PVE (Log10 scale)")+ylab(bquote(frac(hat(PVE)-PVE,PVE)))+scale_x_log10()
+
+```
+
+
+
+To finish out the summary of the new `RSSp` results, below is a plot of relative RMSE, It doesn't look tlike there is a ma
+```{r,echo=F,message=F,warning=F}
+ggplot(res_df,aes(x=tpve,y=abs(pve-tpve)/tpve))+geom_point()+geom_smooth(method="lm",formula=y~x+0)+facet_grid(useLDshrink~simulation,labeller = "label_both")+ggtitle("RSSp Relative RMSE (log 10 scale)",paste0("p=",unique(tparam_df$p),",N=",unique(tparam_df$n)))+xlab("PVE (Log10 scale)")+ylab(bquote(frac(hat(PVE)-PVE,PVE)))+scale_x_log10()+scale_y_log10()
+
+```
+
+
+# LDSC results
+
+As mentioned above, LD score regression was run with a fixed intercept and with an estimated intercept.  Results for both are shown here. Interestingly, LD score regression has a very hard time with the direct simulations when the intercept is allowed to vary
+
+```{r,echo=F,message=F,warning=F}
+res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake/ldsc_res/",pattern="genred2",full.names = T)
+res_df <- map_df(res_d_rssp,~read_delim(.x,delim="\t") %>% mutate(Intercept=as.character(Intercept))) %>% filter(!is.na(simulation),!is.na(useLDshrink)) %>% inner_join(tparam_df)
+
+ldsc_res_ni <- filter(res_df,!useIntercept) %>% select(fgeneid,tpve,pve,simulation,useLDshrink) %>% mutate(LDSC_noIntercept=tpve-pve) %>% select(-pve)
+ldsc_res_wi <- filter(res_df,useIntercept) %>% select(fgeneid,tpve,pve,simulation,useLDshrink) %>% mutate(LDSC_Intercept=tpve-pve) %>% select(-pve)
+
+```
+
+
+```{r,echo=F}
+ggplot(res_df,aes(x=tpve,y=pve,col=useIntercept))+geom_point()+geom_smooth(method="lm",formula=y~x+0)+geom_abline(slope=1,intercept=0)+facet_grid(useLDshrink~simulation,labeller = "label_both")+ggtitle("LDSC",paste0("p=",unique(tparam_df$p),",N=",unique(tparam_df$n)))+xlab("PVE")+ylab(bquote(hat(PVE)))
+
+```
+
+# RSSp vs LDSC
+
+Overall it looks like RSSp does at least as well, and in some cases better than LD score regression (both with and without and intercept).  Next steps are to try out of sample LD.
+
+
+```{r,echo=F}
+both_res <- inner_join(inner_join(ldsc_res_ni,rss_res),ldsc_res_wi)
+nboth_res <- gather(both_res,"method","RMSE",LDSC_noIntercept,LDSC_Intercept,RSSp)
+ggplot(nboth_res,aes(x=method,y=abs(RMSE),col=method))+geom_boxplot()+facet_grid(useLDshrink~simulation,labeller = "label_both")
+```
+```{r,echo=F}
+ggplot(nboth_res)+aes(x=tpve,y=RMSE^2,col=method)+geom_point()+facet_grid(useLDshrink~simulation,labeller = "label_both")+scale_y_log10()
+```
+
+
+```{r,echo=F}
+filter(nboth_res,simulation=="gwas",useLDshrink) %>% ggplot()+aes(x=tpve,y=abs(RMSE)/tpve,group=interaction(tpve,method),col=method)+geom_boxplot()+scale_x_log10()+scale_y_log10()
+```
+
+

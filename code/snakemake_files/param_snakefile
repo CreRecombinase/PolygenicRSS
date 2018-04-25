@@ -4,14 +4,15 @@ import gzip
 configpath = None
 gardner_dir="../../../../../../../../group/xhe-lab/1KG/"
 rcc_dir="../../../../../../../project/xinhe/eQTL/1kg/"
-helab_dir="../../../../Desktop/scratch/"
+helab_dir="../../../../Desktop/scratch/polyg_scratch/"
+xps_dir="/home/nwknoblauch/Desktop/im_xps13"
 if os.path.exists(gardner_dir):
     print("On Gardner\n")
     configpath="../workflow_params_gardner.json"
 if os.path.exists(rcc_dir):
     print("On RCC\n")
     configpath="../workflow_params_rcc.json"
-if os.path.exists("../../../../Desktop/im_xps13"):
+if os.path.exists(xps_dir):
     print("On laptop\n")
     configpath="../workflow_params_xps.json"
 if os.path.exists(helab_dir):
@@ -32,14 +33,18 @@ def count_lines(fname):
 
 #List of WTCCC case datasets
 GWAS_NAMES = ["bd","cad","cd","ht","ra","t1d","t2d"]
+
 #Combine 2 or more   
 COMB_NAME="T1D-T2D"
 #Come up with a unique name for the PVE+BIAS+NREPS combo (No underscores please)
-SCEN="XiangSmallPVE"
+SCEN="AllPVE"
 #Number of replicates per PVE+BIAS combo
 NREPS =5
 #PVE (must be between 0 and 1)
-PVE=[0.45,
+PVE=[0.8,
+     0.7,
+     0.45,
+     0.35,
      0.17,
      0.06,
      0.02,
@@ -50,6 +55,13 @@ BIAS=[0.0]
 TOT_SIM=NREPS*len(PVE)*len(BIAS)
 #Don't change this either
 FGENEID=range(1,TOT_SIM+1)
+
+
+cutoff=[0.1,0.01,0.001,0.0001]
+m = [85]
+#Ne= [10000,11490.672741,15000,100000]
+Ne= [11490.672741]
+#cutoff 
 
 #pvv controls the proportion of eigenvalues to keep
 #must be greater than 0 and less than 1

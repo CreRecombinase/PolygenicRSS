@@ -1,15 +1,10 @@
-
-#config = {key: "../"+value for (key,value) in config.items()}   
-
-#RsMergeArch url       
-#ftp://ftp.ncbi.nlm.nih.gov/snp/organisms/human_9606/database/data/organism_data/RsMergeArch.bcp.gz
-
-        
+wildcard_constraints:
+    gn="[0-9a-z]+"
 
 rule wtccc_plink_gds:
     ''' This rule converts HDF5 to plink files using SNPrelate'''
     input:
-        input_h5=config["WTCC_INPUT_H5"]+"{gn}.mat"
+        input_h5=config["WTCC_INPUT_H5"]+"{gn}.h5"
     output:
         outf_snpgds=temp(config["SNPGDS_DIR"]+"{gn}_16_snp_wtcc_geno.gds"),
         outf_fam=temp(config["PLINK_DIR"]+"{gn}_16.fam"),
@@ -18,6 +13,8 @@ rule wtccc_plink_gds:
     params:
         outf_pref_plink=config["PLINK_DIR"]+"{gn}_16",
         gn="{gn}"
+    resources:
+        fh5=1
     script:
         "../scripts/h52tplink.R"
 
@@ -36,7 +33,7 @@ rule badplink_to_vcf:
         out_vcf_lg=temp(config["VCF_ODIR"]+"{gn}_16.log")
     threads: 11
     shell:
-        "plink --bfile {params.in_pref_plink} --recode vcf bgz --out {params.out_pref_vcf} --threads {threads}"
+        "plink --bfile {params.in_pref_plink} --geno 0 --min-ac 1 --max-af 0.9999 --recode vcf bgz --out {params.out_pref_vcf} --threads {threads}"
         
 rule gds_19:
     ''' This rule converts a vcf file to SNPrelate format'''
@@ -62,6 +59,18 @@ rule crossover_vcf:
         "CrossMap.py vcf {input.in_chain} {input.in_vcf} {input.in_hg19} {output.out_vcf}"
 
 
+rule crossover_vcf_18:
+    ''' This rule changes WTCCC coordinates from hg16 (My best guess based on googling rsid numbers) to hg19'''
+    input:
+        in_vcf=config["VCF_ODIR"]+"{gn}_18.vcf.gz",
+        in_chain="../../data/hg18ToHg19.over.chain.gz",
+        in_hg19=config["HG19_DIR"]+"hg19.fa"
+    output:
+        out_vcf=temp(config["VCF_ODIR"]+"{gn}_19.vcf")
+    conda:
+        "envs/ldpred.yml"
+    shell:
+        "CrossMap.py vcf {input.in_chain} {input.in_vcf} {input.in_hg19} {output.out_vcf}"
 
 rule vcf_id2x:
     ''' This rule removes missing data, and sorts the vcf'''
@@ -73,9 +82,8 @@ rule vcf_id2x:
     shell:
         "cat {input} | vcf-sort -c -p {threads} | bcftools view --genotype \"^miss\" -Oz --threads {threads} -o {output.vcfi}"
 
-
 rule vcf_idx:
-        ''' This rule indexes the vcf'''
+    ''' This rule indexes the vcf'''
     input:
         config["VCF_ODIR"]+"{gn}_19.vcf.gz"
     output:
@@ -83,20 +91,29 @@ rule vcf_idx:
     threads: 9
     shell:
         "bcftools index {input}"
+   
+# rule vcf_to_goodplink:
+#     ''' This rule makes a plink file from a vcf file'''
+#     input:
+#         in_vcf=config["VCF_ODIR"]+"{gn}.vcf.gz"
+#     output:
+#         out_bed=config["PLINK_DIR"]+"{gn}_19.bed",
+#         out_bim=config["PLINK_DIR"]+"{gn}_19.bim",
+#         out_fam=config["PLINK_DIR"]+"{gn}_19.fam"        
+#     params:
+#         out_pref_plink=config["PLINK_DIR"]+"{gn}_19"
+#     shell:
+#         "plink --vcf {input.in_vcf} --make-bed --out {params.out_pref_plink}"        
 
-        
-rule vcf_to_goodplink:
-    ''' This rule makes a plink file from a vcf file'''
+
+
+
+
+rule interp_i_map_wtcc:
+    ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are rearranged)'''
     input:
-        in_vcf=config["VCF_ODIR"]+"{gn}.vcf.gz"
+        input_gds=config["GDS_DIR"]+"{cn}_19.gds",
     output:
-        out_bed=config["PLINK_DIR"]+"{gn}_19.bed",
-        out_bim=config["PLINK_DIR"]+"{gn}_19.bim",
-        out_fam=config["PLINK_DIR"]+"{gn}_19.fam"        
-    params:
-        out_pref_plink=config["PLINK_DIR"]+"{gn}_19"
-    shell:
-        "plink --vcf {input.in_vcf} --make-bed --out {params.out_pref_plink}"        
-
-
-
+        outf=config["HDF5_DIR"]+"ALL_{cn}_geno.h5"
+    script:
+        "../scripts/gds2h5.R"
