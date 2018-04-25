@@ -91,15 +91,15 @@ Overall it looks like RSSp does at least as well, and in some cases better than 
 ```{r,echo=F}
 both_res <- inner_join(inner_join(ldsc_res_ni,rss_res),ldsc_res_wi)
 nboth_res <- gather(both_res,"method","RMSE",LDSC_noIntercept,LDSC_Intercept,RSSp)
-ggplot(nboth_res,aes(x=method,y=abs(RMSE),col=method))+geom_boxplot()+facet_grid(useLDshrink~simulation,labeller = "label_both")
+ggplot(nboth_res,aes(x=method,y=abs(RMSE),col=method))+geom_boxplot()+facet_grid(useLDshrink~simulation,labeller = "label_both")+ylab("RMSE")+ggtitle("RMSE of the 3 methods")
 ```
 ```{r,echo=F}
-ggplot(nboth_res)+aes(x=tpve,y=RMSE^2,col=method)+geom_point()+facet_grid(useLDshrink~simulation,labeller = "label_both")+scale_y_log10()
+ggplot(nboth_res)+aes(x=tpve,y=RMSE^2,col=method)+geom_point()+facet_grid(useLDshrink~simulation,labeller = "label_both")+scale_y_log10()+ylab("RMSE")+xlab("PVE")+ggtitle("RMSE of the  3 methods","As a function of true PVE")
 ```
 
 
 ```{r,echo=F}
-filter(nboth_res,simulation=="gwas",useLDshrink) %>% ggplot()+aes(x=tpve,y=abs(RMSE)/tpve,group=interaction(tpve,method),col=method)+geom_boxplot()+scale_x_log10()+scale_y_log10()
+filter(nboth_res,simulation=="gwas",useLDshrink) %>% ggplot()+aes(x=tpve,y=abs(RMSE)/tpve,group=interaction(tpve,method),col=method)+geom_boxplot()+scale_x_log10()+scale_y_log10()+xlab("PVE")+ylab(bquote(frac(RMSE,PVE)))+ggtitle("Relative RMSE","As a function of true PVE")
 ```
 
 
