@@ -298,6 +298,13 @@ div.tocify {
   </div><!--/.container -->
 </div><!--/.navbar -->
 
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
 <div class="fluid-row" id="header">
 
 
@@ -307,6 +314,703 @@ div.tocify {
 </div>
 
 
+<p><strong>Last updated:</strong> 2018-04-25</p>
+<strong>workflowr checks:</strong> <small>(Click a bullet for more information)</small>
+<ul>
+<li>
+<details>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>R Markdown file:</strong> up-to-date </summary></p>
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</details>
+</li>
+<li>
+<details>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/a4d7a0048f863f0ae78eec0abd36618192fd5868" target="_blank">a4d7a00</a> </summary></p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+<pre><code>
+Ignored files:
+    Ignored:    .RData
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    .httr-oauth
+    Ignored:    analysis/PolygenicEstimation_cache/
+    Ignored:    code/scripts/.RData
+    Ignored:    code/scripts/.Rhistory
+    Ignored:    code/snakemake_files/.RData
+    Ignored:    code/snakemake_files/parameter_generation/
+    Ignored:    code/snakemake_files/subset_data_pipeline/.RData
+    Ignored:    data/rep_polygenic/
+
+Untracked files:
+    Untracked:  _workflowr.yml
+    Untracked:  analysis/#RSSp_WTCC_noConfounding.Rmd#
+    Untracked:  analysis/GRM_estimation.Rmd
+    Untracked:  analysis/GenomeWideSimulation.Rmd
+    Untracked:  analysis/Heritability.Rmd
+    Untracked:  analysis/LDshrink_effect.Rmd
+    Untracked:  analysis/MeetingSummary1.Rmd
+    Untracked:  analysis/RSSR_PolygenicData.Rmd
+    Untracked:  analysis/RSSp.stan
+    Untracked:  analysis/RSSp2.stan
+    Untracked:  analysis/RSSp_LDshrink.Rmd
+    Untracked:  analysis/RSSp_Large_WTCC_noConfounding.Rmd
+    Untracked:  analysis/RSSp_Largest_Simulation.Rmd
+    Untracked:  analysis/RSSp_WTCC_noConfounding.Rmd
+    Untracked:  analysis/RSSp_ldsc_highPVE_chr1.Rmd
+    Untracked:  analysis/RSSp_ldsc_highPVE_hr.Rmd
+    Untracked:  analysis/RSSp_ldsc_noConfounding.Rmd
+    Untracked:  analysis/Running_ldetect.Rmd
+    Untracked:  analysis/Summary.Rmd
+    Untracked:  analysis/Summary.org
+    Untracked:  analysis/Vanilla_LDSC.Rmd
+    Untracked:  analysis/chr_16.Rmd
+    Untracked:  analysis/derby.log
+    Untracked:  analysis/fquh_mod.RDS
+    Untracked:  analysis/ltximg/
+    Untracked:  analysis/nquh_mod.RDS
+    Untracked:  analysis/quh_mod.RDS
+    Untracked:  analysis/scz_data.org
+    Untracked:  analysis/shrinkage_effect.Rmd
+    Untracked:  code/.ipynb_checkpoints/
+    Untracked:  code/Untitled.ipynb
+    Untracked:  code/Untitled1.ipynb
+    Untracked:  code/scripts/.snakemake.5new9sfu.evd_1kg_h5.R
+    Untracked:  code/scripts/.snakemake.bl4l60_j.evd_1kg_h5.R
+    Untracked:  code/scripts/.snakemake.gndk0qyr.evd_1kg_h5.R
+    Untracked:  code/scripts/.snakemake.io0ogr01.evd_1kg_h5.R
+    Untracked:  code/scripts/.snakemake.q3jzmw1j.gen_ty_block_RSSp.R
+    Untracked:  code/scripts/.snakemake.tfa8jqyw.evd_1kg_h5.R
+    Untracked:  code/scripts/.snakemake.u82nlrp8.ldsc_rssp.Rmd
+    Untracked:  code/scripts/.snakemake.yjc804n1.evd_1kg_h5.R
+    Untracked:  code/scripts/RSSp_ldsc_results.Rmd
+    Untracked:  code/scripts/allel2haplo_h5.R~
+    Untracked:  code/scripts/break_df.R~
+    Untracked:  code/scripts/gen_sample_df.R
+    Untracked:  code/scripts/gen_sample_df.R~
+    Untracked:  code/scripts/gen_sample_df_n.R
+    Untracked:  code/scripts/gen_sample_df_n.R~
+    Untracked:  code/scripts/gen_uh_chunk_direct.R
+    Untracked:  code/scripts/impute2h5.R~
+    Untracked:  code/scripts/ldsc_rssp.Rmd
+    Untracked:  code/scripts/ldshrink_cv.R
+    Untracked:  code/scripts/ldshrink_cv.R~
+    Untracked:  code/scripts/ldshrink_optim.R
+    Untracked:  code/scripts/sim_geno_evd.R
+    Untracked:  code/scripts/sim_geno_evd.R~
+    Untracked:  code/scripts/split_plink.pl
+    Untracked:  code/scripts/subset_snp_chr.R~
+    Untracked:  code/scripts/vcf-liftover.sh
+    Untracked:  code/scripts/vcf2allel.py
+    Untracked:  code/scripts/vcf2allel.py~
+    Untracked:  code/snakemake_files/#manip_snakefile#
+    Untracked:  code/snakemake_files/.#manip_snakefile
+    Untracked:  code/snakemake_files/.snakemake/
+    Untracked:  code/snakemake_files/crossover_snakefile
+    Untracked:  code/snakemake_files/impute_snakefile
+    Untracked:  code/snakemake_files/kg_snakefile~
+    Untracked:  code/snakemake_files/ldsc/
+    Untracked:  code/snakemake_files/manip_snakefile
+    Untracked:  code/snakemake_files/rssp_ldsc_report/
+    Untracked:  code/snakemake_files/temp_map_19.RDS
+    Untracked:  code/snakemake_files/temp_target_19.RDS
+    Untracked:  code/workflow_params.json~
+    Untracked:  data/NCBI34_to_GRCh38.chain.gz
+    Untracked:  data/Snakemake_inputs/
+    Untracked:  data/hg16ToHg19.over.chain.gz
+    Untracked:  data/hg18ToHg19.over.chain.gz
+    Untracked:  docs/#RSSp_WTCC_noConfounding.Rmd#
+    Untracked:  docs/RSSp.stan
+    Untracked:  docs/RSSp2.stan
+    Untracked:  docs/Summary.org
+    Untracked:  docs/derby.log
+    Untracked:  docs/figure/LDshrink_effect.Rmd/
+    Untracked:  docs/figure/RSSp_Large_WTCC_noConfounding.Rmd/
+    Untracked:  docs/figure/RSSp_WTCC_noConfounding.Rmd/
+    Untracked:  docs/figure/RSSp_ldsc_highPVE_chr1.Rmd/
+    Untracked:  docs/figure/RSSp_ldsc_highPVE_hr.Rmd/
+    Untracked:  docs/fquh_mod.RDS
+    Untracked:  docs/log4j.spark.log
+    Untracked:  docs/ltximg/
+    Untracked:  docs/nquh_mod.RDS
+    Untracked:  docs/quh_mod.RDS
+    Untracked:  docs/scz_data.org
+    Untracked:  output/RSSp_snakemake/
+
+Unstaged changes:
+    Modified:   analysis/IndependenceCheck.Rmd
+    Modified:   analysis/Meeting_Notes.Rmd
+    Modified:   analysis/PolygenicEstimation.Rmd
+    Modified:   analysis/RSSP_standard_error.Rmd
+    Modified:   analysis/RSSp_Chunksize_Investigation.Rmd
+    Modified:   analysis/RSSp_Large_Simulation.Rmd
+    Modified:   analysis/RSSp_Posterior.Rmd
+    Modified:   analysis/RSSp_Prediction.Rmd
+    Modified:   analysis/RSSp_ldsc.Rmd
+    Modified:   analysis/RSSp_ldsc_gwas_direct_noConfounding.Rmd
+    Modified:   analysis/RSSp_ldsc_highPVE.Rmd
+    Modified:   analysis/SimulationPipeline.Rmd
+    Modified:   analysis/_site.yml
+    Modified:   analysis/about.Rmd
+    Modified:   analysis/chr_2.Rmd
+    Deleted:    analysis/chunks.R
+    Modified:   analysis/index.Rmd
+    Modified:   analysis/license.Rmd
+    Modified:   analysis/simulatingGWAS.Rmd
+    Modified:   analysis/simulation.Rmd
+    Modified:   code/TF_LDshrink.ipynb
+    Modified:   code/scripts/RSSp_est.R
+    Modified:   code/scripts/break_df.R
+    Modified:   code/scripts/evd_1kg_h5.R
+    Modified:   code/scripts/gds2h5.R
+    Modified:   code/scripts/gen_quh_chunk_direct.R
+    Modified:   code/scripts/gen_quh_chunk_h5.R
+    Modified:   code/scripts/gen_ty_block_RSSp.R
+    Modified:   code/scripts/h52tplink.R
+    Modified:   code/scripts/ldsc_trait_chunk.R
+    Modified:   code/scripts/map2RDS.R
+    Modified:   code/scripts/map_uh_LDchunk_RSSp_h5.R
+    Modified:   code/scripts/parse_ldsc.R
+    Modified:   code/scripts/prep_ldsc_uh.R
+    Modified:   code/scripts/subset_snp_chr.R
+    Modified:   code/snakemake_files/Snakefile
+    Modified:   code/snakemake_files/combined_snakefile
+    Modified:   code/snakemake_files/direct_snakefile
+    Modified:   code/snakemake_files/kg_snakefile
+    Modified:   code/snakemake_files/ldsc_snakefile
+    Modified:   code/snakemake_files/param_snakefile
+    Modified:   code/snakemake_files/rssp_snakefile
+    Modified:   code/snakemake_files/wtcc_snakefile
+    Modified:   code/workflow_params.json
+    Modified:   code/workflow_params_rcc.json
+    Modified:   code/workflow_params_xps.json
+
+</code></pre>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</details>
+</li>
+</ul>
+<details>
+<summary> <small><strong>Expand here to see past versions:</strong></small> </summary>
+<ul>
+<table style="border-collapse:separate; border-spacing:5px;">
+<thead>
+<tr>
+<th style="text-align:left;">
+File
+</th>
+<th style="text-align:left;">
+Version
+</th>
+<th style="text-align:left;">
+Author
+</th>
+<th style="text-align:left;">
+Date
+</th>
+<th style="text-align:left;">
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/a4d7a0048f863f0ae78eec0abd36618192fd5868/analysis/results.Rmd" target="_blank">a4d7a00</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-04-25
+</td>
+<td style="text-align:left;">
+wflow_publish(c(“analysis/New_WholeGenome.Rmd”, “analysis/results.Rmd”))
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/ab444fabb203f587ca20b37f2f7527811d4df145/docs/results.html" target="_blank">ab444fa</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-03-14
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/60684d5c99bba69105f113c6d6e85d0b5e05a8b8/analysis/results.Rmd" target="_blank">60684d5</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-03-14
+</td>
+<td style="text-align:left;">
+wflow_publish(c(“results.Rmd”, “SimulationPipeline.Rmd”))
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/687bc0944b80e764ef096cb6cf5db6a2560ca8ab/docs/results.html" target="_blank">687bc09</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-03-08
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/263c501ad73718e7cbda2fce61360fcf6aab5691/analysis/results.Rmd" target="_blank">263c501</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-03-08
+</td>
+<td style="text-align:left;">
+wflow_publish(c(“analysis/results.Rmd”, “analysis/RSSp_Chunksize_Investigation.Rmd”))
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/6c284ef418ffe3bf68864964c5423744dc04bf7e/docs/results.html" target="_blank">6c284ef</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-03-01
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/93f2db9986494e3bee0459bb1be43a65cafb3f59/analysis/results.Rmd" target="_blank">93f2db9</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-03-01
+</td>
+<td style="text-align:left;">
+wflow_publish(c(“analysis/results.Rmd”,
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/760d5638d7f0fd97e09ddb2d5b21433809122883/docs/results.html" target="_blank">760d563</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-02-21
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/d17b4ada541d4e0233f53709f83970936b361ab3/analysis/results.Rmd" target="_blank">d17b4ad</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-02-21
+</td>
+<td style="text-align:left;">
+wflow_publish(“analysis/results.Rmd”)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/e77a5d238f9b41afeca266e4007b29e60e6e3efd/docs/results.html" target="_blank">e77a5d2</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-12-18
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/494aae91dc52b29d25f930718e8dfccd05dd7252/analysis/results.Rmd" target="_blank">494aae9</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-12-18
+</td>
+<td style="text-align:left;">
+wflow_publish(c(“results.Rmd”, “Meeting_Notes.Rmd”))
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/c346df4a1d8856a62d1b8e8f8127170baebb5f02/docs/results.html" target="_blank">c346df4</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-12-06
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/6ce82f253f50b71e99c12d8b01d454b092301df4/analysis/results.Rmd" target="_blank">6ce82f2</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-12-06
+</td>
+<td style="text-align:left;">
+wflow_publish(“analysis/results.Rmd”)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/08bc464f391fbb06e57de5bf952b84fad7408b76/docs/results.html" target="_blank">08bc464</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-11-28
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/9a0134ba04fce788d29fabff78214781358e84e5/analysis/results.Rmd" target="_blank">9a0134b</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-11-28
+</td>
+<td style="text-align:left;">
+wflow_publish(“analysis/results.Rmd”)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/5d97777190ef78665877e8f1f9df41653e592169/docs/results.html" target="_blank">5d97777</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-11-28
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/2c67d91fb587a203e547de3d041283ab8788a9d5/analysis/results.Rmd" target="_blank">2c67d91</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-11-28
+</td>
+<td style="text-align:left;">
+wflow_publish(“analysis/results.Rmd”)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/3f65b7ad1991cb147d18fcc09c90c7bf29103d8b/docs/results.html" target="_blank">3f65b7a</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-11-20
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/2a01543a12fe72012624d35882bc43a0efe24749/analysis/results.Rmd" target="_blank">2a01543</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-11-20
+</td>
+<td style="text-align:left;">
+RSSP_standard_error.Rmd
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/af184c8c81cb9c8350ecdaec131977036ced8120/docs/results.html" target="_blank">af184c8</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-11-16
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/976274d11ec6597567156f9fd18847b23e30eb4a/analysis/results.Rmd" target="_blank">976274d</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-11-16
+</td>
+<td style="text-align:left;">
+wflow_publish(c(“RSSp_ldsc.Rmd”, “RSSp_Posterior.Rmd”, “RSSp_Prediction.Rmd”, “results.Rmd”))
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/4a1b73f2d1aac60ea9b4273853f5aa4e4fb3fda1/docs/results.html" target="_blank">4a1b73f</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-10-30
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/140a008299eccaff20b9a7605d4510b939a81f2e/analysis/results.Rmd" target="_blank">140a008</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-10-30
+</td>
+<td style="text-align:left;">
+wflow_publish(c(“results.Rmd”, “RSSp_Posterior.Rmd”))
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/bed2a0e5318e42891ac1b19b16af5bc5cfc1e267/docs/results.html" target="_blank">bed2a0e</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-09-14
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/20ec8ba42bec9adf2a7cac0aaf6c83996704ff93/analysis/results.Rmd" target="_blank">20ec8ba</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-09-14
+</td>
+<td style="text-align:left;">
+wflow_publish(c(“analysis/chr_2.Rmd”, “analysis/results.Rmd”, “analysis/PolygenicEstimation.Rmd”))
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/be3bee40d6744d7dc8b6589af76b89ef67161a00/docs/results.html" target="_blank">be3bee4</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-08-14
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/a88809face2479162d73572b74366da25b3a5372/analysis/results.Rmd" target="_blank">a88809f</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-08-14
+</td>
+<td style="text-align:left;">
+wflow_publish(“results.Rmd”)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/d8fabf4ca1eb3cae8a41ad5b6dd30783465bbdb6/docs/results.html" target="_blank">d8fabf4</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-07-28
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/b29dab8a170c5ea9146243fc3ea548c0695b753e/analysis/results.Rmd" target="_blank">b29dab8</a>
+</td>
+<td style="text-align:left;">
+Nicholas Knoblauch
+</td>
+<td style="text-align:left;">
+2017-07-28
+</td>
+<td style="text-align:left;">
+wflow_publish(files = c(“index.Rmd”, “simulation.Rmd”, “PolygenicEstimation.Rmd”, “results.Rmd”))
+</td>
+</tr>
+</tbody>
+</table>
+</ul>
+</details>
+<hr />
 <ul>
 <li><a href="chr_2.html">Comparing RSS-p to ldsc</a></li>
 <li><a href="IndependenceCheck.html">Diagonal Approximation of LD matrix</a></li>
@@ -325,11 +1029,12 @@ div.tocify {
 <li><a href="RSSp_Large_Simulation.html">Diagnosing inflation at large sample size</a></li>
 <li><a href="RSSp_Chunksize_Investigation.html">Influece of chunk size on PVE inflation</a></li>
 <li><a href="SimulationPipeline.html">Detailed summary of simulation/data</a></li>
+<li><a href="New_WholeGenome.html">New whole genome simulation</a></li>
 </ul>
 
 <hr>
 <p>
-    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+    
 </p>
 <hr>
 
@@ -351,6 +1056,25 @@ div.tocify {
     <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
     <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 -->
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+<hr>
+<p>
+  This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a>
+  analysis was created with
+  <a href="https://github.com/jdblischak/workflowr">workflowr</a> 1.0.1
+</p>
+<hr>
 
 
 </div>
