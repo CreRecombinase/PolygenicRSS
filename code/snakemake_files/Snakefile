@@ -1,6 +1,10 @@
 include: "param_snakefile"
-include: "wtcc_snakefile"
+#include: "wtcc_snakefile"
 #include: "combined_snakefile"
+#include: crossover_snakefile
+include: "impute_snakefile"
+#include: "manip_snakefile"
+include: "kg_snakefile"
 include: "trait_snakefile"
 include: "LD_snakefile"
 include: "direct_snakefile"
@@ -14,8 +18,7 @@ wildcard_constraints:
 
 
 
-#all_dgn = ["genred","genred2"]
-#all_tn = '-'.join(all_dgn).upper()
+#all_dgn = ["genred","genred2"]#all_tn = '-'.join(all_dgn).upper()
 #all_tn='-'.join(GWAS_NAMES).upper()
 #all_tn=GWAS_NAMES
 #all_tn=["genred"]
@@ -24,25 +27,23 @@ wildcard_constraints:
 #dsp=[all_tn+"_"+all_tn]
 rule all:
     input:
-        expand("rssp_ldsc_report/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{pvv}_{lds}_{cf}.html",
-               snpset="chr1-22",
-               dataset="bd",
-               hm=["omni"],
-               bdf=["T"],
-               scen=SCEN,
-               pvv=["1"],
-               lds=["F","T"],
-        cf=["F"])
+        expand(config["VCF_DIR"]+"{gn}_chr{chrom}_phased.Output.vcf",gn="genred",chrom=["20"])
+        # expand("rssp_ldsc_report/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{pvv}_{lds}_{cf}_{dointer}.html",
+        #        snpset="chr1-22",
+        #        dataset="ra",
+        #        hm=["omni"],
+        #        bdf=["T"],
+        #        scen=SCEN,
+        #        pvv=["1"],
+        #        lds=["F","T"],
+        #        dointer=["F","T"],
+        # cf=["F"])
 rule ldsc_rss_report:
     input:
         rssprf_gwas=config["OUTPUT_DIR"]+"sim_{snpset}_{dataset}_{dataset}_{bdf}_{hm}_gwas_RSSp_res_{scen}_{pvv}_{lds}_{cf}.txt.gz",
-        rssprf_direct=config["OUTPUT_DIR"]+"sim_{snpset}_{dataset}_{dataset}_{bdf}_{hm}_direct_RSSp_res_{scen}_{pvv}_{lds}_{cf}.txt.gz",
-        ldscrf_direct=config["OUTPUT_DIR"]+"ldsc_res/sim_{snpset}_{dataset}_{bdf}_{hm}_gwas_ldsc_res_{scen}_{lds}_{dointer}.txt.gz",
-        ldscrf_gwas=config["OUTPUT_DIR"]+"ldsc_res/sim_{snpset}_{dataset}_{bdf}_{hm}_direct_ldsc_res_{scen}_{lds}_{dointer}.txt.gz",
-        quhf_direct=config["KG_DIRECTORY"]+"RSSp_genome_direct_quh/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{lds}.h5",
+        ldscrf_gwas=config["OUTPUT_DIR"]+"ldsc_res/sim_{snpset}_{dataset}_{bdf}_{hm}_gwas_ldsc_res_{scen}_{lds}_{dointer}.txt.gz",
         quhf_gwas=config["KG_DIRECTORY"]+"RSSp_genome_gwas_quh/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{lds}.h5",
         uhf_gwas=config["KG_DIRECTORY"]+"RSSp_genome_gwas_uh/{snpset}_{dataset}_{scen}_sim.h5",
-        uhf_direct=config["KG_DIRECTORY"]+"RSSp_genome_direct_uh/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{lds}.h5",
         evdf=config["EVD_DIR"]+"{snpset}_{dataset}_{bdf}_{hm}_{lds}.h5"
     params:
         snpset="{snpset}",
@@ -52,8 +53,9 @@ rule ldsc_rss_report:
         jobName="{scen}",
         percent_ev="{pvv}",
         usesLDshrink="{lds}",
+        ldsc_intercet="{dointer}",
         confoundingRSS="{cf}"
     output:
-        reportf="rssp_ldsc_report/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{pvv}_{lds}_{cf}.html"
+        reportf="rssp_ldsc_report/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{pvv}_{lds}_{cf}_{dointer}.html"
     script:
         "../scripts/ldsc_rssp.Rmd"

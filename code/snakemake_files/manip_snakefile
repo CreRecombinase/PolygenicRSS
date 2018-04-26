@@ -1,0 +1,73 @@
+
+
+rule badplink_to_vcf:
+    ''' This rule converts a plink file to vcf '''
+    input:
+        in_bed=config["PLINK_DIR"]+"{gn}_16.bed",
+        in_bim=config["PLINK_DIR"]+"{gn}_16.bim",
+        in_fam=config["PLINK_DIR"]+"{gn}_16.fam"
+    params:
+        in_pref_plink=config["PLINK_DIR"]+"{gn}_16",
+        out_pref_vcf=config["VCF_ODIR"]+"{gn}_16"
+    output:
+        out_vcf=temp(config["VCF_ODIR"]+"{gn}_16.vcf.gz"),
+        out_vcf_nsx=temp(config["VCF_ODIR"]+"{gn}_16.nosex"),
+        out_vcf_lg=temp(config["VCF_ODIR"]+"{gn}_16.log")
+    threads: 11
+    shell:
+        "plink --bfile {params.in_pref_plink} --geno 0 --min-ac 1 --max-af 0.9999 --recode vcf bgz --out {params.out_pref_vcf} --threads {threads}"
+
+rule gds_19:
+    ''' This rule converts a vcf file to SNPrelate format'''
+    input:
+        vcff=config["VCF_ODIR"]+"{gn}_19.vcf.gz"
+    output:
+        temp_gds=config["GDS_DIR"]+"{gn}_19.gds"
+    threads: 9
+    script:
+        "../scripts/vcf2seq_gds.R"
+
+
+
+rule vcf_id2x:
+    ''' This rule removes missing data, and sorts the vcf'''
+    input:
+        config["VCF_ODIR"]+"{gn}_19.vcf"
+    output:
+        vcfi=config["VCF_ODIR"]+"{gn}_19.vcf.gz"
+    threads: 9
+    shell:
+        "cat {input} | vcf-sort -c -p {threads} | bcftools view --genotype \"^miss\" -Oz --threads {threads} -o {output.vcfi}"
+
+rule vcf_idx:
+    ''' This rule indexes the vcf'''
+    input:
+        config["VCF_ODIR"]+"{gn}_19.vcf.gz"
+    output:
+        config["VCF_ODIR"]+"{gn}_19.vcf.gz.csi"
+    threads: 9
+    shell:
+        "bcftools index {input}"
+
+rule vcf2plink:
+    ''' This rule converts a vcf file to a plink file'''
+    input:
+        inf=config["VCF_ODIR"]+"{ccn}_19.vcf.gz"
+    output:
+        outf_fam=temp(config["PLINK_DIR"]+"{ccn}_19.fam"),
+        outf_bim=temp(config["PLINK_DIR"]+"{ccn}_19.bim"),
+        outf_bed=temp(config["PLINK_DIR"]+"{ccn}_19.bed")
+    params:
+        out_pref=config["PLINK_DIR"]+"{ccn}_19"
+    threads: 9
+    shell:
+        "plink --vcf {input.inf} --double-id --make-bed --out {params.out_pref} --threads {threads}"
+
+rule interp_map_wtcc:
+    ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are rearranged)'''
+    input:
+        input_gds=config["GDS_DIR"]+"{cn}_19.gds",
+    output:
+        outf=config["HDF5_DIR"]+"ALL_{cn}_geno.h5"
+    script:
+        "../scripts/gds2h5.R"

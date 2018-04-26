@@ -1,0 +1,26 @@
+rule crossover_vcf:
+    ''' This rule changes WTCCC coordinates from hg16 (My best guess based on googling rsid numbers) to hg19'''
+    input:
+        in_vcf=config["VCF_ODIR"]+"{gn}_16.vcf.gz",
+        in_chain="../../data/hg16ToHg19.over.chain.gz",
+        in_hg19=config["HG19_DIR"]+"hg19.fa"
+    output:
+        out_vcf=temp(config["VCF_ODIR"]+"{gn}_19.vcf")
+    conda:
+        "envs/ldpred.yml"
+    shell:
+        "CrossMap.py vcf {input.in_chain} {input.in_vcf} {input.in_hg19} {output.out_vcf}"
+
+
+rule crossover_vcf_18:
+    ''' This rule changes WTCCC coordinates from hg16 (My best guess based on googling rsid numbers) to hg19'''
+    input:
+        in_vcf=config["VCF_ODIR"]+"{gn}_18.vcf.gz",
+        in_chain="../../data/hg18ToHg19.over.chain.gz",
+        in_hg19=config["HG19_DIR"]+"hg19.fa"
+    output:
+        out_vcf=temp(config["VCF_ODIR"]+"{gn}_19.vcf")
+    conda:
+        "envs/ldpred.yml"
+    shell:
+        "CrossMap.py vcf {input.in_chain} {input.in_vcf} {input.in_hg19} {output.out_vcf}"

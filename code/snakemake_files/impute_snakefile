@@ -1,0 +1,49 @@
+rule split_ped_vcf:
+    input:
+        in_bed=config["PLINK_DIR"]+"{gn}.bed",
+        in_bim=config["PLINK_DIR"]+"{gn}.bim",
+        in_fam=config["PLINK_DIR"]+"{gn}.fam"
+    params:
+        in_pref_plink=config["PLINK_DIR"]+"{gn}",
+        out_pref_vcf=config["VCF_DIR"]+"{gn}_chr{chrom}",
+        chrom="{chrom}"
+    output:
+        out_vcf=temp(config["VCF_DIR"]+"{gn}_chr{chrom}.vcf.gz"),
+        out_vcf_lg=temp(config["VCF_DIR"]+"{gn}_chr{chrom}.log")
+    shell:
+        "plink --bfile {params.in_pref_plink} --chr {params.chrom} --recode vcf bgz --out {params.out_pref_vcf} --threads {threads}"
+
+rule phase_chr_hapmap:
+    input:
+        ivcf=config["VCF_DIR"]+"{gn}_chr{chrom}.vcf.gz",
+        imap="genetic_map_GRCh37_chr{chrom}.txt"
+    params:
+        out_pref=config["VCF_DIR"]+"{gn}_chr{chrom}_phased.Output"
+    output:
+        out_d=temp(config["VCF_DIR"]+"{gn}_chr{chrom}_phased.Output.haps"),
+        out_s=temp(config["VCF_DIR"]+"{gn}_chr{chrom}_phased.Output.sample")
+    threads:
+        10
+    shell:
+        "shapeit -T {threads} -V {input.ivcf} -M {input.imap} -O {params.out_pref}"
+
+rule shapeit2vcf:
+    input:
+        i_d=config["VCF_DIR"]+"{gn}_chr{chrom}_phased.Output.haps",
+        i_s=config["VCF_DIR"]+"{gn}_chr{chrom}_phased.Output.sample"
+    params:
+        i_p=config["VCF_DIR"]+"{gn}_chr{chrom}_phased.Output"
+    output:
+        ovcf=config["VCF_DIR"]+"{gn}_chr{chrom}_phased.Output.vcf"
+    shell:
+        "shapeit -convert --input-haps {params.i_p} --output-vcf {output.ovcf}"
+
+rule phase_chr_prep:
+    input:
+        infile=config["KG_MAPDIR"]+"hapmap/genetic_map_GRCh37_chr{chrom}.txt",
+    output:
+        ofile=temp("genetic_map_GRCh37_chr{chrom}.txt")
+    shell:
+        "cut --complement -f 1 {input.infile} > {output.ofile}"
+
+rule impute_dat:

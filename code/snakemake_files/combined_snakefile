@@ -67,19 +67,6 @@ rule vcf_merge:
         "bcftools merge --force-samples {input.input_vcf} --threads {threads} -Ou | bcftools view --genotype \"^miss\" -Oz --threads {threads} -o {output.out_vcf} --types snps --min-af 0.05 --min-ac 1:minor"
 
 
-rule vcf2plink:
-    ''' This rule converts a vcf file to a plink file'''
-    input:
-        inf=config["VCF_ODIR"]+"{ccn}_c_19.vcf.gz"
-    output:
-        outf_fam=temp(config["PLINK_DIR"]+"{ccn}_19.fam"),
-        outf_bim=temp(config["PLINK_DIR"]+"{ccn}_19.bim"),
-        outf_bed=temp(config["PLINK_DIR"]+"{ccn}_19.bed")
-    params:
-        out_pref=config["PLINK_DIR"]+"{ccn}_19"
-    threads: 9
-    shell:
-        "plink --vcf {input.inf} --double-id --make-bed --out {params.out_pref} --threads {threads}"        
 
 
 rule combine_grm:
@@ -114,25 +101,3 @@ rule grm_combined:
     threads: 11
     shell:
         "gcta64 --bfile {params.in_p} --make-grm-part "+str(GRM_PARTS)+" {params.p} --thread-num {threads} --out {params.out_p}"
-        
-
-
-rule gds_c_19:
-    ''' This rule converts a vcf file to SNPrelate format'''
-    input:
-        vcff=config["VCF_ODIR"]+"{cn}_c_19.vcf.gz"
-    output:
-        temp_gds=config["GDS_DIR"]+"{cn}_c_19.gds"
-    threads: 9
-    script:
-        "../scripts/vcf2seq_gds.R"
-        
-        
-rule interp_map_wtcc:
-    ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are rearranged)'''
-    input:
-        input_gds=config["GDS_DIR"]+"{cn}_c_19.gds",
-    output:
-        outf=config["HDF5_DIR"]+"ALL_{cn}_geno.h5"
-    script:
-        "../scripts/gds2h5.R"        

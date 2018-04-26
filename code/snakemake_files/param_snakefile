@@ -37,9 +37,9 @@ GWAS_NAMES = ["bd","cad","cd","ht","ra","t1d","t2d"]
 #Combine 2 or more   
 COMB_NAME="T1D-T2D"
 #Come up with a unique name for the PVE+BIAS+NREPS combo (No underscores please)
-SCEN="AllPVE"
+SCEN="VeryLargePVE"
 #Number of replicates per PVE+BIAS combo
-NREPS =5
+NREPS =100
 #PVE (must be between 0 and 1)
 PVE=[0.8,
      0.7,
@@ -57,27 +57,26 @@ TOT_SIM=NREPS*len(PVE)*len(BIAS)
 FGENEID=range(1,TOT_SIM+1)
 
 
-cutoff=[0.1,0.01,0.001,0.0001]
-m = [85]
+#cutoff=[0.1,0.01,0.001,0.0001]
+#m = [85]
 #Ne= [10000,11490.672741,15000,100000]
-Ne= [11490.672741]
+#Ne= [11490.672741]
 #cutoff 
 
 #pvv controls the proportion of eigenvalues to keep
 #must be greater than 0 and less than 1
-pvv=1
+#pvv=1
 #To do single-chromosome simulations, uncomment the line below
 #tchr = ["chr"+str(x) for x in range(1,23)]
 #To do a subset of the genome, use commas to separate chromosomes you want
 #tchr=chr1,3,5,7
 #To do a range of the genome, use a hyphen
-tchr="chr1-22"
+#tchr="chr1-22"
 #svd==F will use LDshrink+eigenvalue decomposition, while svd==T will perform singular value decomposition on the scaled genotype(haplotype) matrix
-svd = ["F"]
+#svd = ["F"]
 #Don't change this
 TRAIT=COMB_NAME
 
 #To run direct simulations as well as gwas simulations, uncomment
 #METH=["gwas","direct"]
-METH="gwas"
-
+#METH="gwas"

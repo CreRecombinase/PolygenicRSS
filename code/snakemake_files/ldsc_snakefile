@@ -36,10 +36,10 @@ rule ldsc_trait_est_int:
         chroml2=rules.ldsc_trait_chunk.output.outf,
         soutf=rules.ldsc_trait_chunk.output.soutf
     params:
-        out_pref=config["KG_DIRECTORY"]+"ldsc_est_gwas_genome/est_{snpset}_{dataset}_{bdf}_{hm}_sim_{fgeneid}_{scen}_{lds}_int",
+        out_pref=config["KG_DIRECTORY"]+"ldsc_est_gwas_genome/est_{snpset}_{dataset}_{bdf}_{hm}_sim_{fgeneid}_{scen}_{lds}_T",
         ld_dir=config["KG_DIRECTORY"]+"eur_w_ld_chr_{snpset}_{dataset}_{bdf}_{hm}_{lds}/"
     output:
-        logf=temp(config["KG_DIRECTORY"]+"ldsc_est_gwas_genome/est_{snpset}_{dataset}_{bdf}_{hm}_sim_{fgeneid}_{scen}_{lds}_int.log")
+        logf=temp(config["KG_DIRECTORY"]+"ldsc_est_gwas_genome/est_{snpset}_{dataset}_{bdf}_{hm}_sim_{fgeneid}_{scen}_{lds}_T.log")
     conda:
         "envs/ldpred.yml"
     shell:
@@ -53,10 +53,10 @@ rule ldsc_trait_est_noint:
         chroml2=rules.ldsc_trait_chunk.output.outf,
         soutf=rules.ldsc_trait_chunk.output.soutf
     params:
-        out_pref=config["KG_DIRECTORY"]+"ldsc_est_gwas_genome/est_{snpset}_{dataset}_{bdf}_{hm}_sim_{fgeneid}_{scen}_{lds}_noint",
+        out_pref=config["KG_DIRECTORY"]+"ldsc_est_gwas_genome/est_{snpset}_{dataset}_{bdf}_{hm}_sim_{fgeneid}_{scen}_{lds}_F",
         ld_dir=config["KG_DIRECTORY"]+"eur_w_ld_chr_{snpset}_{dataset}_{bdf}_{hm}_{lds}/"
     output:
-        logf=temp(config["KG_DIRECTORY"]+"ldsc_est_gwas_genome/est_{snpset}_{dataset}_{bdf}_{hm}_sim_{fgeneid}_{scen}_{lds}_noint.log")
+        logf=temp(config["KG_DIRECTORY"]+"ldsc_est_gwas_genome/est_{snpset}_{dataset}_{bdf}_{hm}_sim_{fgeneid}_{scen}_{lds}_F.log")
     conda:
         "envs/ldpred.yml"
     shell:
@@ -72,10 +72,10 @@ rule ldsc_trait_direct_est_int:
         chroml2=rules.ldsc_trait_chunk.output.outf,
         soutf=rules.ldsc_trait_chunk.output.soutf
     params:
-        out_pref=config["KG_DIRECTORY"]+"ldsc_est_direct_genome/est_{snpset}_{dataset}_{bdf}_{hm}_sim_{fgeneid}_{scen}_{lds}_int",
+        out_pref=config["KG_DIRECTORY"]+"ldsc_est_direct_genome/est_{snpset}_{dataset}_{bdf}_{hm}_sim_{fgeneid}_{scen}_{lds}_T",
         ld_dir=config["KG_DIRECTORY"]+"eur_w_ld_chr_{snpset}_{dataset}_{bdf}_{hm}_{lds}/"
     output:
-        logf=temp(config["KG_DIRECTORY"]+"ldsc_est_direct_genome/est_{snpset}_{dataset}_{bdf}_{hm}_sim_{fgeneid}_{scen}_{lds}_int.log")
+        logf=temp(config["KG_DIRECTORY"]+"ldsc_est_direct_genome/est_{snpset}_{dataset}_{bdf}_{hm}_sim_{fgeneid}_{scen}_{lds}_T.log")
     conda:
         "envs/ldpred.yml"
     shell:
@@ -90,10 +90,10 @@ rule ldsc_trait_direct_est_noint:
         chroml2=rules.ldsc_trait_chunk.output.outf,
         soutf=rules.ldsc_trait_chunk.output.soutf
     params:
-        out_pref=config["KG_DIRECTORY"]+"ldsc_est_direct_genome/est_{snpset}_{dataset}_{bdf}_{hm}_sim_{fgeneid}_{scen}_{lds}_noint",
+        out_pref=config["KG_DIRECTORY"]+"ldsc_est_direct_genome/est_{snpset}_{dataset}_{bdf}_{hm}_sim_{fgeneid}_{scen}_{lds}_F",
         ld_dir=config["KG_DIRECTORY"]+"eur_w_ld_chr_{snpset}_{dataset}_{bdf}_{hm}_{lds}/"
     output:
-        logf=temp(config["KG_DIRECTORY"]+"ldsc_est_direct_genome/est_{snpset}_{dataset}_{bdf}_{hm}_sim_{fgeneid}_{scen}_{lds}_noint.log")
+        logf=temp(config["KG_DIRECTORY"]+"ldsc_est_direct_genome/est_{snpset}_{dataset}_{bdf}_{hm}_sim_{fgeneid}_{scen}_{lds}_F.log")
     conda:
         "envs/ldpred.yml"
     shell:
@@ -103,9 +103,9 @@ rule ldsc_trait_direct_est_noint:
 
 rule ldsc_trait_parse:
     input:
-        logf=expand(config["KG_DIRECTORY"]+"ldsc_est_{{gwas}}_genome/est_{{snpset}}_{{dataset}}_{{bdf}}_{{hm}}_sim_{fgeneid}_{{scen}}_{{lds}}_{dointer}.log",fgeneid=FGENEID)
+        logf=expand(config["KG_DIRECTORY"]+"ldsc_est_{{simulation}}_genome/est_{{snpset}}_{{dataset}}_{{useLDetect}}_{{geneticMap}}_sim_{fgeneid}_{{scenario}}_{{useLDshrink}}_{{useIntercept}}.log",fgeneid=FGENEID)
     output:
-        logf=config["OUTPUT_DIR"]+"ldsc_res/sim_{snpset}_{dataset}_{bdf}_{hm}_{gwas}_ldsc_res_{scen}_{lds}_{dointer}.txt.gz"
+        logf=config["OUTPUT_DIR"]+"ldsc_res/sim_{snpset}_{dataset}_{useLDetect}_{geneticMap}_{simulation}_ldsc_res_{scenario}_{useLDshrink}_{useIntercept}.txt.gz"
     params:
         fgeneid=expand("{fgeneid}",fgeneid=FGENEID)
     script:

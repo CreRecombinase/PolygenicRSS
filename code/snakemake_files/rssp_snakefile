@@ -12,13 +12,13 @@ rule gen_quh:
 
 rule RSSp_est:
     input:
-        rdsf=config["KG_DIRECTORY"]+"RSSp_genome_{gwas}_quh/{snpset}_{dataseta}_{datasetb}_{bdf}_{hm}_{scen}_{lds}.h5"
+        rdsf=config["KG_DIRECTORY"]+"RSSp_genome_{simulation}_quh/{snpset}_{dataset}_{paneldataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}.h5"
     output:
-        dff=config["OUTPUT_DIR"]+"sim_{snpset}_{dataseta}_{datasetb}_{bdf}_{hm}_{gwas}_RSSp_res_{scen}_{pvv}_{lds}_{cf}.txt.gz"
+        dff=config["OUTPUT_DIR"]+"sim_{snpset}_{dataset}_{paneldataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{useConfounding}.txt.gz"
     params:
-        doConfound="{cf}",
+        doConfound="{useConfounding}",
         doMoM="F",
-        pvv="{pvv}"
+        pvv="{percentEigen}"
     script:
         "../scripts/RSSp_est.R"
 

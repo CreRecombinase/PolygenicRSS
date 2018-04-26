@@ -1,9 +1,20 @@
+rule vcf_2_EUR:
+    input:
+        vcff=config["VCF_DIR"]+"ALL.chr{chr}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
+        filt_f="EUR.samples"
+    output:
+        vcff=temp(config["VCF_DIR"]+"EUR.chr{chr}.vcf.gz")
+    threads:
+        1
+    shell:
+        "bcftools view {input.vcff} -m2 -M2 -S {input.filt_f} -Oz -o {output.vcff} --threads {threads}"
+
 rule eur_concat:
     input:
-        vcff=expand(config["KG_VCFDIR"]+"EUR.chr{chr}_maf_01.vcf.gz",chr=range(1,23))
+        vcff=expand(config["VCF_DIR"]+"EUR.chr{chr}.vcf.gz",chr=range(1,23))
     output:
-        vcff=config["KG_VCFDIR"]+"EUR.ALL_maf_01.vcf.gz"
+        vcff=config["VCF_DIR"]+"eur1kg_19.vcf.gz"
     threads:
         11
     shell:
-        "bcftools concat {input.vcff} -D -Oz -o {output.vcff} --threads {threads}"
+        "bcftools concat {input.vcff} -Oz -o {output.vcff} --threads {threads}"
