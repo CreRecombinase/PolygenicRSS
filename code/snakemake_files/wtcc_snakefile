@@ -6,12 +6,12 @@ rule wtccc_plink_gds:
     input:
         input_h5=config["WTCC_INPUT_H5"]+"{gn}.h5"
     output:
-        outf_snpgds=temp(config["SNPGDS_DIR"]+"{gn}_16_snp_wtcc_geno.gds"),
-        outf_fam=temp(config["PLINK_DIR"]+"{gn}_16.fam"),
-        outf_bim=temp(config["PLINK_DIR"]+"{gn}_16.bim"),
-        outf_bed=temp(config["PLINK_DIR"]+"{gn}_16.bed")
+        outf_snpgds=temp(config["SNPGDS_DIR"]+"{gn}_17_snp_wtcc_geno.gds"),
+        outf_fam=temp(config["PLINK_DIR"]+"{gn}_17.fam"),
+        outf_bim=temp(config["PLINK_DIR"]+"{gn}_17.bim"),
+        outf_bed=temp(config["PLINK_DIR"]+"{gn}_17.bed")
     params:
-        outf_pref_plink=config["PLINK_DIR"]+"{gn}_16",
+        outf_pref_plink=config["PLINK_DIR"]+"{gn}_17",
         gn="{gn}"
     resources:
         fh5=1
@@ -22,15 +22,15 @@ rule wtccc_plink_gds:
 # rule vcf_to_goodplink:
 #     ''' This rule makes a plink file from a vcf file'''
 #     input:
-#         in_vcf=config["VCF_ODIR"]+"{gn}.vcf.gz"
+#         in_vcf=config["VCF_DIR"]+"{gn}_19.vcf.gz"
 #     output:
 #         out_bed=config["PLINK_DIR"]+"{gn}_19.bed",
 #         out_bim=config["PLINK_DIR"]+"{gn}_19.bim",
-#         out_fam=config["PLINK_DIR"]+"{gn}_19.fam"        
+#         out_fam=config["PLINK_DIR"]+"{gn}_19.fam"
 #     params:
 #         out_pref_plink=config["PLINK_DIR"]+"{gn}_19"
 #     shell:
-#         "plink --vcf {input.in_vcf} --make-bed --out {params.out_pref_plink}"        
+#         "plink --vcf {input.in_vcf} --make-bed --out {params.out_pref_plink}"
 
 
 

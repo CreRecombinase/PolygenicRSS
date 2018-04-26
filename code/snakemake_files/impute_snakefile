@@ -1,6 +1,6 @@
 rule gen_dups:
     input:
-        snp_bim=config["PLINK_DIR"]+"{gn}.bim"
+        snp_bim=config["PLINK_DIR"]+"{gn}_19.bim"
     output:
         dup_snps=temp(config["PLINK_DIR"]+"{gn}_dupsnps.txt")
     script:
@@ -8,12 +8,12 @@ rule gen_dups:
 
 rule remove_dups:
     input:
-        in_bed=config["PLINK_DIR"]+"{gn}.bed",
-        in_bim=config["PLINK_DIR"]+"{gn}.bim",
-        in_fam=config["PLINK_DIR"]+"{gn}.fam",
+        in_bed=config["PLINK_DIR"]+"{gn}_19.bed",
+        in_bim=config["PLINK_DIR"]+"{gn}_19.bim",
+        in_fam=config["PLINK_DIR"]+"{gn}_19.fam",
         in_dup=config["PLINK_DIR"]+"{gn}_dupsnps.txt"
     params:
-        in_pref_plink=config["PLINK_DIR"]+"{gn}",
+        in_pref_plink=config["PLINK_DIR"]+"{gn}_19",
         out_pref_plink=config["PLINK_DIR"]+"{gn}_nodup"
     output:
         out_bed=temp(config["PLINK_DIR"]+"{gn}_nodup.bed"),
@@ -61,7 +61,7 @@ rule impute_1kg:
     params:
         opref=config["VCF_DIR"]+"imputed/1kg_{gn}_chr{chrom}"
     output:
-        ovcf=config["VCF_DIR"]+"imputed/1kg_{gn}_chr{chrom}.vcf.gz"
+        ovcf=config["VCF_DIR"]+"imputed/1kg_{gn}_chr{chrom}.m3vcf.gz"
     threads:
         5
     shell:

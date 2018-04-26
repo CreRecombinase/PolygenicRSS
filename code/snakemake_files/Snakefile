@@ -1,9 +1,9 @@
 include: "param_snakefile"
-#include: "wtcc_snakefile"
+include: "wtcc_snakefile"
 #include: "combined_snakefile"
-#include: crossover_snakefile
+include: "crossover_snakefile"
 include: "impute_snakefile"
-#include: "manip_snakefile"
+include: "manip_snakefile"
 include: "kg_snakefile"
 include: "trait_snakefile"
 include: "LD_snakefile"
@@ -30,7 +30,7 @@ localrules: all, phase_chr_prep
 
 rule all:
     input:
-        expand(config["VCF_DIR"]+"imputed/1kg_genred_chr{chrom}.vcf.gz",chrom=range(1,23))
+        expand(config["VCF_DIR"]+"bd_chr{chrom}.vcf.gz",chrom=range(1,23))
         # expand("rssp_ldsc_report/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{pvv}_{lds}_{cf}_{dointer}.html",
         #        snpset="chr1-22",
         #        dataset="ra",
