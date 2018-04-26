@@ -1,0 +1,18 @@
+{
+    "KG_DIRECTORY": "/scratch/t.cri.nknoblauch/",
+    "VCF_DIR": "/scratch/t.cri.nknoblauch/vcf/",
+    "EVD_DIR": "/scratch/t.cri.nknoblauch/EVD_H5/",
+    "VCF_ODIR": "/scratch/t.cri.nknoblauch/wtcc_input/vcf/",
+    "GDS_DIR": "/scratch/t.cri.nknoblauch/gds/",
+    "SNPGDS_DIR": "/scratch/t.cri.nknoblauch/snpgds/",
+    "PLINK_DIR": "/scratch/t.cri.nknoblauch/plink/",
+    "HDF5_DIR": "/scratch/t.cri.nknoblauch/h5/",
+    "HG19_DIR": "/scratch/t.cri.nknoblauch/hg19/",
+    "WTCC_INPUT_H5" :"/scratch/t.cri.nknoblauch/wtcc_input/",
+    "WTCC_H5" : "/scratch/t.cri.nknoblauch/wtcc/",
+    "KG_MAPDIR" :"/scratch/t.cri.nknoblauch/1kg/1000-genomes-genetic-maps/",
+    "KG_VCFDIR" :"/scratch/t.cri.nknoblauch/1kg/vcf/",
+    "OUTPUT_DIR" :"../../output/RSSp_snakemake/",
+    "INPUT_DIR" :"../../data/Snakemake_inputs/",
+    "LDETECT_BREAK_FILE": "fourier_ls-all.bed"
+}
