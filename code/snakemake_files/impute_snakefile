@@ -1,10 +1,37 @@
-rule split_ped_vcf:
+rule gen_dups:
+    input:
+        snp_bim=config["PLINK_DIR"]+"{gn}.bim"
+    output:
+        dup_snps=temp(config["PLINK_DIR"]+"{gn}_dupsnps.txt")
+    script:
+        "../scripts/clean_snp.R"
+
+rule remove_dups:
     input:
         in_bed=config["PLINK_DIR"]+"{gn}.bed",
         in_bim=config["PLINK_DIR"]+"{gn}.bim",
-        in_fam=config["PLINK_DIR"]+"{gn}.fam"
+        in_fam=config["PLINK_DIR"]+"{gn}.fam",
+        in_dup=config["PLINK_DIR"]+"{gn}_dupsnps.txt"
     params:
         in_pref_plink=config["PLINK_DIR"]+"{gn}",
+        out_pref_plink=config["PLINK_DIR"]+"{gn}_nodup"
+    output:
+        out_bed=temp(config["PLINK_DIR"]+"{gn}_nodup.bed"),
+        out_bim=temp(config["PLINK_DIR"]+"{gn}_nodup.bim"),
+        out_fam=temp(config["PLINK_DIR"]+"{gn}_nodup.fam"),
+        out_log=temp(config["PLINK_DIR"]+"{gn}_nodup.log")
+    shell:
+        "plink --bfile {params.in_pref_plink} --exclude {input.in_dup} --make-bed --out {params.out_pref_plink} --threads {threads}"
+
+
+
+rule split_ped_vcf:
+    input:
+        in_bed=config["PLINK_DIR"]+"{gn}_nodup.bed",
+        in_bim=config["PLINK_DIR"]+"{gn}_nodup.bim",
+        in_fam=config["PLINK_DIR"]+"{gn}_nodup.fam"
+    params:
+        in_pref_plink=config["PLINK_DIR"]+"{gn}_nodup",
         out_pref_vcf=config["VCF_DIR"]+"{gn}_chr{chrom}",
         chrom="{chrom}"
     output:
@@ -45,5 +72,3 @@ rule phase_chr_prep:
         ofile=temp("genetic_map_GRCh37_chr{chrom}.txt")
     shell:
         "cut --complement -f 1 {input.infile} > {output.ofile}"
-
-rule impute_dat:

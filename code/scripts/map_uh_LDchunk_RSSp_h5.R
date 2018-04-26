@@ -1,6 +1,12 @@
 
-
+#
+# save.image()
+# # stop()
+# load(".RData")
 library(LDshrink)
+
+
+
 library(tidyverse)
 library(SeqSupport)
 
@@ -21,39 +27,33 @@ tparam_df <- EigenH5::read_df_h5(ymatf, "SimulationInfo")
 
 p <- nrow(snp_df)
 N <- as.integer(unique(tparam_df$n))
-g <- nrow(tparam_df)
-chunksize <- 10000
+g <- as.integer(nrow(tparam_df))
+chunksize <- as.integer(10000)
 num_chunks <- ceiling(p/chunksize)
+cat("Chunking SNP data\n")
+snp_lff  <- BBmisc::chunk(snp_df$snp_id,chunk.size=chunksize) %>% map(~list(subset_rows=.x,filename=h5f,datapath="dosage"))
+exp_lff <- list(list(filename=ymatf,datapath="trait/ymat"))
 
-snp_dff <- dplyr::mutate(snp_df,nchunk_id=sort(as.integer(gl(n = num_chunks,k=chunksize,length = p)))) %>%
-    EigenH5::split_chunk_df(pos_id=snp_id,group_id=nchunk_id) %>%
-    dplyr::mutate(chunk_group=nchunk_id) %>% mutate(filenames=h5f,groupnames="/",datanames="dosage")
+## exp_dff  <- data_frame(filenames=ymatf,groupnames="trait",datanames="ymat",row_offsets=0L,row_chunksizes=N,col_offsets=0L,col_chunksizes=g)
 
+uh_lff <-  BBmisc::chunk(1:p,chunk.size=chunksize) %>% map(~list(subset_rows=.x,filename=uhf,datapath="uh"))
+se_lff <-  map(uh_lff,~update_list(.,datapath="se"))
 
-snp_dff  <- BBmisc::chunk(snp_df$snp_id,chunk.size = chunksize) %>%
-  map_df(cont_reg) %>%
-  mutate(filenames=h5f,groupnames="/",datanames="dosage",snp_chunk=1:n(),
-         row_offsets=in_start,row_chunksizes=in_stop-in_start+1,col_offsets=0L,col_chunksizes=-1L)
-
-
-exp_dff  <- data_frame(filenames=ymatf,groupnames="trait",datanames="ymat",row_offsets=0L,row_chunksizes=-1L,col_offsets=0L,col_chunksizes=-1L)
-
-
-uh_dff <- BBmisc::chunk(1:p,chunk.size = chunksize) %>%
-  map_df(cont_reg) %>%
-  mutate(filenames=uhf,groupnames="/",datanames="uh",
-         row_offsets=in_start,row_chunksizes=in_stop-in_start+1,
-         col_offsets=0L,col_chunksizes=-1L,chunk_group=1:n())
-se_dff <- uh_dff %>% mutate(filenames=uhf,groupnames="/",datanames="se")
-
-EigenH5::create_matrix_h5(uhf,"/","uh",numeric(),dims=c(nrow(snp_df),nrow(tparam_df)),chunksizes=c(1000L,nrow(tparam_df)))
-EigenH5::create_matrix_h5(uhf,"/","se",numeric(),dims=c(nrow(snp_df),nrow(tparam_df)),chunksizes=c(1000L,nrow(tparam_df)))
+cat("Creating output matrices\n")
+EigenH5::create_matrix_h5(uhf,"/","uh",numeric(),dims=c(p,g),chunksizes=c(1000L,g))
+EigenH5::create_matrix_h5(uhf,"/","se",numeric(),dims=c(p,g),chunksizes=c(1000L,g))
 
 stopifnot(nrow(tparam_df)>0)
 
+cat("Writing simulation/data info\n")
 write_df_h5(snp_df,"SNPinfo",uhf)
 write_df_h5(tparam_df,"SimulationInfo",uhf)
 
+cat("Mapping traits\n")
+SeqSupport::map_eQTL_chunk_h5(snp_lff,exp_lff,uh_lff,se_lff,EXP_first = F,SNP_first = T)
 
-SeqSupport::map_eQTL_chunk_h5(snp_dff,exp_dff,uh_dff,se_dff)
-
+cat("Checking uh\n")
+tuh <- EigenH5::read_matrix_h5(uhf,"/","uh",
+                               subset_rows=sort(sample(1:p,min(p,100),replace=F)),
+                               subset_cols=sort(sample(1:g,min(g,100),replace=F)))
+stopifnot(all(!is.na(c(tuh))))

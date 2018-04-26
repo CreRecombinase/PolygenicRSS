@@ -3,6 +3,8 @@
 # stop()
 # setwd("~/Dropbox/PolygenicRSS/code/snakemake_files/")
 # load(".RData")
+# save.image()
+# stop()
 library(SeqSupport)
 
 library(tidyverse)
@@ -30,5 +32,5 @@ tparam_df <- gen_tparamdf_norm(pve,bias,nreps,n = n,p = p,mfgeneid) %>% mutate(n
 
 ymat <- gen_sim_phenotype_h5(snp_df,gdsf,beta_h5file,tparam_df)
 EigenH5::write_matrix_h5(out_h5f,"trait","ymat",ymat)
-EigenH5::write_df_h5(tparam_df,groupname = "SimulationInfo",outfile = out_h5f)
+EigenH5::write_df_h5(tparam_df,groupname = "SimulationInfo",out_h5f)
 

@@ -13,7 +13,7 @@ map_df <- map2_dfr(map_file_df$map_file, map_file_df$chr,
                    function(filename, chrom){
                        tdf <- read_delim(filename,
                                   col_names = c( "pos", "map"),
-                                  delim = " ",col_types=c("_in")) %>% mutate(chr = chrom)
+                                  delim = " ",col_types=c("_id")) %>% mutate(chr = chrom)
                        stopifnot(!is.unsorted(tdf$map))
                        return(tdf)
                    })

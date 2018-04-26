@@ -28,7 +28,7 @@ walk(soutf,write,x=0L)
 snp_df <- select(break_df,chr,region_id) %>%
   inner_join(read_df_h5(evdf,"LDinfo")) %>%
   rename(CHR=chr,BP=pos,CM=map) %>% select(-snp_id)
-snp_df <- group_by(snp_df,region_id) %>% do(mutate(.,L2=read_vector_h5(evdf,paste0("LDSC/",as.character(.$region_id[1])),"L2"))) %>% ungroup() %>% select(-region_id)
+snp_df <- group_by(snp_df,region_id) %>% do(mutate(.,L2=read_vector_h5(evdf,paste0("L2/",as.character(.$region_id[1])),"L2"))) %>% ungroup() %>% select(-region_id)
 
 
 pb <- progress_bar$new(total=length(outf))

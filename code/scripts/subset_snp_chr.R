@@ -16,4 +16,7 @@ if(grepl("-",chromosome)){
 }
 stopifnot(all(!is.na(tchromosome)))
 
-read_df_h5(inf,"SNPinfo") %>% filter(chr%in%tchromosome) %>% write_delim(outf,delim="\t")
+
+## HLA Region
+#!((chrom==6)&between(pos,27866528,34775446)))
+read_df_h5(inf,"SNPinfo") %>% filter(chr%in%tchromosome)  %>% filter(!((chr==6)&between(pos,27866528,34775446))) %>% distinct(chr,pos,.keep_all=T) %>% write_delim(outf,delim="\t")

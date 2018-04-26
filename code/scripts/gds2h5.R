@@ -9,10 +9,23 @@ inf <- snakemake@input[["input_gds"]]
 outf <- snakemake@output[["outf"]]
 #mapf <- snakemake@input[["mapf"]]
 
-tgds <- seqOpen(inf)
+
+makeSeq <- function(inf,readonly=TRUE){
+  mgds <- safely(seqOpen,otherwise=NA)(inf)
+  gdsfmt::showfile.gds(T)
+  if(is.na(mgds$result)){
+    tempf <- tempfile()
+    inf <- seqSNP2GDS(inf,tempf,storage.option ="LZ4_RA.fast")
+  }
+  return(seqOpen(inf,readonly = readonly))
+}
+
+tgds <- makeSeq(inf)
+
 si_df <- read_SNPinfo_gds(tgds) %>% mutate(chr=as.integer(chr))
 #stopifnot(LDshrink::sorted_snp_df(si_df))
 SeqSupport::gds2hdf5(tgds,outf)
+
 #snp_df <- read_df_h5(outf,"SNPinfo")
 #ld_r <- LDshrink::set_ld_region(ld_regions = break_df,snp_info = snp_df)
 #map_df <- read_df_h5(mapf,"SNPinfo")
