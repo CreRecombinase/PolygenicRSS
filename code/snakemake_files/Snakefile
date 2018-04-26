@@ -16,7 +16,7 @@ include: "grm_snakefile"
 wildcard_constraints:
     gn="[0-9a-z]+"
 
-shell.prefix("module load shapeit; module load plink; ")
+
 
 #all_dgn = ["genred","genred2"]#all_tn = '-'.join(all_dgn).upper()
 #all_tn='-'.join(GWAS_NAMES).upper()
@@ -25,9 +25,12 @@ shell.prefix("module load shapeit; module load plink; ")
 #dsp=['_'.join([x,x]) for x in GWAS_NAMES]
 #dsp=["genred_genred"]
 #dsp=[all_tn+"_"+all_tn]
+
+localrules: all, phase_chr_prep
+
 rule all:
     input:
-        expand(config["VCF_DIR"]+"{gn}_chr{chrom}_phased.Output.vcf",gn="genred",chrom=range(1,23))
+        expand(config["VCF_DIR"]+"imputed/1kg_genred_chr{chrom}.vcf.gz",chrom=range(1,23))
         # expand("rssp_ldsc_report/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{pvv}_{lds}_{cf}_{dointer}.html",
         #        snpset="chr1-22",
         #        dataset="ra",
