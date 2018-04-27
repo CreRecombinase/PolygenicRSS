@@ -10,18 +10,18 @@
   
   },
   "phase_chr_hapmap":{
-    "time" : "02:00:00",
+    "time" : "06:00:00",
     "mem" : "20gb",
-    "cpus": 5
+    "cpus": 12
     },
     "shapeit2vcf":{
       "time" : "00:30:00",
       "mem" : "8gb"
       },
       "impute_1kg":{
-      "time" : "02:00:00",
+      "time" : "12:00:00",
       "mem" : "20gb",
-      "cpus" : 5
+      "cpus" : 12
       },
     
   "ldsc_chrom_est":{
