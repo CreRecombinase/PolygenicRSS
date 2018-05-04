@@ -22,4 +22,6 @@ output: workflowr::wflow_html
 * [Influece of chunk size on PVE inflation](RSSp_Chunksize_Investigation.html)
 * [Detailed summary of simulation/data](SimulationPipeline.html)
 * [New whole genome simulation](New_WholeGenome.html)
+* [Likelihood Curves](lnzDist.html)
+
 
