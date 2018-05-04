@@ -318,7 +318,7 @@ div.section {
 </div>
 
 
-<p><strong>Last updated:</strong> 2018-04-25</p>
+<p><strong>Last updated:</strong> 2018-05-04</p>
 <strong>workflowr checks:</strong> <small>(Click a bullet for more information)</small>
 <ul>
 <li>
@@ -347,7 +347,7 @@ div.section {
 </li>
 <li>
 <details>
-<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/a6b38fa077160ed78e303074130a21484bf920a3" target="_blank">a6b38fa</a> </summary></p>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/26bbfbf3c99c4afebeef2ee5e14b6e9fdd8f18fa" target="_blank">26bbfbf</a> </summary></p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
 <pre><code>
 Ignored files:
@@ -388,6 +388,7 @@ Untracked files:
     Untracked:  analysis/chr_16.Rmd
     Untracked:  analysis/derby.log
     Untracked:  analysis/fquh_mod.RDS
+    Untracked:  analysis/lnzDist.Rmd
     Untracked:  analysis/ltximg/
     Untracked:  analysis/nquh_mod.RDS
     Untracked:  analysis/quh_mod.RDS
@@ -396,50 +397,35 @@ Untracked files:
     Untracked:  code/.ipynb_checkpoints/
     Untracked:  code/Untitled.ipynb
     Untracked:  code/Untitled1.ipynb
-    Untracked:  code/scripts/.snakemake.5new9sfu.evd_1kg_h5.R
-    Untracked:  code/scripts/.snakemake.bl4l60_j.evd_1kg_h5.R
-    Untracked:  code/scripts/.snakemake.gndk0qyr.evd_1kg_h5.R
-    Untracked:  code/scripts/.snakemake.io0ogr01.evd_1kg_h5.R
-    Untracked:  code/scripts/.snakemake.q3jzmw1j.gen_ty_block_RSSp.R
-    Untracked:  code/scripts/.snakemake.tfa8jqyw.evd_1kg_h5.R
-    Untracked:  code/scripts/.snakemake.u82nlrp8.ldsc_rssp.Rmd
-    Untracked:  code/scripts/.snakemake.yjc804n1.evd_1kg_h5.R
     Untracked:  code/scripts/RSSp_ldsc_results.Rmd
     Untracked:  code/scripts/allel2haplo_h5.R~
+    Untracked:  code/scripts/bin/
     Untracked:  code/scripts/break_df.R~
-    Untracked:  code/scripts/gen_sample_df.R
+    Untracked:  code/scripts/cv_ind.R
     Untracked:  code/scripts/gen_sample_df.R~
-    Untracked:  code/scripts/gen_sample_df_n.R
     Untracked:  code/scripts/gen_sample_df_n.R~
-    Untracked:  code/scripts/gen_uh_chunk_direct.R
     Untracked:  code/scripts/impute2h5.R~
     Untracked:  code/scripts/ldsc_rssp.Rmd
-    Untracked:  code/scripts/ldshrink_cv.R
     Untracked:  code/scripts/ldshrink_cv.R~
-    Untracked:  code/scripts/ldshrink_optim.R
-    Untracked:  code/scripts/sim_geno_evd.R
+    Untracked:  code/scripts/matlab2h5.py
     Untracked:  code/scripts/sim_geno_evd.R~
-    Untracked:  code/scripts/split_plink.pl
     Untracked:  code/scripts/subset_snp_chr.R~
     Untracked:  code/scripts/vcf-liftover.sh
     Untracked:  code/scripts/vcf2allel.py
     Untracked:  code/scripts/vcf2allel.py~
-    Untracked:  code/snakemake_files/#manip_snakefile#
-    Untracked:  code/snakemake_files/.#manip_snakefile
     Untracked:  code/snakemake_files/.snakemake/
-    Untracked:  code/snakemake_files/crossover_snakefile
-    Untracked:  code/snakemake_files/impute_snakefile
+    Untracked:  code/snakemake_files/environment_rssp.yml
     Untracked:  code/snakemake_files/kg_snakefile~
     Untracked:  code/snakemake_files/ldsc/
-    Untracked:  code/snakemake_files/manip_snakefile
+    Untracked:  code/snakemake_files/matlab_snakefile
+    Untracked:  code/snakemake_files/plink.log
     Untracked:  code/snakemake_files/rssp_ldsc_report/
     Untracked:  code/snakemake_files/temp_map_19.RDS
     Untracked:  code/snakemake_files/temp_target_19.RDS
+    Untracked:  code/snakemake_files/ty.RData
     Untracked:  code/workflow_params.json~
     Untracked:  data/NCBI34_to_GRCh38.chain.gz
     Untracked:  data/Snakemake_inputs/
-    Untracked:  data/hg16ToHg19.over.chain.gz
-    Untracked:  data/hg18ToHg19.over.chain.gz
     Untracked:  docs/#RSSp_WTCC_noConfounding.Rmd#
     Untracked:  docs/RSSp.stan
     Untracked:  docs/RSSp2.stan
@@ -481,27 +467,16 @@ Unstaged changes:
     Modified:   analysis/simulation.Rmd
     Modified:   code/TF_LDshrink.ipynb
     Modified:   code/scripts/RSSp_est.R
-    Modified:   code/scripts/break_df.R
     Modified:   code/scripts/evd_1kg_h5.R
-    Modified:   code/scripts/gds2h5.R
-    Modified:   code/scripts/gen_quh_chunk_direct.R
-    Modified:   code/scripts/gen_quh_chunk_h5.R
     Modified:   code/scripts/gen_ty_block_RSSp.R
-    Modified:   code/scripts/h52tplink.R
-    Modified:   code/scripts/ldsc_trait_chunk.R
-    Modified:   code/scripts/map2RDS.R
     Modified:   code/scripts/map_uh_LDchunk_RSSp_h5.R
-    Modified:   code/scripts/parse_ldsc.R
-    Modified:   code/scripts/prep_ldsc_uh.R
     Modified:   code/scripts/subset_snp_chr.R
+    Modified:   code/snakemake_files/LD_snakefile
     Modified:   code/snakemake_files/Snakefile
-    Modified:   code/snakemake_files/combined_snakefile
-    Modified:   code/snakemake_files/direct_snakefile
-    Modified:   code/snakemake_files/kg_snakefile
+    Modified:   code/snakemake_files/impute_snakefile
     Modified:   code/snakemake_files/ldsc_snakefile
-    Modified:   code/snakemake_files/param_snakefile
     Modified:   code/snakemake_files/rssp_snakefile
-    Modified:   code/snakemake_files/wtcc_snakefile
+    Modified:   code/snakemake_files/trait_snakefile
     Modified:   code/workflow_params.json
     Modified:   code/workflow_params_rcc.json
     Modified:   code/workflow_params_xps.json
@@ -535,6 +510,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/26bbfbf3c99c4afebeef2ee5e14b6e9fdd8f18fa/analysis/New_WholeGenome.Rmd" target="_blank">26bbfbf</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-05-04
+</td>
+<td style="text-align:left;">
+wflow_publish(“../../analysis/New_WholeGenome.Rmd”)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/5c7edf72bb0ea1a148529dacbba9b056715de5bf/docs/New_WholeGenome.html" target="_blank">5c7edf7</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-04-25
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
 <tr>
 <td style="text-align:left;">
 Rmd
@@ -694,7 +703,7 @@ CreRecombinase
 </tbody>
 </table>
 </details>
-<p>To finish out the summary of the new <code>RSSp</code> results, below is a plot of relative RMSE, It doesn’t look tlike there is a ma <img src="figure/New_WholeGenome.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>To finish out the summary of the new <code>RSSp</code> results, below is a plot of relative RMSE, It doesn’t look like there is much of a trend <img src="figure/New_WholeGenome.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
 <details>
 <summary><em>Expand here to see past versions of unnamed-chunk-5-1.png:</em></summary>
 <table style = "border-collapse:separate; border-spacing:5px;">
@@ -766,8 +775,6 @@ CreRecombinase
 <div id="rssp-vs-ldsc" class="section level1">
 <h1>RSSp vs LDSC</h1>
 <p>Overall it looks like RSSp does at least as well, and in some cases better than LD score regression (both with and without and intercept). Next steps are to try out of sample LD.</p>
-<pre><code>Joining, by = c(&quot;fgeneid&quot;, &quot;tpve&quot;, &quot;simulation&quot;, &quot;useLDshrink&quot;)
-Joining, by = c(&quot;fgeneid&quot;, &quot;tpve&quot;, &quot;simulation&quot;, &quot;useLDshrink&quot;)</code></pre>
 <p><img src="figure/New_WholeGenome.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
 <details>
 <summary><em>Expand here to see past versions of unnamed-chunk-8-1.png:</em></summary>
@@ -786,6 +793,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/5c7edf72bb0ea1a148529dacbba9b056715de5bf/docs/figure/New_WholeGenome.Rmd/unnamed-chunk-8-1.png" target="_blank">5c7edf7</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-04-25
+</td>
+</tr>
 <tr>
 <td style="text-align:left;">
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/d8592328249ca89a67e95b343af07cbf2b02325d/docs/figure/New_WholeGenome.Rmd/unnamed-chunk-8-1.png" target="_blank">d859232</a>
@@ -820,6 +838,17 @@ Date
 <tbody>
 <tr>
 <td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/5c7edf72bb0ea1a148529dacbba9b056715de5bf/docs/figure/New_WholeGenome.Rmd/unnamed-chunk-9-1.png" target="_blank">5c7edf7</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-04-25
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/d8592328249ca89a67e95b343af07cbf2b02325d/docs/figure/New_WholeGenome.Rmd/unnamed-chunk-9-1.png" target="_blank">d859232</a>
 </td>
 <td style="text-align:left;">
@@ -832,38 +861,202 @@ CreRecombinase
 </tbody>
 </table>
 </details>
-<p><img src="figure/New_WholeGenome.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
-<details>
-<summary><em>Expand here to see past versions of unnamed-chunk-10-1.png:</em></summary>
-<table style = "border-collapse:separate; border-spacing:5px;">
+<table>
+<caption>Without LDshrink</caption>
 <thead>
-<tr>
-<th style="text-align:left;">
-Version
-</th>
-<th style="text-align:left;">
-Author
-</th>
-<th style="text-align:left;">
-Date
-</th>
+<tr class="header">
+<th align="right">True_PVE</th>
+<th align="right">LDSC_Intercept_Mean</th>
+<th align="right">LDSC_Intercept_Mean_RMSE</th>
+<th align="right">LDSC_noIntercept_Mean</th>
+<th align="right">LDSC_noIntercept_Mean_RMSE</th>
+<th align="right">RSSp_Mean</th>
+<th align="right">RSSp_Mean_RMSE</th>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td style="text-align:left;">
-<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/d8592328249ca89a67e95b343af07cbf2b02325d/docs/figure/New_WholeGenome.Rmd/unnamed-chunk-10-1.png" target="_blank">d859232</a>
-</td>
-<td style="text-align:left;">
-CreRecombinase
-</td>
-<td style="text-align:left;">
-2018-04-25
-</td>
+<tr class="odd">
+<td align="right">0.009</td>
+<td align="right">0.022633</td>
+<td align="right">0.102293</td>
+<td align="right">0.028663</td>
+<td align="right">0.073555</td>
+<td align="right">0.0454050</td>
+<td align="right">0.0439809</td>
+</tr>
+<tr class="even">
+<td align="right">0.020</td>
+<td align="right">0.015188</td>
+<td align="right">0.083732</td>
+<td align="right">0.042125</td>
+<td align="right">0.070183</td>
+<td align="right">0.0541657</td>
+<td align="right">0.0491488</td>
+</tr>
+<tr class="odd">
+<td align="right">0.060</td>
+<td align="right">0.055127</td>
+<td align="right">0.088191</td>
+<td align="right">0.088746</td>
+<td align="right">0.076884</td>
+<td align="right">0.0872114</td>
+<td align="right">0.0598144</td>
+</tr>
+<tr class="even">
+<td align="right">0.170</td>
+<td align="right">0.145187</td>
+<td align="right">0.102965</td>
+<td align="right">0.235351</td>
+<td align="right">0.083747</td>
+<td align="right">0.2075228</td>
+<td align="right">0.0622518</td>
+</tr>
+<tr class="odd">
+<td align="right">0.350</td>
+<td align="right">0.271159</td>
+<td align="right">0.122599</td>
+<td align="right">0.486118</td>
+<td align="right">0.140286</td>
+<td align="right">0.4275226</td>
+<td align="right">0.0893071</td>
+</tr>
+<tr class="even">
+<td align="right">0.450</td>
+<td align="right">0.348367</td>
+<td align="right">0.130293</td>
+<td align="right">0.612228</td>
+<td align="right">0.163264</td>
+<td align="right">0.5368619</td>
+<td align="right">0.0993313</td>
+</tr>
+<tr class="odd">
+<td align="right">0.700</td>
+<td align="right">0.543129</td>
+<td align="right">0.184225</td>
+<td align="right">0.968724</td>
+<td align="right">0.269240</td>
+<td align="right">0.8549883</td>
+<td align="right">0.1581785</td>
+</tr>
+<tr class="even">
+<td align="right">0.800</td>
+<td align="right">0.623911</td>
+<td align="right">0.194629</td>
+<td align="right">1.096689</td>
+<td align="right">0.296689</td>
+<td align="right">0.9403890</td>
+<td align="right">0.1417157</td>
 </tr>
 </tbody>
 </table>
-</details>
+<table>
+<caption>With LDshrink</caption>
+<thead>
+<tr class="header">
+<th align="right">True_PVE</th>
+<th align="right">LDSC_Intercept_Mean</th>
+<th align="right">LDSC_Intercept_Mean_RMSE</th>
+<th align="right">LDSC_noIntercept_Mean</th>
+<th align="right">LDSC_noIntercept_Mean_RMSE</th>
+<th align="right">RSSp_Mean</th>
+<th align="right">RSSp_Mean_RMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.009</td>
+<td align="right">0.024699</td>
+<td align="right">0.131459</td>
+<td align="right">0.036133</td>
+<td align="right">0.092865</td>
+<td align="right">0.0465126</td>
+<td align="right">0.0449383</td>
+</tr>
+<tr class="even">
+<td align="right">0.020</td>
+<td align="right">0.012623</td>
+<td align="right">0.102917</td>
+<td align="right">0.049678</td>
+<td align="right">0.086492</td>
+<td align="right">0.0554161</td>
+<td align="right">0.0499686</td>
+</tr>
+<tr class="odd">
+<td align="right">0.060</td>
+<td align="right">0.058956</td>
+<td align="right">0.110090</td>
+<td align="right">0.104679</td>
+<td align="right">0.097095</td>
+<td align="right">0.0901629</td>
+<td align="right">0.0630538</td>
+</tr>
+<tr class="even">
+<td align="right">0.170</td>
+<td align="right">0.157346</td>
+<td align="right">0.126704</td>
+<td align="right">0.281065</td>
+<td align="right">0.124061</td>
+<td align="right">0.2162117</td>
+<td align="right">0.0686083</td>
+</tr>
+<tr class="odd">
+<td align="right">0.350</td>
+<td align="right">0.288037</td>
+<td align="right">0.144287</td>
+<td align="right">0.578972</td>
+<td align="right">0.230186</td>
+<td align="right">0.4471336</td>
+<td align="right">0.1054166</td>
+</tr>
+<tr class="even">
+<td align="right">0.450</td>
+<td align="right">0.375842</td>
+<td align="right">0.137490</td>
+<td align="right">0.734378</td>
+<td align="right">0.284378</td>
+<td align="right">0.5612987</td>
+<td align="right">0.1177101</td>
+</tr>
+<tr class="odd">
+<td align="right">0.700</td>
+<td align="right">0.586082</td>
+<td align="right">0.196954</td>
+<td align="right">1.157465</td>
+<td align="right">0.457465</td>
+<td align="right">0.8814731</td>
+<td align="right">0.1827512</td>
+</tr>
+<tr class="even">
+<td align="right">0.800</td>
+<td align="right">0.667230</td>
+<td align="right">0.201692</td>
+<td align="right">1.308978</td>
+<td align="right">0.508978</td>
+<td align="right">0.9581693</td>
+<td align="right">0.1581693</td>
+</tr>
+</tbody>
+</table>
+<div id="lambda_gc" class="section level2">
+<h2><code>Lambda_GC</code></h2>
+<p>What’s the relationship between <code>Lambda_GC</code> and <span class="math inline">\(PVE\)</span>?</p>
+<p><img src="figure/New_WholeGenome.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<!-- # Estimates when PVE is precisely 0 -->
+<!-- These (2) simulations were performed using the `RA` dataset -->
+<!-- ```{r} -->
+<!-- res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",pattern="ra",full.names = T) -->
+<!-- # res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",pattern="ra",full.names = T) -->
+<!-- res_df <- map_df(res_d_rssp,read_delim,delim="\t") %>% filter(scenario=="NoPVE")  -->
+<!-- tparam_df <- distinct(res_df,fgeneid,tsigu,tpve,p,n) -->
+<!-- ggplot(res_df,aes(x=tpve,y=pve))+geom_point()+geom_smooth(method="lm",formula=y~x+0)+facet_grid(useLDshrink~simulation,labeller = "label_both")+ggtitle("RSSp",paste0("p=",unique(tparam_df$p),",N=",unique(tparam_df$n)))+xlab("PVE")+ylab(bquote(hat(PVE))) -->
+<!-- # rss_res <- select(res_df,fgeneid,tpve,pve,simulation,useLDshrink) %>% mutate(RSSp=tpve-pve) %>% select(-pve) -->
+<!-- ``` -->
+<!-- ```{r} -->
+<!-- res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake/ldsc_res/",pattern="ra",full.names = T) -->
+<!-- res_df <- map_df(res_d_rssp,~read_delim(.x,delim="\t") %>% mutate(Intercept=as.character(Intercept))) %>% filter(scenario=="NoPVE")  %>% inner_join(tparam_df) -->
+<!-- ggplot(res_df,aes(x=tpve,y=pve))+geom_point()+geom_smooth(method="lm",formula=y~x+0)+facet_grid(useLDshrink~useIntercept,labeller = "label_both")+ggtitle("LDSC",paste0("p=",unique(tparam_df$p),",N=",unique(tparam_df$n)))+xlab("PVE")+ylab(bquote(hat(PVE))) -->
+<!-- ``` -->
+</div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <pre class="r"><code>sessionInfo()</code></pre>
@@ -901,16 +1094,16 @@ loaded via a namespace (and not attached):
 [22] workflowr_1.0.1     rvest_0.3.2         R.methodsS3_1.7.1  
 [25] libblosc_1.12.1     psych_1.8.3.3       evaluate_0.10.1    
 [28] labeling_0.3        knitr_1.20          parallel_3.5.0     
-[31] broom_0.4.4         Rcpp_0.12.16        backports_1.1.2    
-[34] scales_0.5.0        jsonlite_1.5        mnormt_1.5-5       
-[37] hms_0.4.2           digest_0.6.15       stringi_1.1.7      
-[40] grid_3.5.0          rprojroot_1.3-2     cli_1.0.0          
-[43] tools_3.5.0         magrittr_1.5        lazyeval_0.2.1     
-[46] crayon_1.3.4        whisker_0.3-2       pkgconfig_2.0.1    
-[49] Matrix_1.2-14       xml2_1.2.0          lubridate_1.7.4    
-[52] rstudioapi_0.7      assertthat_0.2.0    rmarkdown_1.9      
-[55] httr_1.3.1          R6_2.2.2            nlme_3.1-137       
-[58] git2r_0.21.0        compiler_3.5.0     </code></pre>
+[31] highr_0.6           broom_0.4.4         Rcpp_0.12.16       
+[34] backports_1.1.2     scales_0.5.0        jsonlite_1.5       
+[37] mnormt_1.5-5        hms_0.4.2           digest_0.6.15      
+[40] stringi_1.1.7       grid_3.5.0          rprojroot_1.3-2    
+[43] cli_1.0.0           tools_3.5.0         magrittr_1.5       
+[46] lazyeval_0.2.1      crayon_1.3.4        whisker_0.3-2      
+[49] pkgconfig_2.0.1     Matrix_1.2-14       xml2_1.2.0         
+[52] lubridate_1.7.4     rstudioapi_0.7      assertthat_0.2.0   
+[55] rmarkdown_1.9       httr_1.3.1          R6_2.2.2           
+[58] nlme_3.1-137        git2r_0.21.0        compiler_3.5.0     </code></pre>
 </div>
 </div>
 
