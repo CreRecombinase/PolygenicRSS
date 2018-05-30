@@ -53,8 +53,7 @@ filter(sum_df,SNPCT==0,AF!=0.2,!useLDshrink) %>% ggplot(aes(x = method, y = erro
   facet_grid( n~AF,labeller = "label_both",scales="free_y") +
   ggtitle("RSSp outperforms LDSC across sample size and AF cutoff","10 replicates per PVE value") +
   xlab("Method") + 
-  ylab(bquote(hat(PVE)))
-
+  ylab("PVE squared error")
 ```
 
 ```{r,echo=F,message = F,warnings = F}
@@ -64,7 +63,7 @@ filter(sum_df,N==0,SNPCT!=0,AF!=0.2,!useLDshrink) %>% ggplot(aes(x = tpve, y = m
   facet_grid( p~AF,labeller = "label_both") +
   ggtitle("RSSp vs LDSc, varying SNP count & AF","10 replicates per PVE value") +
   xlab("PVE") + 
-  ylab("PVE squared error")
+   ylab(bquote(hat(PVE)))
 ```
 
 ```{r,echo=F,message = F,warnings = F}
