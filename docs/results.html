@@ -314,7 +314,7 @@ div.section {
 </div>
 
 
-<p><strong>Last updated:</strong> 2018-05-04</p>
+<p><strong>Last updated:</strong> 2018-05-30</p>
 <strong>workflowr checks:</strong> <small>(Click a bullet for more information)</small>
 <ul>
 <li>
@@ -325,7 +325,7 @@ div.section {
 </li>
 <li>
 <details>
-<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/ab3622828d41842f43ebc0e9421bcfc185d03d68" target="_blank">ab36228</a> </summary></p>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/ef42e7df539954f5d250ab1aeeaddd8e7b2563fc" target="_blank">ef42e7d</a> </summary></p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
 <pre><code>
 Ignored files:
@@ -334,9 +334,7 @@ Ignored files:
     Ignored:    .Rproj.user/
     Ignored:    .httr-oauth
     Ignored:    analysis/PolygenicEstimation_cache/
-    Ignored:    analysis/figure/
-    Ignored:    code/scripts/.RData
-    Ignored:    code/scripts/.Rhistory
+    Ignored:    code/.Rhistory
     Ignored:    code/snakemake_files/.RData
     Ignored:    code/snakemake_files/parameter_generation/
     Ignored:    code/snakemake_files/subset_data_pipeline/.RData
@@ -345,11 +343,15 @@ Ignored files:
 Untracked files:
     Untracked:  _workflowr.yml
     Untracked:  analysis/#RSSp_WTCC_noConfounding.Rmd#
+    Untracked:  analysis/AFvsp.Rmd
+    Untracked:  analysis/DownSamplingResults.Rmd
+    Untracked:  analysis/EVD_SVD.Rmd
     Untracked:  analysis/GRM_estimation.Rmd
     Untracked:  analysis/GenomeWideSimulation.Rmd
     Untracked:  analysis/Heritability.Rmd
     Untracked:  analysis/LDshrink_effect.Rmd
     Untracked:  analysis/MeetingSummary1.Rmd
+    Untracked:  analysis/OutOfSampleLD.Rmd
     Untracked:  analysis/RSSR_PolygenicData.Rmd
     Untracked:  analysis/RSSp.stan
     Untracked:  analysis/RSSp2.stan
@@ -361,6 +363,7 @@ Untracked files:
     Untracked:  analysis/RSSp_ldsc_highPVE_hr.Rmd
     Untracked:  analysis/RSSp_ldsc_noConfounding.Rmd
     Untracked:  analysis/Running_ldetect.Rmd
+    Untracked:  analysis/SPVE.Rmd
     Untracked:  analysis/Summary.Rmd
     Untracked:  analysis/Summary.org
     Untracked:  analysis/Vanilla_LDSC.Rmd
@@ -370,28 +373,23 @@ Untracked files:
     Untracked:  analysis/ltximg/
     Untracked:  analysis/nquh_mod.RDS
     Untracked:  analysis/out_res.RDS
+    Untracked:  analysis/pvv_opt.Rmd
     Untracked:  analysis/quh_mod.RDS
     Untracked:  analysis/scz_data.org
     Untracked:  analysis/shrinkage_effect.Rmd
-    Untracked:  code/.ipynb_checkpoints/
+    Untracked:  code/RSSp_talk_notes.org
+    Untracked:  code/RSSp_talk_notes.pdf
+    Untracked:  code/RSSp_talk_notes.tex
     Untracked:  code/Untitled.ipynb
     Untracked:  code/Untitled1.ipynb
+    Untracked:  code/ideas.org
+    Untracked:  code/ltximg/
     Untracked:  code/scripts/RSSp_ldsc_results.Rmd
-    Untracked:  code/scripts/allel2haplo_h5.R~
     Untracked:  code/scripts/bin/
-    Untracked:  code/scripts/break_df.R~
-    Untracked:  code/scripts/cv_ind.R
-    Untracked:  code/scripts/gen_sample_df.R~
-    Untracked:  code/scripts/gen_sample_df_n.R~
-    Untracked:  code/scripts/impute2h5.R~
     Untracked:  code/scripts/ldsc_rssp.Rmd
-    Untracked:  code/scripts/ldshrink_cv.R~
     Untracked:  code/scripts/matlab2h5.py
-    Untracked:  code/scripts/sim_geno_evd.R~
-    Untracked:  code/scripts/subset_snp_chr.R~
     Untracked:  code/scripts/vcf-liftover.sh
     Untracked:  code/scripts/vcf2allel.py
-    Untracked:  code/scripts/vcf2allel.py~
     Untracked:  code/snakemake_files/.snakemake/
     Untracked:  code/snakemake_files/environment_rssp.yml
     Untracked:  code/snakemake_files/kg_snakefile~
@@ -401,10 +399,11 @@ Untracked files:
     Untracked:  code/snakemake_files/rssp_ldsc_report/
     Untracked:  code/snakemake_files/temp_map_19.RDS
     Untracked:  code/snakemake_files/temp_target_19.RDS
-    Untracked:  code/snakemake_files/ty.RData
+    Untracked:  code/snakemake_files/wtcc_start_snakefile
     Untracked:  code/workflow_params.json~
     Untracked:  data/NCBI34_to_GRCh38.chain.gz
     Untracked:  data/Snakemake_inputs/
+    Untracked:  data/temp_ws.RData
     Untracked:  docs/#RSSp_WTCC_noConfounding.Rmd#
     Untracked:  docs/RSSp.stan
     Untracked:  docs/RSSp2.stan
@@ -426,6 +425,7 @@ Untracked files:
 Unstaged changes:
     Modified:   analysis/IndependenceCheck.Rmd
     Modified:   analysis/Meeting_Notes.Rmd
+    Modified:   analysis/New_WholeGenome.Rmd
     Modified:   analysis/PolygenicEstimation.Rmd
     Modified:   analysis/RSSP_standard_error.Rmd
     Modified:   analysis/RSSp_Chunksize_Investigation.Rmd
@@ -442,18 +442,18 @@ Unstaged changes:
     Deleted:    analysis/chunks.R
     Modified:   analysis/index.Rmd
     Modified:   analysis/license.Rmd
+    Modified:   analysis/lnzDist.Rmd
     Modified:   analysis/simulatingGWAS.Rmd
     Modified:   analysis/simulation.Rmd
     Modified:   code/TF_LDshrink.ipynb
-    Modified:   code/scripts/RSSp_est.R
-    Modified:   code/scripts/evd_1kg_h5.R
-    Modified:   code/scripts/gen_ty_block_RSSp.R
-    Modified:   code/scripts/map_uh_LDchunk_RSSp_h5.R
-    Modified:   code/scripts/subset_snp_chr.R
     Modified:   code/snakemake_files/LD_snakefile
     Modified:   code/snakemake_files/Snakefile
+    Modified:   code/snakemake_files/direct_snakefile
+    Modified:   code/snakemake_files/envs/ldpred.yml
     Modified:   code/snakemake_files/impute_snakefile
     Modified:   code/snakemake_files/ldsc_snakefile
+    Modified:   code/snakemake_files/manip_snakefile
+    Modified:   code/snakemake_files/param_snakefile
     Modified:   code/snakemake_files/rssp_snakefile
     Modified:   code/snakemake_files/trait_snakefile
     Modified:   code/workflow_params.json
@@ -489,6 +489,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/ef42e7df539954f5d250ab1aeeaddd8e7b2563fc/analysis/results.Rmd" target="_blank">ef42e7d</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-05-30
+</td>
+<td style="text-align:left;">
+wflow_publish(“analysis/results.Rmd”)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/36641072fbc96f40506d22ad48733624e107eb02/docs/results.html" target="_blank">3664107</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-05-04
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
 <tr>
 <td style="text-align:left;">
 html
@@ -1041,6 +1075,7 @@ wflow_publish(files = c(“index.Rmd”, “simulation.Rmd”, “PolygenicEstim
 <li><a href="SimulationPipeline.html">Detailed summary of simulation/data</a></li>
 <li><a href="New_WholeGenome.html">New whole genome simulation</a></li>
 <li><a href="lnzDist.html">Likelihood Curves</a></li>
+<li><a href="DownsamplingResults2.html">Effect of Downsampling</a></li>
 </ul>
 
 <hr>
