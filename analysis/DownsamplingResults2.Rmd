@@ -72,6 +72,6 @@ filter(sum_df,N==0,SNPCT!=0,AF!=0.2,!useLDshrink) %>% ggplot(aes(x = method, y =
   facet_grid( p~AF,labeller = "label_both",scales="free_y") +
   ggtitle("RSSp outperforms LDSC across SNP count and AF cutoff","10 replicates per PVE value") +
   xlab("Method") + 
-  ylab(bquote(hat(PVE)))
+  ylab("PVE squared error")
 ```
 
