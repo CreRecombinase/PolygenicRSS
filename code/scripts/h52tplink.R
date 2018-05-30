@@ -4,22 +4,6 @@ library(SeqArray)
 library(EigenH5)
 library(tidyverse)
 
-## inf <- dir("/media/nwknoblauch/Data/wtcc_input",full.names=T,pattern="^[a-z0-9.]+h5$")
-## mapf <- "/media/nwknoblauch/Data/1kg/1000-genomes-genetic-maps/interpolated_hapmap.h5"
-## ## marchf <- "/media/nwknoblauch/Data/RsMergeArch.h5"
-## gn <- gsub(".+input/(.+).h5","\\1",inf)
-## outf_snpgds <- paste0("/media/nwknoblauch/Data/wtcc_input/",gn,".gds")
-## outf_seqgds <- paste0("/media/nwknoblauch/Data/wtcc_input/",gn,"_seq_.gds")
-
-## out_pref_plink <- paste0("/media/nwknoblauch/Data/wtcc_input/plink/",gn)
-## out_pref_vcf <- paste0("/media/nwknoblauch/Data/wtcc_input/",gn,".vcf")
-
-# inf <- "/media/nwknoblauch/Data/wtcc_input/bd.h5"
-# outf_snpgds <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/gds/bd_snp_wtcc_geno.gds"
-# outf_seqgds <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/gds/bd_seq_wtcc_geno.gds"
-# out_pref_plink <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/plink/bd"
-# gn <- "bd"
-## #out_pref_plink <- snakemake@params[["out_pref_plink"]]
 
 
 

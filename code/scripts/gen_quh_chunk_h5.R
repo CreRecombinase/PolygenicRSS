@@ -27,54 +27,39 @@ tparam_df <- EigenH5::read_df_h5(uhf,"SimulationInfo")
 
 
 p <- nrow(snp_df)
+g <- nrow(tparam_df)
+
 uh_d <- get_dims_h5(uhf,"uh")
 stopifnot(uh_d[1]==p,
-          uh_d[2]==nrow(tparam_df))
+          uh_d[2]==g,
+          tparam_df$p[1]==p)
 
+
+uh_l <- split(1:p,snp_df$region_id) %>% imap(~list(subset_rows=.x,
+                                                  filename=uhf,
+                                                  datapath="uh",region_id=.y))
+q_l <- map(uh_l,~list_modify(.x,subset_rows=NULL,filename=evdf,datapath=paste0("EVD/",.x$region_id,"/Q")))
+quh_l <- map(uh_l,~list_modify(.x,filename=quhf,datapath="quh"))
+
+
+D <- map(q_l,~read_vector_h5(filename = .x$filename,datapath=paste0("EVD/",.x$region_id,"/D"))) %>% as_vector(.type="double")
+stopifnot(length(D)==p)
 
 
 EigenH5::write_df_h5(tparam_df,"SimulationInfo",quhf)
-
-ld_grp <-ls_h5(evdf,"EVD")
-D_df <- map_df(ld_grp,~data_frame(region_id=as.integer(.x),D=read_vector_h5(evdf,paste0("EVD/",.x),"D"))) %>%
-    arrange(as.integer(region_id))
-LDsnp_df <- map_df(ld_grp,~data_frame(region_id=as.integer(.x),
-                                      pos=read_vector_h5(evdf,paste0("LDi/",.x),"pos"),
-                                      chr=read_vector_h5(evdf,paste0("LDi/",.x),"chr"),
-                                      allele=read_vector_h5(evdf,paste0("LDi/",.x),"allele")
-                                      )) %>%
-    arrange(as.integer(region_id))
-
-stopifnot(all(LDsnp_df$chr==snp_df_u$chr),
-              all(LDsnp_df$pos==snp_df_u$pos),
-              all(LDsnp_df$allele==snp_df_u$allele))
+pl <- snakemake@wildcards
+if(is.null(pl[["simulation"]])){
+  pl[["simulation"]] <-"gwas"
+}
+pl <- as_data_frame(pl[names(pl)!=""])
+write_df_h5(pl,groupname = "Wildcards",filename=quhf)
 
 
-stopifnot(nrow(snp_df)==nrow(D_df))
-
-Qf_dff <- EigenH5::gen_matslice_df(evdf,"EVD","Q")
-
-uh_dff <- mutate(snp_df,
-                snp_id=1:n()) %>%
-    select(snp_id,region_id) %>%
-    split_chunk_df(snp_id,region_id,rowsel=T,colsel=F) %>%
-    mutate(filenames=uhf,
-           groupnames="/",
-           datanames="uh")
-
-
-quh_dff <-mutate(uh_dff,filenames=quhf,
-                 groupnames="/",
-                 datanames="quh")
-
-EigenH5::write_vector_h5(quhf,"/","D",D_df$D)
-create_matrix_h5(quhf,"/","quh",numeric(),dims=c(nrow(D_df),nrow(tparam_df)),chunksizes = c(pmin(1024,nrow(D_df)),1))
-
-
-
+EigenH5::write_vector_h5(quhf,"/","D",D)
+create_matrix_h5(quhf,"/","quh",numeric(),dims=c(p,g),chunksizes = c(pmin(1024,p),1))
 
 EigenH5::write_df_h5(snp_df,"SNPinfo",quhf)
-SeqSupport::crossprod_quh_h5(Qf_dff,uh_dff,quh_dff)
+SeqSupport::crossprod_quh_h5(list(Q=q_l,uh=uh_l,quh=quh_l),TRUE)
 
 
 

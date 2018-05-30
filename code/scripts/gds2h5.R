@@ -25,7 +25,9 @@ tgds <- makeSeq(inf)
 si_df <- read_SNPinfo_gds(tgds) %>% mutate(chr=as.integer(chr))
 #stopifnot(LDshrink::sorted_snp_df(si_df))
 SeqSupport::gds2hdf5(tgds,outf)
-
+pl <- snakemake@wildcards
+pl <- as_data_frame(pl[names(pl)!=""])
+write_df_h5(pl,groupname = "Wildcards",filename=outf)
 #snp_df <- read_df_h5(outf,"SNPinfo")
 #ld_r <- LDshrink::set_ld_region(ld_regions = break_df,snp_info = snp_df)
 #map_df <- read_df_h5(mapf,"SNPinfo")

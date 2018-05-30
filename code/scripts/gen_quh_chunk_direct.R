@@ -34,6 +34,12 @@ write_matrix_h5(quhf,
                 "/",
                 "quh",
                 quh)
+pl <- snakemake@wildcards
+if(is.null(pl[["simulation"]])){
+  pl[["simulation"]] <-"direct"
+}
+pl <- as_data_frame(pl[names(pl)!=""])
+write_df_h5(pl,groupname = "Wildcards",filename=quhf)
 
 write_vector_h5(quhf,"/","D",D)
 

@@ -1,7 +1,7 @@
 library(tidyverse)
 inf <- snakemake@input[["ldetectf"]]
 use_ldetect <- snakemake@params[["use_ldetect"]]=="T"
-cat("HEY!",snakemake@params[["use_ldetect"]],"\n")
+
 chrom <- as.integer(snakemake@params[["chrom"]])
 if(length(chrom)==0){
     chrom <- 1:22

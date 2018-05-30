@@ -19,6 +19,12 @@ tparam_df <- EigenH5::read_df_h5(quhf,"SimulationInfo")
 
 EigenH5::write_df_h5(tparam_df,"SimulationInfo",uhf)
 
+pl <- snakemake@wildcards
+if(is.null(pl[["simulation"]])){
+  pl[["simulation"]] <-"direct"
+}
+pl <- as_data_frame(pl[names(pl)!=""])
+write_df_h5(pl,groupname = "Wildcards",filename=uhf)
 
 ld_grp <-ls_h5(evdf,"EVD")
 D_df <- map_df(ld_grp,~data_frame(region_id=as.integer(.x),D=read_vector_h5(evdf,paste0("EVD/",.x),"D"))) %>%

@@ -8,37 +8,34 @@ library(purrr)
 library(readr)
 
 
-
-# save.image()
+#
+# save.image("trsp.RData")
 # stop()
-fix_path <- function(x){
-    dirnames <- normalizePath(dirname(x))
-    files <- basename(x)
-    return(file.path(dirnames,files))
-}
+# setwd("~/Dropbox/PolygenicRSS/code/snakemake_files")
+# load("trsp.RData")
+
 
 
 rdsf <- snakemake@input[["rdsf"]]
 outf <- snakemake@output[["dff"]]
 doConfound <- snakemake@params[["doConfound"]]
 pvv <- snakemake@params[["pvv"]]
-doMoM <- snakemake@params[["doMoM"]]
 
 if(is.null(pvv)){
-    pvv <- 1
+    pvv <- 0
 }else{
     pvv <- as.numeric(pvv)
 }
+
+stopifnot(!is.na(pvv),
+          !is.na(as.numeric(pvv)),
+          length(pvv)==1)
 if(is.null(doConfound)){
     doConfound <- F
 }else{
     doConfound <- doConfound =="T"
 }
-if(is.null(doMoM)){
-  doMoM <- F
-}else{
-  doMoM <- doMoM =="T"
-}
+
 
 
 
@@ -50,34 +47,21 @@ pl <- snakemake@wildcards
 pl <- as_data_frame(pl[names(pl)!=""]) %>% mutate(ttca=NA)
 tparam_df <- read_df_h5(rdsf,"SimulationInfo") %>% mutate(ttca=NA) %>% inner_join(pl) %>% select(-ttca)
 ldgrp <- "/"
-if(doMoM){
-  exec_fn <-  function(quhl,tpdfl,D,region_id){
-      data_frame(fgeneid=tpdfl$fgeneid,
-                 region_id=region_id,
-                 quh=quhl,
-                 D=D,
-                 p_n=tpdfl$p/tpdfl$n,
-                 tbias=tpdfl$tbias,
-                 tpve=tpdfl$tpve,
-                 tsigu=tpdfl$tsigu) %>% filter_pvv(pvv) %>%
-          RSSp_mom(doConfound=doConfound) %>%
-          inner_join(as_data_frame(tpdfl),by="fgeneid")
-  }
 
-}else{
-  exec_fn <-  function(quhl,tpdfl,D,region_id){
-      data_frame(fgeneid=tpdfl$fgeneid,
-                 region_id=region_id,
-                 quh=quhl,
-                 D=D,
-                 p_n=tpdfl$p/tpdfl$n,
-                 tbias=tpdfl$tbias,
-                 tpve=tpdfl$tpve,
-                 tsigu=tpdfl$tsigu) %>% filter_pvv(pvv) %>%
-        RSSp_estimate(doConfound=doConfound) %>%
-        inner_join(as_data_frame(tpdfl),by="fgeneid")
-  }
+exec_fn <-  function(quhl,tpdfl,D,region_id){
+    max_sigu <- calc_sigu(1,tpdfl$p/tpdfl$n)[1]
+  data_frame(fgeneid=tpdfl$fgeneid,
+             region_id=region_id,
+             quh=quhl,
+             D=D,
+             p_n=tpdfl$p/tpdfl$n,
+             tbias=tpdfl$tbias,
+             tpve=tpdfl$tpve,
+             tsigu=tpdfl$tsigu) %>%filter_normD(normD=pvv) %>%
+    RSSp_estimate(pve_bounds=c(.Machine$double.eps, 4 - .Machine$double.eps),doConfound=doConfound,eigenvalue_cutoff=0) %>%
+    inner_join(as_data_frame(tpdfl),by="fgeneid")
 }
+
 
 
 
