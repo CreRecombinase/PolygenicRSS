@@ -1,0 +1,77 @@
+---
+title: "Out Of Sample LD"
+author: "Nicholas Knoblauch"
+date: 2018-04-12
+output: workflowr::wflow_html
+---
+
+
+
+```{r,echo=F,message=F,warnings=F}
+library(EigenH5)
+library(tidyverse)
+```
+
+
+# Effects of Downsampling
+
+
+3 Properties I thought it would be interesting to compare across are 1) Allele frequency cutoff, 2) Sample size, and 3) number of SNPs.  I varied all three of these independently, and compared to LD score regression (with or without an intercept). `RSSp` performs better than `LDSC` in all scenarios
+
+```{r,echo=F,message=F,warnings=F}
+res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",full.names = T,pattern="SNP")
+res_d_ldsc <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake/ldsc_res/",pattern="cd",full.names = T)
+
+res_df_rssp <- map_df(res_d_rssp,~quietly(read_delim)(.x,delim = "\t")$result %>% mutate(chrom=as.character(chrom),method="RSSp")) %>% filter(!is.na(simulation),!is.na(useLDshrink)) %>% filter(scenario == "RepPVE", dataset == "cd", panel_dataset == "cd",chrom=="1-22",simulation=="gwas",!is.na(chrom),!is.na(AF)) %>% select(-ends_with("bound"),-sigu,-lnZ,-bias,-tbias,-optim,-useGradient,-log_params,-message,-convergence)
+res_df_ldsc <- map_df(res_d_ldsc,~quietly(read_delim)(.x,delim = "\t")$result %>% mutate(Intercept=as.character(Intercept),chrom=as.character(chrom),method=ifelse(useIntercept,"LDSC_Intercept","LDSC_noIntercept"))) %>% filter(scenario == "RepPVE", dataset == "cd", panel_dataset == "cd",chrom=="1-22",simulation=="gwas",!is.na(chrom),!is.na(AF))%>% select(-Lambda_GC,-Mean_Chi_2,-Total_time_elapsed,-Intercept)
+res_df <- bind_rows(res_df_rssp,res_df_ldsc)
+# rss_res <- filter(res_df) %>% select(fgeneid,tpve,pve,simulation,useLDshrink,N,AF,SNPCT) %>% 
+#   mutate(RSSp_error=tpve-pve,RSSp=pve) %>% select(-pve)
+#,!is.na(chrom),!is.na(AF),simulation=="gwas",chrom=="1-22")
+ # select_if(function(x){!all(is.na(x))})
+
+sum_df <- res_df %>%  group_by_at(vars(-pve,-fgeneid)) %>% summarise(mean_pve=mean(pve),sd_pve=sd(pve),error_pve=mean((pve-tpve)^2)) %>% ungroup()
+tparam_df <- distinct(res_df,fgeneid,tsigu,tpve,p,n,AF,SNPCT,N)
+# rssp_cols <- colnames(res_df)
+
+```
+
+
+```{r,echo=F,message = F,warnings = F}
+filter(sum_df,SNPCT==0,AF!=0.2,!useLDshrink) %>% ggplot(aes(x = tpve, y = mean_pve,col=method)) +
+  geom_point() + geom_errorbar(aes(ymin=mean_pve-sd_pve/2,ymax=mean_pve+sd_pve/2))+
+  geom_abline(slope = 1, intercept = 0) +
+  facet_grid( n~AF,labeller = "label_both") +
+  ggtitle("RSSp vs LDSc (Varying sample size)","10 replicates per PVE value") +
+  xlab("PVE") + 
+  ylab(bquote(hat(PVE)))
+```
+
+```{r,echo=F,message = F,warnings = F}
+filter(sum_df,SNPCT==0,AF!=0.2,!useLDshrink) %>% ggplot(aes(x = method, y = error_pve,fill=method)) +
+  geom_boxplot() + 
+  facet_grid( n~AF,labeller = "label_both",scales="free_y") +
+  ggtitle("RSSp outperforms LDSC across sample size and AF cutoff","10 replicates per PVE value") +
+  xlab("Method") + 
+  ylab("PVE squared error")
+```
+
+```{r,echo=F,message = F,warnings = F}
+filter(sum_df,N==0,SNPCT!=0,AF!=0.2,!useLDshrink) %>% ggplot(aes(x = tpve, y = mean_pve,col=method)) +
+  geom_point() + geom_errorbar(aes(ymin=mean_pve-sd_pve/2,ymax=mean_pve+sd_pve/2))+
+  geom_abline(slope = 1, intercept = 0) +
+  facet_grid( p~AF,labeller = "label_both") +
+  ggtitle("RSSp vs LDSc, varying SNP count & AF","10 replicates per PVE value") +
+  xlab("PVE") + 
+  ylab("PVE squared error")
+```
+
+```{r,echo=F,message = F,warnings = F}
+filter(sum_df,N==0,SNPCT!=0,AF!=0.2,!useLDshrink) %>% ggplot(aes(x = method, y = error_pve,fill=method)) +
+  geom_boxplot() + 
+  facet_grid( p~AF,labeller = "label_both",scales="free_y") +
+  ggtitle("RSSp outperforms LDSC across SNP count and AF cutoff","10 replicates per PVE value") +
+  xlab("Method") + 
+  ylab(bquote(hat(PVE)))
+```
+
