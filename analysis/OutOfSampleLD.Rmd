@@ -18,7 +18,7 @@ library(plotly)
 
 
 
-```{r}
+```{r,echo=F,message = F,warnings = F}
 res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",full.names = T,pattern="SNP")
 res_d_ldsc <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake/ldsc_res/",pattern="cd",full.names = T)
 
@@ -35,9 +35,9 @@ p <- filter(sum_df,SNPCT==0,N==0,AF!=0.2) %>% ggplot(aes(x = tpve, y = mean_pve,
    geom_errorbar(aes(ymin=mean_pve-sd_pve/2,ymax=mean_pve+sd_pve/2))+
   geom_abline(slope = 1, intercept = 0) +geom_point()+
   facet_grid( AF~useLDshrink,labeller = "label_both") +
-  ggtitle("RSSp vs LDSc across Allele Frequencies (with and without LDshrink)","10 replicates per PVE value") +
+  ggtitle("RSSp vs LDSc across Allele Frequencies (with and without LDshrink)") +
   xlab("PVE") + 
-  ylab(bquote(hat(PVE)))
+  ylab("PVE Estimate")
 ggplotly(p)
 ```
 
@@ -46,9 +46,10 @@ ggplotly(p)
 px <- filter(sum_df,SNPCT==0,N==0,AF!=0.2) %>% ggplot(aes(x = method, y = error_pve,fill=method)) +
   geom_boxplot() + 
   facet_grid( AF~useLDshrink,labeller = "label_both",scales="free_y") +
-  ggtitle("RSSp performance is vastly improved by LDshrink","10 replicates per PVE value") +
+  ggtitle("RSSp performance is vastly improved by LDshrink") +
   xlab("Method") + 
-  ylab("PVE squared error")+scale_y_sqrt()
+  ylab("PVE squared error")+
+  scale_y_sqrt()
 
 ggplotly(px)
 ```
@@ -61,9 +62,9 @@ npx <- filter(sum_df,SNPCT!=0,N==0,AF!=0.2,useLDshrink) %>% ggplot(aes(x = tpve,
    geom_errorbar(aes(ymin=mean_pve-sd_pve/2,ymax=mean_pve+sd_pve/2))+
   geom_abline(slope = 1, intercept = 0) +geom_point()+
   facet_grid( AF~p,labeller = "label_both") +
-  ggtitle("RSSp vs LDSc across ","10 replicates per PVE value") +
+  ggtitle("RSSp is robust across AF and SNP count") +
   xlab("PVE") + 
-  ylab(bquote(hat(PVE)))
+  ylab("PVE Estimate")
 ggplotly(npx)
 ```
 
@@ -72,9 +73,10 @@ ggplotly(npx)
 fpx <- filter(sum_df,SNPCT!=0,N==0,AF!=0.2,useLDshrink)  %>% ggplot(aes(x = method, y = error_pve,fill=method)) +
   geom_boxplot() + 
   facet_grid( AF~p,labeller = "label_both",scales="free_y") +
-  ggtitle("RSSp outperforms LDSC across SNP count and Allele Frequency","10 replicates per PVE value, using LDshrink") +
+  ggtitle("RSSp outperforms LDSC across SNP count and Allele Frequency") +
   xlab("Method") + 
-  ylab("PVE squared error")+scale_y_sqrt()
+  ylab("PVE squared error")+
+  scale_y_sqrt()
 ggplotly(fpx)
 ```
 
@@ -89,9 +91,9 @@ np <- filter(sum_df,SNPCT==0,AF!=0.2,useLDshrink) %>% ggplot(aes(x = tpve, y = m
    geom_errorbar(aes(ymin=mean_pve-sd_pve/2,ymax=mean_pve+sd_pve/2))+
   geom_abline(slope = 1, intercept = 0) +geom_point()+
   facet_grid( AF~n,labeller = "label_both") +
-  ggtitle("RSSp vs LDSc across ","10 replicates per PVE value") +
+  ggtitle("RSSp is robust to changes in sample size") +
   xlab("PVE") + 
-  ylab(bquote(hat(PVE)))
+  ylab("PVE Estimate")
 ggplotly(np)
 ```
 
@@ -100,7 +102,7 @@ ggplotly(np)
 nnp <- filter(sum_df,SNPCT==0,AF!=0.2,useLDshrink)  %>% ggplot(aes(x = method, y = error_pve,fill=method)) +
   geom_boxplot() + 
   facet_grid( AF~n,labeller = "label_both",scales="free_y") +
-  ggtitle("RSSp outperforms LDSC across SNP count and Allele Frequency","10 replicates per PVE value, using LDshrink") +
+  ggtitle("RSSp outperforms LDSC across sample size and Allele Frequency") +
   xlab("Method") + 
   ylab("PVE squared error")+scale_y_sqrt()
 ggplotly(nnp)
