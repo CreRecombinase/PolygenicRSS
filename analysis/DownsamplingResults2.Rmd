@@ -1,5 +1,5 @@
 ---
-title: "Out Of Sample LD"
+title: "Downsampling Sample Size and SNP Count"
 author: "Nicholas Knoblauch"
 date: 2018-04-12
 output: workflowr::wflow_html

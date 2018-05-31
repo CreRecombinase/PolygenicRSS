@@ -1,0 +1,132 @@
+---
+title: "Out Of Sample LD"
+author: "Nicholas Knoblauch"
+date: 2018-04-12
+output: workflowr::wflow_html
+---
+
+# Out of Sample LD
+
+For these simulations I'm using the wtccc `cd` genotypes for GWAS simulation and the `bd` genotypes as a reference panel.
+
+
+```{r,echo=F,message=F,warnings=F}
+library(EigenH5)
+library(tidyverse)
+library(plotly)
+```
+
+
+
+```{r}
+res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",full.names = T,pattern="SNP")
+res_d_ldsc <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake/ldsc_res/",pattern="cd",full.names = T)
+
+res_df_rssp <- map_df(res_d_rssp,~quietly(read_delim)(.x,delim = "\t")$result %>% mutate(chrom=as.character(chrom),method="RSSp")) %>% filter(!is.na(simulation),!is.na(useLDshrink)) %>% filter(scenario == "RepPVE", dataset == "cd", panel_dataset == "bd",chrom=="1-22",simulation=="gwas",!is.na(chrom),!is.na(AF)) %>% select(-ends_with("bound"),-sigu,-lnZ,-bias,-tbias,-optim,-useGradient,-log_params,-message,-convergence)
+res_df_ldsc <- map_df(res_d_ldsc,~quietly(read_delim)(.x,delim = "\t")$result %>% mutate(Intercept=as.character(Intercept),chrom=as.character(chrom),method=ifelse(useIntercept,"LDSC_Intercept","LDSC_noIntercept"))) %>% filter(scenario == "RepPVE", dataset == "cd", panel_dataset == "bd",chrom=="1-22",simulation=="gwas",!is.na(chrom),!is.na(AF))%>% select(-Lambda_GC,-Mean_Chi_2,-Total_time_elapsed,-Intercept)
+res_df <- bind_rows(res_df_rssp,res_df_ldsc)
+
+sum_df <- res_df %>%  group_by_at(vars(-pve,-fgeneid)) %>% summarise(mean_pve=mean(pve),sd_pve=sd(pve),error_pve=mean((pve-tpve)^2)) %>% ungroup()
+```
+
+
+```{r,echo=F,message = F,warnings = F}
+p <- filter(sum_df,SNPCT==0,N==0,AF!=0.2) %>% ggplot(aes(x = tpve, y = mean_pve,col=method)) +
+   geom_errorbar(aes(ymin=mean_pve-sd_pve/2,ymax=mean_pve+sd_pve/2))+
+  geom_abline(slope = 1, intercept = 0) +geom_point()+
+  facet_grid( AF~useLDshrink,labeller = "label_both") +
+  ggtitle("RSSp vs LDSc across Allele Frequencies (with and without LDshrink)","10 replicates per PVE value") +
+  xlab("PVE") + 
+  ylab(bquote(hat(PVE)))
+ggplotly(p)
+```
+
+
+```{r,echo=F,message = F,warnings = F}
+px <- filter(sum_df,SNPCT==0,N==0,AF!=0.2) %>% ggplot(aes(x = method, y = error_pve,fill=method)) +
+  geom_boxplot() + 
+  facet_grid( AF~useLDshrink,labeller = "label_both",scales="free_y") +
+  ggtitle("RSSp performance is vastly improved by LDshrink","10 replicates per PVE value") +
+  xlab("Method") + 
+  ylab("PVE squared error")+scale_y_sqrt()
+
+ggplotly(px)
+```
+
+## Varying SNP count
+
+
+```{r,echo=F,message = F,warnings = F}
+npx <- filter(sum_df,SNPCT!=0,N==0,AF!=0.2,useLDshrink) %>% ggplot(aes(x = tpve, y = mean_pve,col=method)) +
+   geom_errorbar(aes(ymin=mean_pve-sd_pve/2,ymax=mean_pve+sd_pve/2))+
+  geom_abline(slope = 1, intercept = 0) +geom_point()+
+  facet_grid( AF~p,labeller = "label_both") +
+  ggtitle("RSSp vs LDSc across ","10 replicates per PVE value") +
+  xlab("PVE") + 
+  ylab(bquote(hat(PVE)))
+ggplotly(npx)
+```
+
+
+```{r,echo=F,message = F,warnings = F}
+fpx <- filter(sum_df,SNPCT!=0,N==0,AF!=0.2,useLDshrink)  %>% ggplot(aes(x = method, y = error_pve,fill=method)) +
+  geom_boxplot() + 
+  facet_grid( AF~p,labeller = "label_both",scales="free_y") +
+  ggtitle("RSSp outperforms LDSC across SNP count and Allele Frequency","10 replicates per PVE value, using LDshrink") +
+  xlab("Method") + 
+  ylab("PVE squared error")+scale_y_sqrt()
+ggplotly(fpx)
+```
+
+
+## Varying Sample size
+
+I also varied sample size.  In the `N=2000` scenario, both GWAS and reference panel genotypes were downsampled to `2000` individuals.  In the `N=4686` scenario, `N` reflects the size of the GWAS dataset, the reference panel dataset is `4806`.
+
+```{r,echo=F,message = F,warnings = F}
+
+np <- filter(sum_df,SNPCT==0,AF!=0.2,useLDshrink) %>% ggplot(aes(x = tpve, y = mean_pve,col=method)) +
+   geom_errorbar(aes(ymin=mean_pve-sd_pve/2,ymax=mean_pve+sd_pve/2))+
+  geom_abline(slope = 1, intercept = 0) +geom_point()+
+  facet_grid( AF~n,labeller = "label_both") +
+  ggtitle("RSSp vs LDSc across ","10 replicates per PVE value") +
+  xlab("PVE") + 
+  ylab(bquote(hat(PVE)))
+ggplotly(np)
+```
+
+
+```{r,echo=F,message = F,warnings = F}
+nnp <- filter(sum_df,SNPCT==0,AF!=0.2,useLDshrink)  %>% ggplot(aes(x = method, y = error_pve,fill=method)) +
+  geom_boxplot() + 
+  facet_grid( AF~n,labeller = "label_both",scales="free_y") +
+  ggtitle("RSSp outperforms LDSC across SNP count and Allele Frequency","10 replicates per PVE value, using LDshrink") +
+  xlab("Method") + 
+  ylab("PVE squared error")+scale_y_sqrt()
+ggplotly(nnp)
+```
+<!-- # Estimates when PVE is precisely 0 -->
+
+<!-- These (2) simulations were performed using the `RA` dataset -->
+
+<!-- ```{r} -->
+<!-- res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",pattern="ra",full.names = T) -->
+<!-- # res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",pattern="ra",full.names = T) -->
+
+
+<!-- res_df <- map_df(res_d_rssp,read_delim,delim="\t") %>% filter(scenario=="NoPVE")  -->
+<!-- tparam_df <- distinct(res_df,fgeneid,tsigu,tpve,p,n) -->
+<!-- ggplot(res_df,aes(x=tpve,y=pve))+geom_point()+geom_smooth(method="lm",formula=y~x+0)+facet_grid(useLDshrink~simulation,labeller = "label_both")+ggtitle("RSSp",paste0("p=",unique(tparam_df$p),",N=",unique(tparam_df$n)))+xlab("PVE")+ylab(bquote(hat(PVE))) -->
+<!-- # rss_res <- select(res_df,fgeneid,tpve,pve,simulation,useLDshrink) %>% mutate(RSSp=tpve-pve) %>% select(-pve) -->
+<!-- ``` -->
+
+
+
+
+<!-- ```{r} -->
+<!-- res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake/ldsc_res/",pattern="ra",full.names = T) -->
+<!-- res_df <- map_df(res_d_rssp,~read_delim(.x,delim="\t") %>% mutate(Intercept=as.character(Intercept))) %>% filter(scenario=="NoPVE")  %>% inner_join(tparam_df) -->
+<!-- ggplot(res_df,aes(x=tpve,y=pve))+geom_point()+geom_smooth(method="lm",formula=y~x+0)+facet_grid(useLDshrink~useIntercept,labeller = "label_both")+ggtitle("LDSC",paste0("p=",unique(tparam_df$p),",N=",unique(tparam_df$n)))+xlab("PVE")+ylab(bquote(hat(PVE))) -->
+
+<!-- ``` -->
+

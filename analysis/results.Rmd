@@ -24,5 +24,7 @@ output: workflowr::wflow_html
 * [New whole genome simulation](New_WholeGenome.html)
 * [Likelihood Curves](lnzDist.html)
 * [Effect of Downsampling](DownsamplingResults2.html)
+* [Out of Sample LD](OutOfSampleLD.html)
+
 
 
