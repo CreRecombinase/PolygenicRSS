@@ -314,7 +314,7 @@ div.section {
 </div>
 
 
-<p><strong>Last updated:</strong> 2018-05-30</p>
+<p><strong>Last updated:</strong> 2018-05-31</p>
 <strong>workflowr checks:</strong> <small>(Click a bullet for more information)</small>
 <ul>
 <li>
@@ -325,7 +325,7 @@ div.section {
 </li>
 <li>
 <details>
-<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/ef42e7df539954f5d250ab1aeeaddd8e7b2563fc" target="_blank">ef42e7d</a> </summary></p>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/2bd21fe09ac41960fa9a147a4d5785c91879e5d2" target="_blank">2bd21fe</a> </summary></p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
 <pre><code>
 Ignored files:
@@ -351,7 +351,6 @@ Untracked files:
     Untracked:  analysis/Heritability.Rmd
     Untracked:  analysis/LDshrink_effect.Rmd
     Untracked:  analysis/MeetingSummary1.Rmd
-    Untracked:  analysis/OutOfSampleLD.Rmd
     Untracked:  analysis/RSSR_PolygenicData.Rmd
     Untracked:  analysis/RSSp.stan
     Untracked:  analysis/RSSp2.stan
@@ -446,6 +445,7 @@ Unstaged changes:
     Modified:   analysis/simulatingGWAS.Rmd
     Modified:   analysis/simulation.Rmd
     Modified:   code/TF_LDshrink.ipynb
+    Modified:   code/scripts/subset_snp_chr.R
     Modified:   code/snakemake_files/LD_snakefile
     Modified:   code/snakemake_files/Snakefile
     Modified:   code/snakemake_files/direct_snakefile
@@ -489,6 +489,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/2bd21fe09ac41960fa9a147a4d5785c91879e5d2/analysis/results.Rmd" target="_blank">2bd21fe</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-05-31
+</td>
+<td style="text-align:left;">
+wflow_publish(c(“analysis/DownsamplingResults2.Rmd”, “analysis/OutOfSampleLD.Rmd”,
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/017f5377f2c9fe09bca2af6c9dba4860cf6a0fb5/docs/results.html" target="_blank">017f537</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-05-30
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
 <tr>
 <td style="text-align:left;">
 Rmd
@@ -1076,6 +1110,7 @@ wflow_publish(files = c(“index.Rmd”, “simulation.Rmd”, “PolygenicEstim
 <li><a href="New_WholeGenome.html">New whole genome simulation</a></li>
 <li><a href="lnzDist.html">Likelihood Curves</a></li>
 <li><a href="DownsamplingResults2.html">Effect of Downsampling</a></li>
+<li><a href="OutOfSampleLD.html">Out of Sample LD</a></li>
 </ul>
 
 <hr>
