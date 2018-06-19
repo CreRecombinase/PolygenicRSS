@@ -6,7 +6,7 @@ rule import_dgn_gds:
         dgn_bim=config["DGN_PLINK_DIR"]+"GenRED.II.autosomal.Final.bim",
         dgn_fam=config["DGN_PLINK_DIR"]+"GenRED.II.autosomal.Final.fam",
     output:
-        gdsf=config["GDS_DIR"]+"dgn_geno.gds"
+        gdsf=config["GDS_DIR"]+"dgn_geno.gds",
         h5f=config["HDF5_DIR"]+"ALL_dgn_geno.h5"
     script:
         "../scripts/dgn2gds.R"
