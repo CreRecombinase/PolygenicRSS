@@ -38,18 +38,20 @@ GWAS_NAMES = ["bd","cad","cd","ht","ra","t1d","t2d"]
 #Combine 2 or more   
 COMB_NAME="T1D-T2D"
 #Come up with a unique name for the PVE+BIAS+NREPS combo (No underscores please)
-SCEN="VeryLargePVE"
+#SCEN="RatherLargePVE"
+SCEN="RepPVE"
 #Number of replicates per PVE+BIAS combo
-NREPS =100
+NREPS =10
+PVE=[0.1,0.3,0.5]
 #PVE (must be between 0 and 1)
-PVE=[0.8,
-     0.7,
-     0.45,
-     0.35,
-     0.17,
-     0.06,
-     0.02,
-     0.009]
+# PVE=[0.8,
+#      0.7,
+#      0.6,
+#      0.5,
+#      0.4,
+#      0.3,
+#      0.2,
+#      0.1]
 #Bias (must be nonnegative )
 BIAS=[0.0]
 #Don't change this

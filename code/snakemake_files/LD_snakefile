@@ -1,40 +1,41 @@
 rule ld_chunk_1kg:
     input:
-        input_file=config["HDF5_DIR"]+"ALL_{dataset}_geno.h5",
-        subsnpf=config["INPUT_DIR"]+"{snpset}_{dataset}.txt.gz",
-        bdf=config["INPUT_DIR"]+"ldetect_{bdf}.txt.gz",
-        mapf=config["KG_MAPDIR"]+"interpolated_{hm}.h5"
+        input_file=config["HDF5_DIR"]+"ALL_{panel_dataset}_geno.h5",
+        subsnpf=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_LD.txt.gz",
+        subldf=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_LD.RDS",
+        bdf=config["INPUT_DIR"]+"ldetect_{useLDetect}.txt.gz",
+        mapf=config["KG_MAPDIR"]+"interpolated_{geneticMap}.h5"
     params:
-        useLDshrink="{lds}"
+        useLDshrink="{useLDshrink}"
     output:
-        evdf=config["EVD_DIR"]+"{snpset}_{dataset}_{bdf}_{hm}_{lds}.h5"
-    threads: 11
+        evdf=config["EVD_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}.h5"
+    threads: 1
     resources:
         fh5=1
     script:
         "../scripts/evd_1kg_h5.R"
 
 
-# rule ldshrink_cv:
-#     input:
-#         hdff=config["HDF5_DIR"]+"ALL_{dataset}_geno.h5",
-#         subsnpf=config["INPUT_DIR"]+"{snpset}.txt.gz",
-#         bdf=config["INPUT_DIR"]+"ldetect_{bdf}.txt.gz",
-#         mapf=config["KG_MAPDIR"]+"interpolated_{hm}.h5"
-#     params:
-#         m="{m}",
-#         mapsource="{hm}",
-#         ldetect="{bdf}",
-#         dataset="{dataset}",
-#         snpset="{snpset}",
-#         Ne="{Ne}",
-#         cutoff="{cutoff}"
-#     output:
-#         evdf=config["OUTPUT_DIR"]+"cv_ld/{snpset}_{dataset}_{bdf}_{hm}_{m}_{Ne}_{cutoff}.txt"
-#     resources:
-#         fh5=1
-#     script:
-#         "../scripts/ldshrink_cv.R"
+rule ld_df:
+    input:
+        input_file=config["HDF5_DIR"]+"ALL_{panel_dataset}_geno.h5",
+        subsnpf=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_LD.txt.gz",
+        subldf=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_LD.RDS",
+        bdf=config["INPUT_DIR"]+"ldetect_{useLDetect}.txt.gz",
+        mapf=config["KG_MAPDIR"]+"interpolated_{geneticMap}.h5"
+    params:
+        useLDshrink="{useLDshrink}"
+    output:
+        evdf=config["EVD_DIR"]+"LD_DF/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}.h5"
+    threads: 1
+    resources:
+        fh5=1
+    script:
+        "../scripts/ld_df.R"
+
+
+
+
 
 rule with_ldetect_breakpoints:
     input:

@@ -1,0 +1,35 @@
+rule count_n_chr:
+    input:
+        config["FRAM_DIR"]+"machout.chr22.dose_NPU.gz"
+    output:
+        config["FRAM_DIR"]+"all_ind_NPU.txt"
+    shell:
+        "zcat {input} |cut -f 1 >{output}"
+
+rule fram_chr_gds:
+    input:
+        snpdosage=config["FRAM_DIR"]+"machout.chr{chrom}.dose_NPU.gz",
+        snpinfo=config["FRAM_DIR"]+"imputed-metrics/machout.chr{chrom}.info.gz"
+    params:
+        AF="{AF}",
+        chrom="{chrom}"
+    output:
+        dosagef=config["GDS_DIR"]+"fram_{chrom}_AF{AF}.gds",
+        snp_anno_f=config["GDS_DIR"]+"fram_{chrom}_AF{AF}_SNP.RData",
+        scan_anno_f=config["GDS_DIR"]+"fram_{chrom}_AF{AF}_SCAN.RData"
+    script:
+        "../scripts/mach2gds.R"
+
+
+rule fram_chr_h5:
+    input:
+        snpdosage=config["FRAM_DIR"]+"machout.chr{chrom}.dose_NPU.gz",
+        snpinfo=config["FRAM_DIR"]+"imputed-metrics/machout.chr{chrom}.info.gz",
+        sampleidf=config["FRAM_DIR"]+"all_ind_NPU.txt"
+    params:
+        AF="{AF}",
+        chrom="{chrom}"
+    output:
+        dosagef=config["HDF5_DIR"]+"fram_{chrom}_AF{AF}.h5"
+    script:
+        "../scripts/mach2h5.R"

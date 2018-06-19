@@ -1,5 +1,3 @@
-
-
 rule badplink_to_vcf:
     ''' This rule converts a plink file to vcf '''
     input:

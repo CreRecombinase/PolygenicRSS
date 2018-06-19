@@ -1,0 +1,21 @@
+rule import_dgn_gds:
+    ''' This rule imports DGN genotype data (which is a subset of GENRED2)'''
+    input:
+        dgn_expf=config["DGN_EXP_DIR"]+"cis_data.txt",
+        dgn_bed=config["DGN_PLINK_DIR"]+"GenRED.II.autosomal.Final.bed",
+        dgn_bim=config["DGN_PLINK_DIR"]+"GenRED.II.autosomal.Final.bim",
+        dgn_fam=config["DGN_PLINK_DIR"]+"GenRED.II.autosomal.Final.fam",
+    output:
+        gdsf=config["GDS_DIR"]+"dgn_geno.gds"
+        h5f=config["HDF5_DIR"]+"ALL_dgn_geno.h5"
+    script:
+        "../scripts/dgn2gds.R"
+
+rule import_dgn:
+    ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are rearranged)'''
+    input:
+        input_gds=config["GDS_DIR"]+"{cn}_19.gds",
+    output:
+        outf=config["HDF5_DIR"]+"ALL_{cn}_geno.h5"
+    script:
+        "../scripts/gds2h5.R"

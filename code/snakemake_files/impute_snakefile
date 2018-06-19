@@ -47,17 +47,19 @@ rule phase_chr_hapmap:
     params:
         out_pref=config["VCF_DIR"]+"{gn}_chr{chrom}_phased.Output"
     output:
-        out_d=temp(config["VCF_DIR"]+"{gn}_chr{chrom}_phased.Output.haps"),
-        out_s=temp(config["VCF_DIR"]+"{gn}_chr{chrom}_phased.Output.sample")
+        out_d=config["VCF_DIR"]+"{gn}_chr{chrom}_phased.Output.haps",
+        out_s=config["VCF_DIR"]+"{gn}_chr{chrom}_phased.Output.sample"
     threads:
         12
     shell:
         "shapeit -T {threads} -V {input.ivcf} -M {input.imap} -O {params.out_pref}"
 
+
+
 rule impute_1kg:
     input:
         target_vcf=config["VCF_DIR"]+"{gn}_chr{chrom}_phased.Output.vcf",
-        ref_vcf=config["VCF_DIR"]+"ALL.chr{chrom}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
+        ref_vcf=config["VCF_DIR"]+"{chrom}.1000g.Phase3.v5.With.Parameter.Estimates.m3vcf.gz"
     params:
         opref=config["VCF_DIR"]+"imputed/1kg_{gn}_chr{chrom}"
     output:
@@ -66,7 +68,7 @@ rule impute_1kg:
     threads:
         12
     shell:
-        "Minimac3-omp --refHaps {input.ref_vcf} --haps {input.target_vcf} --prefix {params.opref} --log {output.lf} --cpus {threads}"
+        config["MINIMAC4"]+" --refHaps {input.ref_vcf} --haps {input.target_vcf} --prefix {params.opref} --log {output.lf} --cpus {threads}"
 
 rule shapeit2vcf:
     input:
@@ -75,7 +77,7 @@ rule shapeit2vcf:
     params:
         i_p=config["VCF_DIR"]+"{gn}_chr{chrom}_phased.Output"
     output:
-        ovcf=temp(config["VCF_DIR"]+"{gn}_chr{chrom}_phased.Output.vcf")
+        ovcf=config["VCF_DIR"]+"{gn}_chr{chrom}_phased.Output.vcf"
     shell:
         "shapeit -convert --input-haps {params.i_p} --output-vcf {output.ovcf}"
 

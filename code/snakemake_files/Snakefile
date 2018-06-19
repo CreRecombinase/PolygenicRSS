@@ -1,10 +1,13 @@
 include: "param_snakefile"
-include: "wtcc_snakefile"
+#include: "wtcc_snakefile"
 #include: "combined_snakefile"
-include: "crossover_snakefile"
-include: "impute_snakefile"
-include: "manip_snakefile"
-include: "kg_snakefile"
+#include: "matlab_snakefile"
+#include: "crossover_snakefile"
+#include: "impute_snakefile"
+#include: "manip_snakefile"
+#include: "fram_snakefile"
+#include: "kg_snakefile"
+include: "genred_snakefile"
 include: "trait_snakefile"
 include: "LD_snakefile"
 include: "direct_snakefile"
@@ -18,47 +21,98 @@ wildcard_constraints:
 
 
 
-#all_dgn = ["genred","genred2"]#all_tn = '-'.join(all_dgn).upper()
-#all_tn='-'.join(GWAS_NAMES).upper()
-#all_tn=GWAS_NAMES
-#all_tn=["genred"]
-#dsp=['_'.join([x,x]) for x in GWAS_NAMES]
-#dsp=["genred_genred"]
-#dsp=[all_tn+"_"+all_tn]
-
 localrules: all, phase_chr_prep
 
 rule all:
     input:
-        expand(config["VCF_DIR"]+"imputed/1kg_genred_chr{chrom}.m3vcf.gz",chrom=range(1,23))
-        # expand("rssp_ldsc_report/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{pvv}_{lds}_{cf}_{dointer}.html",
-        #        snpset="chr1-22",
-        #        dataset="ra",
-        #        hm=["omni"],
-        #        bdf=["T"],
-        #        scen=SCEN,
-        #        pvv=["1"],
-        #        lds=["F","T"],
-        #        dointer=["F","T"],
-        # cf=["F"])
-rule ldsc_rss_report:
-    input:
-        rssprf_gwas=config["OUTPUT_DIR"]+"sim_{snpset}_{dataset}_{dataset}_{bdf}_{hm}_gwas_RSSp_res_{scen}_{pvv}_{lds}_{cf}.txt.gz",
-        ldscrf_gwas=config["OUTPUT_DIR"]+"ldsc_res/sim_{snpset}_{dataset}_{bdf}_{hm}_gwas_ldsc_res_{scen}_{lds}_{dointer}.txt.gz",
-        quhf_gwas=config["KG_DIRECTORY"]+"RSSp_genome_gwas_quh/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{lds}.h5",
-        uhf_gwas=config["KG_DIRECTORY"]+"RSSp_genome_gwas_uh/{snpset}_{dataset}_{scen}_sim.h5",
-        evdf=config["EVD_DIR"]+"{snpset}_{dataset}_{bdf}_{hm}_{lds}.h5"
-    params:
-        snpset="{snpset}",
-        dataset="{dataset}",
-        usesLDetect="{bdf}",
-        panel_map="{hm}",
-        jobName="{scen}",
-        percent_ev="{pvv}",
-        usesLDshrink="{lds}",
-        ldsc_intercet="{dointer}",
-        confoundingRSS="{cf}"
-    output:
-        reportf="rssp_ldsc_report/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{pvv}_{lds}_{cf}_{dointer}.html"
-    script:
-        "../scripts/ldsc_rssp.Rmd"
+        expand(config["EVD_DIR"]+"LD_DF/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}.h5",chrom="1-22",AF="0",SNPCT="0",N="0",dataset="dgn",panel_dataset="dgn",useLDetect="F",geneticMap="omni",useLDshrink="F")
+#        expand(config["HDF5_DIR"]+"fram_{chrom}_AF{AF}.h5",AF="0.05",chrom=range(1,23))
+
+        # expand(config["OUTPUT_DIR"]+"sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{useConfounding}.txt.gz",
+        #        chrom="1-22",
+        #        AF=["0.01","0.05","0.1"],
+        #        SNPCT=[0,150000,75000,50000],
+        #        N=[0,2000],
+        #        simulation=["gwas"],
+        #        dataset="cd",
+        #        panel_dataset=["bd"],
+        #        geneticMap=["omni"],
+        #        useLDetect=["T"],
+        #        percentEigen=[".1"],
+        #        useConfounding="F",
+        #        scenario=SCEN,
+        #        useLDshrink=["T","F"]),
+        # expand(config["EVD_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}.h5",
+        #        chrom="1-22",
+        #        AF=["0.01","0.05","0.1"],
+        #        SNPCT=[0],
+        #        N=[0],
+        #        simulation=["gwas"],
+        #        dataset="cd",
+        #        panel_dataset=["bd"],
+        #        geneticMap=["omni"],
+        #        useLDetect=["T"],
+        #        scenario=SCEN,
+        #        useLDshrink=["T","F"])
+        # # expand(config["OUTPUT_DIR"]+"ldsc_res/sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_ldsc_res_{scenario}_{useLDshrink}_{useIntercept}.txt.gz",
+        # #        chrom="1-22",
+        # #        AF=["0.01","0.05","0.1"],
+        # #        SNPCT=[0,150000,75000,50000],
+        # #        N=[0,2000],
+        # #        simulation=["gwas"],
+        # #        dataset="cd",
+        # #        panel_dataset=["bd"],
+        # #        geneticMap=["omni"],
+        # #        useLDetect=["T"],
+        # #        scenario=SCEN,
+        # #        useLDshrink=["T","F"],
+        # #        useIntercept=["T","F"])
+
+        # ,
+        # expand(config["KG_DIRECTORY"]+"spve_est/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{useConfounding}.h5",
+
+        #        chrom="1-22",
+        #        AF=["0.01","0.05","0.1",".2"],
+        #        SNPCT=[0,150000,75000,50000],
+        #        N=[0,2000],
+        #        simulation=["gwas"],
+        #        dataset="cd",
+        #        panel_dataset=["cd"],
+        #        geneticMap=["omni"],
+        #        useLDetect=["T"],
+        #        percentEigen=[".1"],
+        #        useConfounding="F",
+        #        scenario=SCEN,
+        #        useLDshrink=["T","F"]),
+
+
+
+
+
+               
+        # 
+       
+
+
+# rule ldsc_rss_report:
+#     input:
+#         rssprf_gwas=config["OUTPUT_DIR"]+"sim_{snpset}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_gwas_RSSp_res_{scenario}_{pvv}_{useLDshrink}_{cf}_{doSplit}.txt.gz",
+#         ldscrf_gwas=config["OUTPUT_DIR"]+"ldsc_res/sim_{snpset}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_gwas_ldsc_res_{scenario}_{useLDshrink}_{doSplit}_{dointer}.txt.gz",
+#         betaf=config["KG_DIRECTORY"]+"RSSp_sim_gwas_beta/{snpset}_{dataset}_{panel_dataset}_{scenario}_{doSplit}_beta.h5",
+#         quhf_gwas=config["KG_DIRECTORY"]+"RSSp_genome_gwas_quh/{snpset}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}_{doSplit}.h5",
+#         uhf_gwas=config["KG_DIRECTORY"]+"RSSp_genome_gwas_uh/{snpset}_{dataset}_{panel_dataset}_{scenario}_{doSplit}_sim.h5",
+#         evdf=config["EVD_DIR"]+"{snpset}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{doSplit}.h5"
+#     params:
+#         snpset="{snpset}",
+#         dataset="{dataset}",
+#         usesLDetect="{useLDetect}",
+#         panel_map="{geneticMap}",
+#         jobName="{scenario}",
+#         percent_ev="{pvv}",
+#         usesLDshrink="{useLDshrink}",
+#         ldsc_intercet="{dointer}",
+#         confoundingRSS="{cf}"
+#     output:
+#         reportf="rssp_ldsc_report/{snpset}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{scenario}_{pvv}_{useLDshrink}_{cf}_{dointer}_{doSplit}.html"
+#     script:
+#         "../scripts/ldsc_rssp.Rmd"

@@ -83,7 +83,14 @@ subset_snp_df <- function(inf,chromosome,AF_cutoff=0,subset_ind){
 snp_a <- subset_snp_df(inf_a,chromosome,AF_cutoff=AF_cutoff,subset_ind_a)
 snp_b <- subset_snp_df(inf_b,chromosome,AF_cutoff=AF_cutoff,subset_ind_b)
 
-both_snp <- inner_join(snp_a,snp_b,by=c("SNP","allele","chr","info","pos","rs"),suffix=c("_a","_b"))
+both_snp <- inner_join(snp_a,snp_b,by=c("chr","pos"),suffix=c("_a","_b"))
+
+subsnp_a <-semi_join(snp_a,both_snp)
+subsnp_b <- semi_join(snp_b,both_snp)
+
+bdf <-flip_allele_exp(allele_a = subsnp_a$allele,allele_b=subsnp_b$allele)
+both_snp <- filter(both_snp,!is.na(bdf))
+
 p <- nrow(both_snp)
 
 stopifnot(p >= SNPCT)
@@ -94,8 +101,8 @@ stopifnot(!is.unsorted(both_snp$snp_id_a),
           !is.unsorted(both_snp$snp_id_b))
 
 
-trait_snp <- select(both_snp,AF=AF_a,SNP,allele,chr,info,pos,rs,snp_id=snp_id_a)
-LD_snp <- select(both_snp,AF=AF_b,SNP,allele,chr,info,pos,rs,snp_id=snp_id_b)
+trait_snp <- select(both_snp,AF=AF_a,SNP=SNP_a,allele=allele_a,chr,info=info_a,pos,rs=rs_a,snp_id=snp_id_a)
+LD_snp <- select(both_snp,AF=AF_b,SNP=SNP_b,allele=allele_b,chr,info=info_b,pos,rs=rs_b,snp_id=snp_id_b)
 
 
 write_delim(trait_snp,outf_a,delim="\t")

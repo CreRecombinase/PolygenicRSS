@@ -67,12 +67,6 @@ stopifnot(group_by(snp_df,chr) %>%
             summarise(sorted=all(sorted)) %>%
             pull(1))
 
-## LDshrink::chunkwise_LD_h5(input_file = input_file,
-##                                 output_file = output_file,
-##                                 snp_df = snp_df,
-##                                 useLDshrink=useLDshrink)
-
-
 stopifnot(file.exists(input_file),
           !file.exists(output_file),
           !is.null(snp_df[["region_id"]]),
@@ -97,18 +91,12 @@ write_df_h5(snp_df,"LDinfo",output_file)
 pl <- snakemake@wildcards
 pl <- as_data_frame(pl[names(pl)!=""])
 write_df_h5(pl,groupname = "Wildcards",filename=output_file)
-
-
 snp_dfl <- split(snp_df,snp_df$region_id)
-
 cat("Estimating LD")
 num_b <- length(snp_dfl)
 pb <- progress::progress_bar$new(total = num_b)
 for(i in 1:num_b){
   tdf <- snp_dfl[[i]]
-  # }
-  # retl <- snp_dfl %>% purrr::map(function(tdf,m,Ne,cutoff,useLDshrink,SNPfirst,ind_l){
-  #   return(future::future({
   if(SNPfirst){
     dosage <- EigenH5::read_matrix_h5(input_file,"/","dosage",subset_rows=tdf$ld_snp_id,subset_cols=ind_v,doTranspose=T)
   }else{
@@ -116,21 +104,9 @@ for(i in 1:num_b){
   }
   mrid <- unique(tdf$region_id)
   stopifnot(length(mrid)==1)
-  retl <- LDshrink_evd(dosage,
-                       tdf$map,
-                       m,
-                       Ne,
-                       cutoff,
-                       useLDshrink=useLDshrink,
-                       na.rm=T)
-  stopifnot(length(retl$D)==length(tdf$pos))
-  EigenH5::write_vector_h5(output_file,paste0("EVD/",mrid),"D",retl$D)
-  EigenH5::write_matrix_h5(output_file,paste0("EVD/",mrid),"Q",retl$Q)
-  EigenH5::write_vector_h5(output_file,paste0("L2/",mrid),"L2",retl$L2)
-  # EigenH5::write_matrix_h5(output_file,paste0("LD/",mrid),"R",retl$R)
-  # EigenH5::write_vector_h5(output_file,paste0("LDi/",mrid),"chr",tdf$chr)
-  # EigenH5::write_vector_h5(output_file,paste0("LDi/",mrid),"pos",tdf$pos)
-  # EigenH5::write_vector_h5(output_file,paste0("LDi/",mrid),"allele",tdf$allele)
+  R <- cor(dosage)
+  ld_df <- ld2df(R,tdf$SNP)
+  EigenH5::write_df_h5(ld_df,paste0("LD_DF/",mrid),output_file)
   pb$tick()
 }
 #   },packages=c("EigenH5","LDshrink")))

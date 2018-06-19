@@ -1,24 +1,46 @@
 
 rule gen_quh:
     input:
-        evdf=config["EVD_DIR"]+"{snpset}_{dataseta}_{bdf}_{hm}_{lds}.h5",
-        uhf=config["KG_DIRECTORY"]+"RSSp_genome_gwas_uh/{snpset}_{datasetb}_{scen}_sim.h5"
+        evdf=config["EVD_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}.h5",
+        uhf=config["KG_DIRECTORY"]+"gwas_uh/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{scenario}_sim.h5"
     output:
-        quhf=config["KG_DIRECTORY"]+"RSSp_genome_gwas_quh/{snpset}_{dataseta}_{datasetb}_{bdf}_{hm}_{scen}_{lds}.h5"
+        quhf=config["KG_DIRECTORY"]+"quh/gwas_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}.h5"
     resources:
         fh5=1
     script:
         "../scripts/gen_quh_chunk_h5.R"
 
+rule quantile_quh:
+    input:
+        quhf=config["KG_DIRECTORY"]+"quh/{simulation}_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}.h5"
+    output:
+        quantf=config["KG_DIRECTORY"]+"quh_quantile/{simulation}_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}.h5"
+    script:
+        "../scripts/quantile_quh.R"
+
+
+
+        
+
 rule RSSp_est:
     input:
-        rdsf=config["KG_DIRECTORY"]+"RSSp_genome_{simulation}_quh/{snpset}_{dataset}_{paneldataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}.h5"
+        rdsf=config["KG_DIRECTORY"]+"quh/{simulation}_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}.h5"
     output:
-        dff=config["OUTPUT_DIR"]+"sim_{snpset}_{dataset}_{paneldataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{useConfounding}.txt.gz"
+        dff=config["OUTPUT_DIR"]+"sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{useConfounding}.txt.gz"
     params:
         doConfound="{useConfounding}",
-        doMoM="F",
         pvv="{percentEigen}"
     script:
         "../scripts/RSSp_est.R"
 
+rule post_mean_beta:
+    input:
+        estf=rules.RSSp_est.output.dff,
+        quhf=rules.gen_quh.output.quhf,
+        evdf=rules.ld_chunk_1kg.output.evdf,
+        est_betaf=rules.map_uh_RSSp.output.uhf
+    output:
+        est_spvef=config["KG_DIRECTORY"]+"spve_est/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{useConfounding}.h5"#,
+#        true_spvef=config["KG_DIRECTORY"]+"spve_true/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{useConfounding}.h5"
+    script:
+        "../scripts/spve_est.R"

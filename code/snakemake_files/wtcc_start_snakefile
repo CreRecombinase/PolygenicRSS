@@ -1,0 +1,109 @@
+#  Rules for each dataset (to make things a little easier(?))
+
+#GWAS_NAMES = ["bd","cad","cd","ht","ra","t1d","t2d"]
+rule wtccc_plink_gds_bd:
+    ''' This rule converts HDF5 to plink files using SNPrelate'''
+    input:
+        input_h5=config["WTCC_INPUT_H5"]+"bd.h5"
+    output:
+        outf_snpgds=temp(config["SNPGDS_DIR"]+"bd_17_snp_wtcc_geno.gds"),
+        outf_fam=temp(config["PLINK_DIR"]+"bd_17.fam"),
+        outf_bim=temp(config["PLINK_DIR"]+"bd_17.bim"),
+        outf_bed=temp(config["PLINK_DIR"]+"bd_17.bed")
+    params:
+        outf_pref_plink=config["PLINK_DIR"]+"bd_17",
+        gn="bd"
+    resources:
+        fh5=1
+    script:
+        "../scripts/h52tplink.R"
+
+
+rule wtccc_plink_gds_cad:
+    ''' This rule converts HDF5 to plink files using SNPrelate'''
+    input:
+        input_h5=config["WTCC_INPUT_H5"]+"cad.h5"
+    output:
+        outf_snpgds=temp(config["SNPGDS_DIR"]+"cad_17_snp_wtcc_geno.gds"),
+        outf_fam=temp(config["PLINK_DIR"]+"cad_17.fam"),
+        outf_bim=temp(config["PLINK_DIR"]+"cad_17.bim"),
+        outf_bed=temp(config["PLINK_DIR"]+"cad_17.bed")
+    params:
+        outf_pref_plink=config["PLINK_DIR"]+"cad_17",
+        gn="cad"
+    resources:
+        fh5=1
+    script:
+        "../scripts/h52tplink.R"
+
+
+rule wtccc_plink_gds_cd:
+    ''' This rule converts HDF5 to plink files using SNPrelate'''
+    input:
+        input_h5=config["WTCC_INPUT_H5"]+"ht.h5"
+    output:
+        outf_snpgds=temp(config["SNPGDS_DIR"]+"ht_17_snp_wtcc_geno.gds"),
+        outf_fam=temp(config["PLINK_DIR"]+"ht_17.fam"),
+        outf_bim=temp(config["PLINK_DIR"]+"ht_17.bim"),
+        outf_bed=temp(config["PLINK_DIR"]+"ht_17.bed")
+    params:
+        outf_pref_plink=config["PLINK_DIR"]+"ht_17",
+        gn="ht"
+    resources:
+        fh5=1
+    script:
+        "../scripts/h52tplink.R"
+
+
+rule wtccc_plink_gds_ra:
+    ''' This rule converts HDF5 to plink files using SNPrelate'''
+    input:
+        input_h5=config["WTCC_INPUT_H5"]+"ra.h5"
+    output:
+        outf_snpgds=temp(config["SNPGDS_DIR"]+"ra_17_snp_wtcc_geno.gds"),
+        outf_fam=temp(config["PLINK_DIR"]+"ra_17.fam"),
+        outf_bim=temp(config["PLINK_DIR"]+"ra_17.bim"),
+        outf_bed=temp(config["PLINK_DIR"]+"ra_17.bed")
+    params:
+        outf_pref_plink=config["PLINK_DIR"]+"ra_17",
+        gn="ra"
+    resources:
+        fh5=1
+    script:
+        "../scripts/h52tplink.R"
+
+
+rule wtccc_plink_gds_t1d:
+    ''' This rule converts HDF5 to plink files using SNPrelate'''
+    input:
+        input_h5=config["WTCC_INPUT_H5"]+"t1d.h5"
+    output:
+        outf_snpgds=temp(config["SNPGDS_DIR"]+"t1d_17_snp_wtcc_geno.gds"),
+        outf_fam=temp(config["PLINK_DIR"]+"t1d_17.fam"),
+        outf_bim=temp(config["PLINK_DIR"]+"t1d_17.bim"),
+        outf_bed=temp(config["PLINK_DIR"]+"t1d_17.bed")
+    params:
+        outf_pref_plink=config["PLINK_DIR"]+"t1d_17",
+        gn="t1d"
+    resources:
+        fh5=1
+    script:
+        "../scripts/h52tplink.R"
+
+
+rule wtccc_plink_gds_t2d:
+    ''' This rule converts HDF5 to plink files using SNPrelate'''
+    input:
+        input_h5=config["WTCC_INPUT_H5"]+"t2d.h5"
+    output:
+        outf_snpgds=temp(config["SNPGDS_DIR"]+"t2d_17_snp_wtcc_geno.gds"),
+        outf_fam=temp(config["PLINK_DIR"]+"t2d_17.fam"),
+        outf_bim=temp(config["PLINK_DIR"]+"t2d_17.bim"),
+        outf_bed=temp(config["PLINK_DIR"]+"t2d_17.bed")
+    params:
+        outf_pref_plink=config["PLINK_DIR"]+"t2d_17",
+        gn="t2d"
+    resources:
+        fh5=1
+    script:
+        "../scripts/h52tplink.R"

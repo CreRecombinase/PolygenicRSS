@@ -1,0 +1,8 @@
+rule matlab_geno:
+    input:
+        inf=config["KG_DIRECTORY"]+"genotype.mat"
+    output:
+        gwas=config["HDF5_DIR"]+"gwas_tmp.h5",
+        panel=config["HDF5_DIR"]+"panel_tmp.h5"
+    script:
+        "../scripts/matlab2h5.py"

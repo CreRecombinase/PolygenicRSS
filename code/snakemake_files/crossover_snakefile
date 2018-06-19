@@ -1,11 +1,43 @@
+rule genredi2vcf:
+    ''' convert GENREDI hg18 plink data to hg18 vcf data'''
+    input:
+        in_bed=config["DGN_PLINK_DIR"]+"GenRED.case.autosomal.FINAL.forward.strand.bed",
+        in_bim=config["DGN_PLINK_DIR"]+"GenRED.case.autosomal.FINAL.forward.strand.bim",
+        in_fam=config["DGN_PLINK_DIR"]+"GenRED.case.autosomal.FINAL.forward.strand.fam"
+    params:
+        in_pref=config["DGN_PLINK_DIR"]+"GenRED.case.autosomal.FINAL.forward.strand",
+        out_pref=config["DGN_VCF_DIR"]+"genredi_18"
+    output:
+        out_vcf=config["DGN_VCF_DIR"]+"genredi_18.vcf.gz"
+    shell:
+        "plink --bfile {params.in_pref} --recode vcf bgz --out {params.out_pref} --threads  {threads}"
+
+
+
+rule genredii2vcf:
+    ''' convert GENREDI hg18 plink data to hg18 vcf data'''
+    input:
+        in_bed=config["DGN_PLINK_DIR"]+"GenRED.II.autosomal.Final.bed",
+        in_bim=config["DGN_PLINK_DIR"]+"GenRED.II.autosomal.Final.bim",
+        in_fam=config["DGN_PLINK_DIR"]+"GenRED.II.autosomal.Final.fam"
+    params:
+        in_pref=config["DGN_PLINK_DIR"]+"GenRED.II.autosomal.Final",
+        out_pref=config["DGN_VCF_DIR"]+"genredii_19"
+    output:
+        out_vcf=config["DGN_VCF_DIR"]+"genredii_19.vcf.gz"
+    shell:
+        "plink --bfile {params.in_pref} --recode vcf bgz --out {params.out_pref} --threads  {threads}"
+
+
+
 rule crossover_vcf:
     ''' This rule changes WTCCC coordinates from hg17 (My best guess based on googling rsid numbers) to hg19'''
     input:
-        in_vcf=config["VCF_DIR"]+"{gn}_17.vcf.gz",
+        in_vcf=config["DGN_VCF_DIR"]+"{gn}_17.vcf.gz",
         in_chain="../../data/hg17ToHg19.over.chain.gz",
         in_hg19=config["HG19_DIR"]+"hg19.fa"
     output:
-        out_vcf=temp(config["VCF_DIR"]+"{gn}_19.vcf")
+        out_vcf=temp(config["DGN_VCF_DIR"]+"{gn}_19.vcf")
     conda:
         "envs/ldpred.yml"
     shell:
@@ -15,12 +47,22 @@ rule crossover_vcf:
 rule crossover_vcf_18:
     ''' This rule changes WTCCC coordinates from hg18 (My best guess based on googling rsid numbers) to hg19'''
     input:
-        in_vcf=config["VCF_ODIR"]+"{gn}_18.vcf.gz",
+        in_vcf=config["DGN_VCF_DIR"]+"{gn}_18.vcf.gz",
         in_chain="../../data/hg18ToHg19.over.chain.gz",
         in_hg19=config["HG19_DIR"]+"hg19.fa"
     output:
-        out_vcf=temp(config["VCF_ODIR"]+"{gn}_19.vcf")
+        out_vcf=temp(config["DGN_VCF_DIR"]+"{gn}_19.vcf")
     conda:
         "envs/ldpred.yml"
     shell:
         "CrossMap.py vcf {input.in_chain} {input.in_vcf} {input.in_hg19} {output.out_vcf}"
+
+rule vcf_id2x_dgn:
+    ''' This rule sorts and compresses the vcf'''
+    input:
+        config["DGN_VCF_DIR"]+"{gn}_19.vcf"
+    output:
+        vcfi=config["DGN_VCF_DIR"]+"{gn}_19.vcf.gz"
+    threads: 9
+    shell:
+        "cat {input} | vcf-sort -c -p {threads} | bcftools view -Oz --threads {threads} -o {output.vcfi}"

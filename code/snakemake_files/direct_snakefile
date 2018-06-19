@@ -1,10 +1,9 @@
-
 rule gen_quh_chunk_direct:
     input:
-        evdf=config["EVD_DIR"]+"{snpset}_{dataset}_{bdf}_{hm}_{lds}.h5",
-        traitf=config["KG_DIRECTORY"]+"RSSp_sim_gwas_pheno/{snpset}_{dataset}_{scen}_trait.h5"
+        evdf=config["EVD_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}.h5",
+        traitf=config["KG_DIRECTORY"]+"RSSp_sim_gwas_pheno/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{scenario}_trait.h5"
     output:
-        quhf=config["KG_DIRECTORY"]+"RSSp_genome_direct_quh/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{lds}.h5"
+        quhf=config["KG_DIRECTORY"]+"quh/direct_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}.h5"
     resources:
         fh5=1
     script:
@@ -12,10 +11,10 @@ rule gen_quh_chunk_direct:
 
 rule gen_uh_direct:
     input:
-        evdf=config["EVD_DIR"]+"{snpset}_{dataset}_{bdf}_{hm}_{lds}.h5",
-        quhf=config["KG_DIRECTORY"]+"RSSp_genome_direct_quh/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{lds}.h5"
+        evdf=config["EVD_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{useLDetect}_{geneticMap}_{useLDshrink}.h5",
+        quhf=config["KG_DIRECTORY"]+"RSSp_genome_direct_quh/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{dataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}.h5"
     output:
-        uhf=config["KG_DIRECTORY"]+"RSSp_genome_direct_uh/{snpset}_{dataset}_{dataset}_{bdf}_{hm}_{scen}_{lds}.h5"
+        uhf=config["KG_DIRECTORY"]+"RSSp_genome_direct_uh/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{dataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}.h5"
     resources:
         fh5=1
     script:
