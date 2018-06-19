@@ -3,6 +3,7 @@ library(SNPRelate)
 library(gdsfmt)
 library(SeqSupport)
 library(SeqArray)
+library(EigenH5)
 
 
 
@@ -16,7 +17,7 @@ DGN_famf  <- snakemake@input[["dgn_fam"]]
 DGN_bimf <-  snakemake@input[["dgn_bim"]]
 dgn_expf <- snakemake@input[["dgn_expf"]]
 DGN_geno_gds <- snakemake@output[["gdsf"]]
-
+dgn_h5 <- snakemake@output[["h5f"]]
 SNPRelate::snpgdsBED2GDS(bed.fn = DGN_bedf,fam.fn = DGN_famf,bim.fn = DGN_bimf,out.gdsfn = DGN_geno_gds,family = F)
 
 
