@@ -25,7 +25,7 @@ localrules: all, phase_chr_prep
 
 rule all:
     input:
-        expand(config["EVD_DIR"]+"LD_DF/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}.h5",chrom="1-22",AF="0",SNPCT="0",N="0",dataset="dgn",panel_dataset="dgn",useLDetect="F",geneticMap="omni",useLDshrink="F")
+        expand(config["EVD_DIR"]+"LD_DF/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}.h5",chrom=range(1,23),AF="0",SNPCT="0",N="0",dataset="dgn",panel_dataset="dgn",useLDetect="F",geneticMap="omni",useLDshrink="F")
 #        expand(config["HDF5_DIR"]+"fram_{chrom}_AF{AF}.h5",AF="0.05",chrom=range(1,23))
 
         # expand(config["OUTPUT_DIR"]+"sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{useConfounding}.txt.gz",

@@ -58,12 +58,10 @@ sample_info <- tibble::data_frame(sample_id=seqGetData(tgds,"sample.id"))
 
 
 sample_info <- mutate(sample_info,new_sample_id=gsub("WG[0-9]+-DNA.+_[0-9]+_(LD[0-9]+)-.+","\\1",x = sample_id),index=1:n())
-rownames(dgn_snp) <- t_dgn_ids
+
 dgn_exp <- read_delim(dgn_expf,col_names = T,delim = "\t")
 dgn_exp <- rename(dgn_exp,Id=X1) %>% select(Id)
 n_sample_info <-inner_join(sample_info,dgn_exp,by=c("new_sample_id"="Id"))
-dgn_snp[] <- as.numeric(dgn_snp)
-dgn_snp <- data.matrix(dgn_snp[dgn_exp$Id,])
 snp_df <- distinct(si_df,chr,pos,.keep_all=T) %>% filter(pos>0)
 
 seqSetFilter(tgds,variant.sel = snp_df$t_snp_id,sample.sel=n_sample_info$index)
