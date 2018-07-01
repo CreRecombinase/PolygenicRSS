@@ -10,8 +10,6 @@ rule ld_chunk_1kg:
     output:
         evdf=config["EVD_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}.h5"
     threads: 1
-    resources:
-        fh5=1
     script:
         "../scripts/evd_1kg_h5.R"
 
@@ -29,7 +27,8 @@ rule ld_df:
         pop="{geneticMap}"
     output:
         evdf=config["EVD_DIR"]+"LD_DF/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}.h5"
-    threads: 10
+    threads:
+        10
     script:
         "../scripts/ld_df.R"
 
@@ -71,11 +70,9 @@ rule gen_map_h5:
     input:
         mapf=expand(config["KG_MAPDIR"]+"interpolated_from_hapmap/chr{chrom}.interpolated_genetic_map.gz",chrom=range(1,23))
     params:
-        chrom=range(1,23)
+        chrom=expand("{mchr}",mchr=range(1,23))
     output:
         mapf=config["KG_MAPDIR"]+"interpolated_hapmap.h5"
-    resources:
-        fh5=1
     script:
         "../scripts/map2RDS.R"
 
@@ -91,11 +88,9 @@ rule gen_omni_h5:
     input:
         mapf=expand(config["KG_MAPDIR"]+"interpolated_OMNI/chr{chrom}.OMNI.interpolated_genetic_map.gz",chrom=range(1,23))
     params:
-        chrom=range(1,23)
+        chrom=expand("{mchr}",mchr=range(1,23))
     output:
         mapf=config["KG_MAPDIR"]+"interpolated_omni.h5"
-    resources:
-        fh5=1
     script:
         "../scripts/map2RDS.R"        
 
@@ -118,8 +113,6 @@ rule vcf_2_allel:
     output:
         legf=config["VCF_DIR"]+"../impute/EUR.chr{chr}.h5"
     threads: 10
-    resources:
-        fh5=1
     conda:
         "envs/rssp.yml"
     script:
@@ -131,8 +124,6 @@ rule allel2haplotype:
         legf=config["VCF_DIR"]+"../impute/EUR.chr{chr}.h5"
     output:
         h5f=config["HDF5_DIR"]+"1KG{chr}_seq_1kg_geno.h5"
-    resources:
-        fh5=1
     script:
         "../scripts/allel2haplo_h5.R"
 

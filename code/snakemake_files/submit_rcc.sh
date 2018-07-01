@@ -1,5 +1,1 @@
-#!/bin/bash
-
-#--output={cluster.output} --error={cluster.error}
-#--job-name={cluster.jobname}
-snakemake --verbose -j $1 --cluster-config gardner.yaml --cluster "qsub -V -l walltime={cluster.time} -l nodes={cluster.nodes}:ppn={cluster.cpus} -l mem={cluster.mempercpu}" 
+snakemake --verbose -j 10 --cluster-config rcc.json --cluster "sbatch  --nodes={cluster.nodes}  --time={cluster.time} --ntasks={cluster.ntasks} --cpus-per-task={cluster.cpuspertask} --partition={cluster.partition} --mem={cluster.mem}"

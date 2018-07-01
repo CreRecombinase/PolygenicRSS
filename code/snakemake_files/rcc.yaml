@@ -1,0 +1,17 @@
+{
+"__default__":
+  {
+  "partition" : "broadwl",
+  "time" : "00:30:00",
+  "nodes" : "1",
+  "ntasks" : "1",
+  "cpuspertask": "1",
+  "mem": "13gb"
+  },
+  "ld_df":
+    {
+    "cpuspertask": "1",
+    "time" : "06:30:00",
+    "mem": "60gb"
+    }
+    }
