@@ -23,14 +23,7 @@ subldf <- snakemake@input[["subldf"]]
 bdf <- snakemake@input[["bdf"]]
 output_file <- snakemake@output[["evdf"]]
 useLDshrink <- snakemake@params[["useLDshrink"]]=="T"
-#
-# if(useLDshrink){
-#   # save
-  # load("evd_t.RData")
-#   stop()
-# }
-## cutoff <- as.numeric(snakemake@params[["cutoff"]])
-## if(length(cutoff)==0){
+
 cutoff <- formals(LDshrink::LDshrink)[["cutoff"]]
 m <- formals(LDshrink::LDshrink)[["m"]]
 Ne <- formals(LDshrink::LDshrink)[["Ne"]]

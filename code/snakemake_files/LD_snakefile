@@ -22,14 +22,14 @@ rule ld_df:
         subsnpf=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_LD.txt.gz",
         subldf=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_LD.RDS",
         bdf=config["INPUT_DIR"]+"ldetect_{useLDetect}.txt.gz",
-        mapf=config["KG_MAPDIR"]+"interpolated_{geneticMap}.h5"
+        mapf=config["KG_MAPDIR"]+"{geneticMap}_map.h5"
     params:
-        useLDshrink="{useLDshrink}"
+        useLDshrink="{useLDshrink}",
+        r2c="{r2cutoff}",
+        pop="{geneticMap}"
     output:
-        evdf=config["EVD_DIR"]+"LD_DF/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}.h5"
-    threads: 1
-    resources:
-        fh5=1
+        evdf=config["EVD_DIR"]+"LD_DF/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}.h5"
+    threads: 10
     script:
         "../scripts/ld_df.R"
 
@@ -78,6 +78,14 @@ rule gen_map_h5:
         fh5=1
     script:
         "../scripts/map2RDS.R"
+
+rule pop_map_h5:
+    params:
+        pop="{pop}"
+    output:
+        mapf=config["KG_MAPDIR"]+"{pop}_map.h5"
+    script:
+        "../scripts/map2h5.R"
 
 rule gen_omni_h5:
     input:
