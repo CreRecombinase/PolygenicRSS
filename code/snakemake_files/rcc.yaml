@@ -1,17 +1,25 @@
-{
-"__default__":
-  {
-  "partition" : "broadwl",
-  "time" : "00:30:00",
-  "nodes" : "1",
-  "ntasks" : "1",
-  "cpuspertask": "1",
-  "mem": "13gb"
-  },
-  "ld_df":
-    {
-    "cpuspertask": "1",
-    "time" : "06:30:00",
-    "mem": "60gb"
-    }
-    }
+---
+__default__:
+  partition: broadwl
+  time: '05:30:00'
+  nodes: '1'
+  ntasks: '1'
+  cpuspertask: '1'
+  mem: '25gb'
+ld_df:
+  cpuspertask: '6'
+  time: '06:30:00'
+  mem: '60gb'
+kggds2h5:
+  cpuspertask: '6'
+  time: '03:30:00'
+  mem: '30gb'
+pop_map_h5:
+  cpuspertask: '1'
+  time: '01:30:00'
+  mem: '25gb'
+subsnp_chr:
+  cpuspertask: '1'
+  time: '01:30:00'
+  mem: '25gb'
+

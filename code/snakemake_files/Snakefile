@@ -6,27 +6,27 @@ include: "param_snakefile"
 #include: "impute_snakefile"
 #include: "manip_snakefile"
 #include: "fram_snakefile"
-#include: "kg_snakefile"
-include: "genred_snakefile"
-include: "trait_snakefile"
+include: "kg_snakefile"
+#include: "genred_snakefile"
+#include: "trait_snakefile"
 include: "LD_snakefile"
-include: "direct_snakefile"
-include: "ldsc_snakefile"
-include: "rssp_snakefile"
-include: "grm_snakefile"
+#include: "direct_snakefile"
+#include: "ldsc_snakefile"
+#include: "rssp_snakefile"
+#include: "grm_snakefile"
 
 
 wildcard_constraints:
-    gn="[0-9a-z]+"
+    gn="[0-9a-z]+",
+    pop="[A-Z]+"
+    
 
 
 
 localrules: all, phase_chr_prep
 
 rule all:
-    input:
-
-        expand(config["EVD_DIR"]+"LD_DF/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}.h5",chrom="19",AF="0",SNPCT="0",N="0",dataset="FIN",panel_dataset="FIN",useLDetect="F",geneticMap="CEU",useLDshrink="F",r2cutoff=0.01)
+    input:        expand(config["EVD_DIR"]+"LD_DF/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}.h5",chrom="19",AF="0.05",SNPCT="0",N="0",dataset="FIN",panel_dataset="FIN",useLDetect="F",geneticMap="FIN",useLDshrink="T",r2cutoff=0.01)
 #        expand(config["HDF5_DIR"]+"fram_{chrom}_AF{AF}.h5",AF="0.05",chrom=range(1,23))
 
         # expand(config["OUTPUT_DIR"]+"sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{useConfounding}.txt.gz",

@@ -1,11 +1,34 @@
+rule subsnp_gds:
+    ''' Subset SNPs according to which chromosomes you want in the simulation, and what Allele Frequency
+ cutoff you want to use (uses gds format)'''
+    input:
+        gdsf_a=config["GDS_DIR"]+"ALL_{dataset}_geno.gds",
+        ldetectf=config["LDETECT_BREAK_FILE"],
+        gdsf_b=config["GDS_DIR"]+"ALL_{panel_dataset}_geno.gds"
+    params:
+        chrom="{chrom}",
+        AF="{AF}",
+        SNPCT="{SNPCT}",
+        N="{N}"
+    output:
+        outf_a=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_trait.txt.gz",
+        outf_b=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_LD.txt.gz",
+        ldo=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_LD.RDS",
+        gwaso=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_gwas.RDS"
+    script:
+        "../scripts/subset_snp_chr_gds.R"
+
+
+
 rule vcf_2_pop:
     input:
         vcff=config["VCF_DIR"]+"ALL.chr{chr}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
         filt_f="{pop}.samples"
     output:
         vcff=temp(config["VCF_DIR"]+"{pop}.chr{chr}.vcf.gz")
-    threads:
-        1
+    wildcard_constraints:
+        pop="[A-Z]+",
+        chr="[0-9]+"
     shell:
         "bcftools view {input.vcff} -m2 -M2 -S {input.filt_f} -Oz -o {output.vcff} --threads {threads}"
 
@@ -18,34 +41,24 @@ rule pull_pop_list:
     script:
         "../scripts/pop_pull.R"
         
-                      
-        
-# rule pop_concat:
-#     input:
-#         vcff=expand(config["VCF_DIR"]+"{pop}.chr{chr}.vcf.gz",chr=range(1,23))
-#     output:
-#         vcff=config["VCF_DIR"]+"{pop}1kg_19.vcf.gz"
-#     threads:
-#         11
-#     shell:
-#         "bcftools concat {input.vcff} -Oz -o {output.vcff} --threads {threads}"
-
 rule kg2gds:
-     ''' This rule converts a vcf file to SNPrelate format'''
+    ''' This rule converts a vcf file to SNPrelate format'''
     input:
-        vcff=expand(config["VCF_DIR"]+"{pop}.chr{chr}.vcf.gz",chr=range(1,23))
-#        vcff=config["VCF_DIR"]+"{pop}1kg_19.vcf.gz"
+        vcff=expand(config["VCF_DIR"]+"{{pop}}.chr{chr}.vcf.gz",chr=range(1,23))
     output:
-        temp_gds=config["GDS_DIR"]+"{pop}1kg_19.gds"
-    threads: 9
+        temp_gds=config["GDS_DIR"]+"ALL_{pop}1kg_geno.gds"
+    wildcard_constraints:
+        pop="[A-Z]+"
+    threads:
+        9
     script:
         "../scripts/vcf2seq_gds.R"
 
-rule kggds2h5:
-    ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are possibly rearranged)'''
-    input:
-        input_gds=config["GDS_DIR"]+"{pop}1kg_19.gds",
-    output:
-        outf=config["HDF5_DIR"]+"ALL_{pop}_geno.h5"
-    script:
-        "../scripts/gds2h5.R"
+# rule kggds2h5:
+#     ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are possibly rearranged)'''
+#     input:
+#         input_gds=config["GDS_DIR"]+"
+#     output:
+#         outf=config["HDF5_DIR"]+"ALL_{pop}_geno.h5"
+#     script:
+#         "../scripts/gds2h5.R"
