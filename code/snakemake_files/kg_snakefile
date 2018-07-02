@@ -46,7 +46,7 @@ rule kg2gds:
     input:
         vcff=expand(config["VCF_DIR"]+"{{pop}}.chr{chr}.vcf.gz",chr=range(1,23))
     output:
-        temp_gds=config["GDS_DIR"]+"ALL_{pop}1kg_geno.gds"
+        temp_gds=config["GDS_DIR"]+"ALL_{pop}_geno.gds"
     wildcard_constraints:
         pop="[A-Z]+"
     threads:
