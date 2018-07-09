@@ -109,6 +109,6 @@ for(i in 1:num_b){
                                      Ne,
                                      cutoff,
                                      r2_cutoff,
-                                     useLDshrink = useLDshrink),output_file)
+                                     useLDshrink = useLDshrink,progress=T),output_file)
     pb$tick()
 }
