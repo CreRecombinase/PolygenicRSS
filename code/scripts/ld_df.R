@@ -1,6 +1,4 @@
 
-
-library(profvis)
 library(EigenH5)
 library(LDshrink)
 library(tidyverse)

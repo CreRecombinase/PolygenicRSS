@@ -1,15 +1,15 @@
 ---
 __default__:
-  partition: broadwl
+  partition: 'broadwl'
   time: '05:30:00'
   nodes: '1'
   ntasks: '1'
   cpuspertask: '1'
   mem: '25gb'
 ld_df:
-  cpuspertask: '6'
+  cpuspertask: '10'
   time: '06:30:00'
-  mem: '60gb'
+  mem: '6G'
 kggds2h5:
   cpuspertask: '6'
   time: '03:30:00'

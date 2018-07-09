@@ -28,9 +28,8 @@ map_file_df <- data_frame(filename=dir(file.path(destination_dir, pop), full.nam
 rff <- function(filename, chrom){
     read_delim(filename, delim="\t", col_names=c("pos", "rate", "map", "filtered"), skip = 1, trim_ws = T) %>% mutate(chr=chrom) %>% return()}
 map_df  <- group_by(map_file_df,filename) %>% do(rff(.$filename,.$chrom)) %>% ungroup() %>% select(chr,map,pos)  %>% arrange(chr,pos)
-save.image()
-stop()
+
 ## %>% unnest()
 ## map_df <- pmap_dfr(map_file_df, ) %>% arrange(chr, pos) %>% select(chr, map, pos)
 ## data(map_parameters)
-write_df_h5(map_df, "SNPinfo", outf)
+saveRDS(map_df, outf)

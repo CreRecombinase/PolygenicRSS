@@ -13,6 +13,7 @@ subsnpf <- snakemake@input[["subsnpf"]]
 subldf <- snakemake@input[["subldf"]]
 bdf <- snakemake@input[["bdf"]]
 output_file <- snakemake@output[["evdf"]]
+snpdff  <- snakemake@output[["snpif"]]
 useLDshrink <- snakemake@params[["useLDshrink"]]=="T"
 pop <- snakemake@params[["pop"]]
 r2_cutoff <- snakemake@params[["r2c"]]
@@ -32,7 +33,7 @@ Ne <- my_map$Ne
 
 
 
-stopifnot(!is.null(input_file), !is.null(output_file), !is.null(mapf), !is.null(bdf))
+stopifnot(!is.null(input_file), !is.null(output_file), !is.null(mapf), !is.null(bdf),!is.null(snpdff))
 
 stopifnot(file.exists(input_file), !file.exists(output_file), file.exists(mapf), file.exists(bdf))
 break_df <- read_delim(bdf, delim="\t")
@@ -49,7 +50,7 @@ p <- nrow(snp_df)
 
 stopifnot(sorted_snp_df(snp_df))
 
-map_df <- read_df_h5(mapf, "SNPinfo")
+map_df <- readRDS(mapf)
 cat("Assigning Map\n")
 snp_df <- assign_map(snp_df, map_df)
 cat("Removing Map\n")
@@ -82,10 +83,11 @@ stopifnot(file.exists(input_file),
 ## }
 
 snp_df <- dplyr::mutate(snp_df, ld_snp_id=snp_id)
-write_df_h5(snp_df, "LDinfo", output_file)
+cat("Writing LDinfo\n")
+saveRDS(snp_df, snpdff)
 pl <- snakemake@wildcards
 pl <- as_data_frame(pl[names(pl)!=""])
-write_df_h5(pl, groupname = "Wildcards", filename=output_file)
+#write_df_h5(pl, groupname = "Wildcards", filename=output_file)
 snp_dfl <- split(snp_df, snp_df$region_id)
 cat("Estimating LD")
 num_b <- length(snp_dfl)
@@ -97,16 +99,16 @@ for(i in 1:num_b){
 
     dosage <- seqGetData(tgds_a,"$dosage")
 
-    mrid <- unique(tdf$region_id)
+    mrid <- unique(subsnp_df$region_id)
     stopifnot(length(mrid)==1)
 
-    EigenH5::write_df_h5(LDshrink_df(dosage,
+    saveRDS(LDshrink_df(dosage,
                                      subsnp_df$map,
                                      subsnp_df$SNP,
                                      m,
                                      Ne,
                                      cutoff,
                                      r2_cutoff,
-                                     useLDshrink = useLDshrink),paste0("LD_DF/",mrid),output_file)
+                                     useLDshrink = useLDshrink),output_file)
     pb$tick()
 }

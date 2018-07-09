@@ -26,7 +26,7 @@ wildcard_constraints:
 localrules: all, phase_chr_prep
 
 rule all:
-    input:        expand(config["EVD_DIR"]+"LD_DF/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}.h5",chrom="19",AF="0.05",SNPCT="0",N="0",dataset="FIN",panel_dataset="FIN",useLDetect="F",geneticMap="FIN",useLDshrink="T",r2cutoff=0.01)
+    input:        expand(config["EVD_DIR"]+"LD_DF/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}.RDS",chrom="19",AF="0.05",SNPCT="0",N="0",dataset="FIN",panel_dataset="FIN",useLDetect="F",geneticMap="FIN",useLDshrink="T",r2cutoff=0.01)
 #        expand(config["HDF5_DIR"]+"fram_{chrom}_AF{AF}.h5",AF="0.05",chrom=range(1,23))
 
         # expand(config["OUTPUT_DIR"]+"sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{useConfounding}.txt.gz",
