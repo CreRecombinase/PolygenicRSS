@@ -1,7 +1,5 @@
 
 
-
-
 rule ld_chunk_1kg:
     input:
         input_file=config["HDF5_DIR"]+"ALL_{panel_dataset}_geno.h5",
@@ -27,17 +25,18 @@ rule ld_df:
         mapf=config["KG_MAPDIR"]+"{geneticMap}_map.RDS"
     params:
         useLDshrink="{useLDshrink}",
+        useLDetect="{useLDetect}",
         r2c="{r2cutoff}",
-        pop="{geneticMap}"
+        pop="{geneticMap}",
+        chunk_a="{x}",
+        chunk_b="{y}",
+        chunk_tot="{chunktot}"
     output:
-        evdf=config["EVD_DIR"]+"LD_DF/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}.RDS",
-        snpif=config["EVD_DIR"]+"LD_DF_SNPList/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}.RDS"
+        evdf=config["EVD_DIR"]+"LD_DF/chr{chrom}/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}_{x}_{y}_{chunktot}.RDS"
     threads:
         10
     script:
         "../scripts/ld_df_gds.R"
-
-
 
 
 
@@ -60,7 +59,6 @@ rule without_ldetect_breakpoints:
         bdf=config["INPUT_DIR"]+"ldetect_F.txt.gz"
     script:
         "../scripts/break_df.R"
-
 
 rule dl_map_h5:
     output:

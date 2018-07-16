@@ -8,11 +8,11 @@ include: "param_snakefile"
 #include: "fram_snakefile"
 include: "kg_snakefile"
 #include: "genred_snakefile"
-#include: "trait_snakefile"
+include: "trait_snakefile"
 include: "LD_snakefile"
-#include: "direct_snakefile"
-#include: "ldsc_snakefile"
-#include: "rssp_snakefile"
+include: "direct_snakefile"
+include: "ldsc_snakefile"
+include: "rssp_snakefile"
 #include: "grm_snakefile"
 
 
@@ -21,14 +21,20 @@ wildcard_constraints:
     pop="[A-Z]+"
     
 
+all_ld = [config["EVD_DIR"]+"LD_DF/chr{chrom}/chr{chrom}AF{AF}SNP0N0_{dataset}_{dataset}_F_{dataset}_T_{r2cutoff}_{x}_{y}_10.RDS".format(chrom=19,dataset="CEU",AF="0.01",r2cutoff=0.1,x=x,y=y) for x in range(1,11) for y in range(x,11)]
+#flat_list = [item for sublist in l for item in sublist]
+
+use_ld=all_ld[0:4]
+
+
+
 
 
 localrules: all, phase_chr_prep
 
 rule all:
-    input:        expand(config["EVD_DIR"]+"LD_DF/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}.RDS",chrom="19",AF="0.05",SNPCT="0",N="0",dataset="FIN",panel_dataset="FIN",useLDetect="F",geneticMap="FIN",useLDshrink="T",r2cutoff=0.01)
-#        expand(config["HDF5_DIR"]+"fram_{chrom}_AF{AF}.h5",AF="0.05",chrom=range(1,23))
-
+    input:
+        use_ld
         # expand(config["OUTPUT_DIR"]+"sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{useConfounding}.txt.gz",
         #        chrom="1-22",
         #        AF=["0.01","0.05","0.1"],
@@ -43,56 +49,19 @@ rule all:
         #        useConfounding="F",
         #        scenario=SCEN,
         #        useLDshrink=["T","F"]),
-        # expand(config["EVD_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}.h5",
+        # expand(config["OUTPUT_DIR"]+"ldsc_res/sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_ldsc_res_{scenario}_{useLDshrink}_{useIntercept}.txt.gz",
         #        chrom="1-22",
         #        AF=["0.01","0.05","0.1"],
-        #        SNPCT=[0],
-        #        N=[0],
+        #        SNPCT=[0,150000,75000,50000],
+        #        N=[0,2000],
         #        simulation=["gwas"],
         #        dataset="cd",
         #        panel_dataset=["bd"],
         #        geneticMap=["omni"],
         #        useLDetect=["T"],
         #        scenario=SCEN,
-        #        useLDshrink=["T","F"])
-        # # expand(config["OUTPUT_DIR"]+"ldsc_res/sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_ldsc_res_{scenario}_{useLDshrink}_{useIntercept}.txt.gz",
-        # #        chrom="1-22",
-        # #        AF=["0.01","0.05","0.1"],
-        # #        SNPCT=[0,150000,75000,50000],
-        # #        N=[0,2000],
-        # #        simulation=["gwas"],
-        # #        dataset="cd",
-        # #        panel_dataset=["bd"],
-        # #        geneticMap=["omni"],
-        # #        useLDetect=["T"],
-        # #        scenario=SCEN,
-        # #        useLDshrink=["T","F"],
-        # #        useIntercept=["T","F"])
-
-        # ,
-        # expand(config["KG_DIRECTORY"]+"spve_est/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{useConfounding}.h5",
-
-        #        chrom="1-22",
-        #        AF=["0.01","0.05","0.1",".2"],
-        #        SNPCT=[0,150000,75000,50000],
-        #        N=[0,2000],
-        #        simulation=["gwas"],
-        #        dataset="cd",
-        #        panel_dataset=["cd"],
-        #        geneticMap=["omni"],
-        #        useLDetect=["T"],
-        #        percentEigen=[".1"],
-        #        useConfounding="F",
-        #        scenario=SCEN,
-        #        useLDshrink=["T","F"]),
-
-
-
-
-
-               
-        # 
-       
+        #        useLDshrink=["T","F"],
+        #        useIntercept=["F"])
 
 
 # rule ldsc_rss_report:

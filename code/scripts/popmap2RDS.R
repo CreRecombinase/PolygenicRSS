@@ -9,7 +9,9 @@ library(EigenH5)
 
 outf <- snakemake@output[["mapf"]]
 pop  <- snakemake@params[["pop"]]
-
+if(pop=="EUR"){
+    pop <- "CEU"
+}
 
 destination <- tempfile()
 base_url <- "ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20130507_omni_recombination_rates/"

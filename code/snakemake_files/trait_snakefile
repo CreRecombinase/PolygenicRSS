@@ -18,9 +18,6 @@ rule subsnp_chr:
     script:
         "../scripts/subset_snp_chr.R"
 
-
-
-
 rule sim_pheno_RSSp:
     ''' This rule works very similarly to sim_pheno_w_Beta_RSSp, but doesn't require beta,
     and instead generates it on the fly.  This is the rule used in LD score regression/RSSp
