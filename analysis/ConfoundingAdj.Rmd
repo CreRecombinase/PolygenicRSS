@@ -81,6 +81,17 @@ res_df_uh <- pmap_dfr(buh_df,l2df_uh)
 res_df_uh <- mutate(res_df_uh) %>% inner_join(res_df)
 ```
 
+```{r l2,echo=F,message=F,warnings=F}
+filter(res_df_uh,method=="LDSC_noIntercept")  %>% mutate(AF=as.factor(AF)) %>%  ggplot(aes(x=mean_L2,y=mean_ch,col=AF))+
+  geom_point()+
+  facet_grid(useLDshrink~tpve,labeller = label_both)+
+  geom_abline(aes(slope=tsigu^2,intercept=1),col="gold")+
+  xlab("Mean LD score(10 bins)")+
+  ylab(bquote(Mean~chi^2~(per~LD~bin)))+
+  ggtitle("LD Score vs Chi^2","Fit without an intercept term")
+```
+
+
 ```{r ldsc_nil2,echo=F,message=F,warnings=F}
 filter(res_df_uh,method=="LDSC_noIntercept")  %>% mutate(AF=as.factor(AF)) %>%  ggplot(aes(x=mean_L2,y=mean_ch,col=AF))+
   geom_point()+
@@ -131,7 +142,7 @@ res_df_quh <- pmap_dfr(bqh_df,l2df_quh) %>% inner_join(res_df)
 ## $(Q^{T}\hat{u})^2-\lambda$ vs $\lambda^2$
 
 
-In the RSSp model, $\Q^{T}\hat{u} \sim N(0,\sigma^2_u \lambda^2+\lambda)$.  Here's a plot of $(Q^{T}\hat{u})^2-\lambda$ vs $\lambda^2$
+In the RSSp model, $Q^{T}\hat{u} \sim N(0,\sigma^2_u \lambda^2+\lambda)$.  Here's a plot of $(Q^{T}\hat{u})^2-\lambda$ vs $\lambda^2$
 
 
 
