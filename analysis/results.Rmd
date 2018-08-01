@@ -25,6 +25,7 @@ output: workflowr::wflow_html
 * [Likelihood Curves](lnzDist.html)
 * [Effect of Downsampling](DownsamplingResults2.html)
 * [Out of Sample LD](OutOfSampleLD.html)
+* [Visualizing RSSp vs LDSc](ConfoundingAdj.html)
 
 
 
