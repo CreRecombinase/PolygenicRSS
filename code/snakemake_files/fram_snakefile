@@ -33,3 +33,13 @@ rule fram_chr_h5:
         dosagef=config["HDF5_DIR"]+"fram_{chrom}_AF{AF}.h5"
     script:
         "../scripts/mach2h5.R"
+
+rule merge_fram_h5:
+    input:
+        dosagef=expand(config["HDF5_DIR"]+"fram_{chrom}_AF{{AF}}.h5",chrom=range(1,23))
+    params:
+        chrom=expand("{chrom}",chrom=range(1,23))
+    output:
+        outf=config["HDF5_DIR"]+"ALL_fram{AF}_geno.h5"
+    script:
+        "../scripts/v_concat.R"

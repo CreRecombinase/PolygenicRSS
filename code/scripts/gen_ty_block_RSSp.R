@@ -2,11 +2,6 @@ library(SeqSupport)
 library(tidyverse)
 library(progress)
 library(RSSp)
-#
-# load("ty.RData")
-# save.image("ty.RData")
-# stop()
-# tym <- read_matrix_h5(ymf,"trait","ymat")
 
 gdsf <- snakemake@input[["gdsf"]]
 subsnpf <- snakemake@input[["subsnpf"]]

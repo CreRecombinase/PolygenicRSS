@@ -1,17 +1,9 @@
-
-
-#library(profvis)
+library(profvis)
 library(EigenH5)
 library(LDshrink)
 library(tidyverse)
-# library(future)
 library(progress)
-# plan(sequential)
-# mb <-profvis({
 
-# setwd("~/Dropbox/PolygenicRSS/code/snakemake_files/")
-# load("ssSNP.RData")
-# stop()
 
 
 cutoff <- 1e-3
@@ -27,15 +19,12 @@ useLDshrink <- snakemake@params[["useLDshrink"]]=="T"
 cutoff <- formals(LDshrink::LDshrink)[["cutoff"]]
 m <- formals(LDshrink::LDshrink)[["m"]]
 Ne <- formals(LDshrink::LDshrink)[["Ne"]]
-## }
+
 
 stopifnot( !is.null(input_file), !is.null(output_file),!is.null(mapf),!is.null(bdf))
 
 stopifnot(file.exists(input_file), !file.exists(output_file),file.exists(mapf),file.exists(bdf))
-break_df <- read_delim(bdf,delim="\t") #%>% group_by(chr) %>% mutate(start=ifelse(start==min(start),0,start),
-                                       #                             stop=ifelse(stop==max(stop),max(stop)*2,stop)) %>% ungroup()
-
-
+break_df <- read_delim(bdf,delim="\t")
 ind_v <- readRDS(subldf)
 snp_df <- read_delim(subsnpf,delim="\t")
 op <- nrow(snp_df)
@@ -59,12 +48,6 @@ stopifnot(group_by(snp_df,chr) %>%
             summarise(sorted=!is.unsorted(map)) %>%
             summarise(sorted=all(sorted)) %>%
             pull(1))
-
-## LDshrink::chunkwise_LD_h5(input_file = input_file,
-##                                 output_file = output_file,
-##                                 snp_df = snp_df,
-##                                 useLDshrink=useLDshrink)
-
 
 stopifnot(file.exists(input_file),
           !file.exists(output_file),
@@ -99,9 +82,6 @@ num_b <- length(snp_dfl)
 pb <- progress::progress_bar$new(total = num_b)
 for(i in 1:num_b){
   tdf <- snp_dfl[[i]]
-  # }
-  # retl <- snp_dfl %>% purrr::map(function(tdf,m,Ne,cutoff,useLDshrink,SNPfirst,ind_l){
-  #   return(future::future({
   if(SNPfirst){
     dosage <- EigenH5::read_matrix_h5(input_file,"/","dosage",subset_rows=tdf$ld_snp_id,subset_cols=ind_v,doTranspose=T)
   }else{

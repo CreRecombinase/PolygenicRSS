@@ -1,5 +1,3 @@
-
-
 rule ld_chunk_1kg:
     input:
         input_file=config["HDF5_DIR"]+"ALL_{panel_dataset}_geno.h5",
@@ -19,6 +17,63 @@ rule ld_chunk_1kg:
 rule ld_df:
     input:
         input_file=config["GDS_DIR"]+"ALL_{panel_dataset}_geno.gds",
+        snpdff_a=config["EVD_DIR"]+"{dataset}/LD_DF_SNPList/chr{chrom}/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}_{x}_{chunktot}.RDS",
+        snpdff_b=config["EVD_DIR"]+"{dataset}/LD_DF_SNPList/chr{chrom}/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}_{y}_{chunktot}.RDS",
+        subldf=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_LD.RDS"
+    params:
+        useLDshrink="{useLDshrink}",
+        useLDetect="{useLDetect}",
+        r2c="{r2cutoff}",
+        pop="{geneticMap}",
+        chunk_a="{x}",
+        chunk_b="{y}",
+        chunk_tot="{chunktot}"
+    output:
+        evdf=config["EVD_DIR"]+"{dataset}/LD_DF/chr{chrom}/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}_{x}_{y}_{chunktot}.RDS"
+    threads:
+        4
+    script:
+        "../scripts/ld_df_gds.R"
+
+rule ld_sp:
+    input:
+        input_file=config["GDS_DIR"]+"ALL_{panel_dataset}_geno.h5",
+        subsnpf=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_LD.txt.gz",
+        subldf=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_LD.RDS",
+        bdf=config["INPUT_DIR"]+"ldetect_{useLDetect}.txt.gz",
+        mapf=config["KG_MAPDIR"]+"interpolated_{geneticMap}.h5"
+    params:
+        useLDshrink="{useLDshrink}",
+        useLDetect="{useLDetect}",
+        r2c="{r2cutoff}",
+        pop="{geneticMap}",
+        chunk_a="{x}",
+        chunk_b="{y}",
+        chunk_tot="{chunktot}"
+    output:
+        evdf=config["EVD_DIR"]+"{dataset}/LD_DF/chr{chrom}/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}_{x}_{y}_{chunktot}.RDS"
+    threads:
+        4
+    script:
+        "../scripts/ld_df_gds.R"
+
+
+
+
+
+
+rule seqgds2snpgds:
+    input:
+        input_file=config["GDS_DIR"]+"ALL_{panel_dataset}_geno.gds"
+    output:
+        output_file=config["SNPGDS_DIR"]+"ALL_{panel_dataset}_geno.gds"
+    script:
+        "../scripts/seq2snp.R"
+
+
+rule ld_chunkdf:
+    input:
+        input_file=config["GDS_DIR"]+"ALL_{panel_dataset}_geno.gds",
         subsnpf=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_LD.txt.gz",
         subldf=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_LD.RDS",
         bdf=config["INPUT_DIR"]+"ldetect_{useLDetect}.txt.gz",
@@ -29,14 +84,11 @@ rule ld_df:
         r2c="{r2cutoff}",
         pop="{geneticMap}",
         chunk_a="{x}",
-        chunk_b="{y}",
         chunk_tot="{chunktot}"
     output:
-        evdf=config["EVD_DIR"]+"LD_DF/chr{chrom}/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}_{x}_{y}_{chunktot}.RDS"
-    threads:
-        10
+        snpdff=config["EVD_DIR"]+"{dataset}/LD_DF_SNPList/chr{chrom}/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}_{x}_{chunktot}.RDS"
     script:
-        "../scripts/ld_df_gds.R"
+        "../scripts/LDchunk.R"
 
 
 

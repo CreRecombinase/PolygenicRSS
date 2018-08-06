@@ -54,11 +54,11 @@ rule kg2gds:
     script:
         "../scripts/vcf2seq_gds.R"
 
-# rule kggds2h5:
-#     ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are possibly rearranged)'''
-#     input:
-#         input_gds=config["GDS_DIR"]+"
-#     output:
-#         outf=config["HDF5_DIR"]+"ALL_{pop}_geno.h5"
-#     script:
-#         "../scripts/gds2h5.R"
+rule kggds2h5:
+    ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are possibly rearranged)'''
+    input:
+        input_gds=config["GDS_DIR"]+"ALL_{pop}_geno.gds"
+    output:
+        outf=config["HDF5_DIR"]+"ALL_{pop}_geno.h5"
+    script:
+        "../scripts/gds2h5.R"

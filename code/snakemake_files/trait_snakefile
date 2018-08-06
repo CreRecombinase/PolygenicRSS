@@ -42,17 +42,29 @@ rule sim_pheno_RSSp:
 
 
 
+rule calc_covar:
+    input:
+        snpgdsf=config["SNPGDS_DIR"]+"ALL_{dataset}_geno.gds",
+        subsnpf=rules.sim_pheno_RSSp.input.subsnpf,
+        subgwasf=rules.sim_pheno_RSSp.input.subgwasf,
+    output:
+        covarf=config["COVAR_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{scenario}_20.h5"
+    threads: 11
+    script:
+        "../scripts/calc_pca_gds.R"
+
 
 rule map_uh_RSSp:
     input:
         h5f=rules.sim_pheno_RSSp.input.gdsf,
+        covarf=rules.calc_covar.output.covarf,
         ymatf=rules.sim_pheno_RSSp.output.h5f,
         subsnpf=rules.sim_pheno_RSSp.input.subsnpf,
         subgwasf=rules.sim_pheno_RSSp.input.subgwasf
+    params:
+        ncovar="{ncovar}"
     output:
-        uhf=config["KG_DIRECTORY"]+"gwas_uh/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{scenario}_sim.h5"
+        uhf=config["KG_DIRECTORY"]+"gwas_uh/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{scenario}_{ncovar}_sim.h5"
     threads: 1
-    resources:
-        fh5=1
     script:
-        "../scripts/map_uh_LDchunk_RSSp_h5.R"
+        "../scripts/map_uh_covar.R"

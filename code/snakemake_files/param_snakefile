@@ -16,9 +16,15 @@ if os.path.exists(rcc_dir):
 if os.path.exists(xps_dir):
     print("On laptop\n")
     configpath="../workflow_params_xps.json"
-if os.path.exists(helab_dir):
+if os.path.exists(helab_dir) and not bigdata:
     print("On desktop\n")
-    configpath="../workflow_params.json"    
+    configpath="../workflow_params_desktop.json"
+if os.path.exists(helab_dir) and bigdata:
+    configpath="../workflow_params_bigdata.json"
+if configpath is None:
+    raise ValueError('Unable to determine path for workflow_params')
+
+
 shell.executable("/bin/bash")    
 configfile:
     configpath    
@@ -39,10 +45,10 @@ GWAS_NAMES = ["bd","cad","cd","ht","ra","t1d","t2d"]
 COMB_NAME="T1D-T2D"
 #Come up with a unique name for the PVE+BIAS+NREPS combo (No underscores please)
 #SCEN="RatherLargePVE"
-SCEN="RepPVE"
+SCEN="PCACovarsBP"
 #Number of replicates per PVE+BIAS combo
-NREPS =10
-PVE=[0.1,0.3,0.5]
+NREPS =20
+PVE=[0.06,0.08,.1,.3,.5,.7]
 #PVE (must be between 0 and 1)
 # PVE=[0.8,
 #      0.7,

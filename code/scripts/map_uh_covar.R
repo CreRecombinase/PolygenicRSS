@@ -4,14 +4,17 @@ library(SeqSupport)
 library(EigenH5)
 
 h5f <- snakemake@input[["h5f"]]
+covarf <- snakemake@input[["covarf"]]
 uhf <- snakemake@output[["uhf"]]
 subsnpf <- snakemake@input[["subsnpf"]]
 subgwasf <- snakemake@input[["subgwasf"]]
+ncovar <- as.integer(snakemake@params[["ncovar"]])
 
 stopifnot(!is.null(h5f),!is.null(uhf),!is.null(subsnpf))
 ymatf <- normalizePath(snakemake@input[["ymatf"]])
 stopifnot(!is.null(ymatf))
 cores <- snakemake@threads
+
 
 
 snp_df <- read_delim(subsnpf,delim="\t")
@@ -25,9 +28,15 @@ g <- as.integer(nrow(tparam_df))
 expdims <- dim_h5(ymatf,"trait/ymat")
 stopifnot(g==expdims[1],
           length(ind_v)==expdims[2])
+if(ncovar>0){
+    covarmat <- read_matrix_h5(covarf,"/","covariates",subset_cols=seq_len(ncovar))
+}else{
+    covarmat <- matrix(1,length(ind_v),1)
+}
 
 
-chunksize <- as.integer(50000)
+
+chunksize <- as.integer(5000)
 num_chunks <- ceiling(p/chunksize)
 cat("Chunking SNP data\n")
 snp_df <- mutate(snp_df,snp_chunk=gl(n = num_chunks,k=chunksize,length = p),snp_chunk_id=1:n())
@@ -58,7 +67,7 @@ pl <- as_data_frame(pl[names(pl)!=""])
 write_df_h5(pl,groupname = "Wildcards",filename=uhf)
 
 cat("Mapping traits\n")
-SeqSupport::map_eQTL_chunk_h5(snp_lff,exp_lff,uh_lff,se_lff)
+SeqSupport::map_eQTL_chunk_h5(snp_lff,exp_lff,uh_lff,se_lff,covarmat)
 
 
 cat("Checking uh\n")

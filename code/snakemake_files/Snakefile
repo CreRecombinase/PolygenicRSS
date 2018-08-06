@@ -1,3 +1,4 @@
+bigdata = True
 include: "param_snakefile"
 #include: "wtcc_snakefile"
 #include: "combined_snakefile"
@@ -5,8 +6,8 @@ include: "param_snakefile"
 #include: "crossover_snakefile"
 #include: "impute_snakefile"
 #include: "manip_snakefile"
-#include: "fram_snakefile"
-include: "kg_snakefile"
+include: "fram_snakefile"
+#include: "kg_snakefile"
 #include: "genred_snakefile"
 include: "trait_snakefile"
 include: "LD_snakefile"
@@ -15,17 +16,44 @@ include: "ldsc_snakefile"
 include: "rssp_snakefile"
 #include: "grm_snakefile"
 
-
 wildcard_constraints:
     gn="[0-9a-z]+",
     pop="[A-Z]+"
     
 
-all_ld = [config["EVD_DIR"]+"LD_DF/chr{chrom}/chr{chrom}AF{AF}SNP0N0_{dataset}_{dataset}_F_{dataset}_T_{r2cutoff}_{x}_{y}_10.RDS".format(chrom=19,dataset="CEU",AF="0.01",r2cutoff=0.1,x=x,y=y) for x in range(1,11) for y in range(x,11)]
+all_ld = [config["EVD_DIR"]+"{dataset}/LD_DF/chr{chrom}/chr{chrom}AF{AF}SNP0N0_{dataset}_{dataset}_F_{dataset}_T_{r2cutoff}_{x}_{y}_20.RDS".format(chrom=z,dataset="CEU",AF="0.01",r2cutoff=0.01,x=x,y=y) for x in range(1,21) for y in range(x,21) for z in range(1,23)]
 #flat_list = [item for sublist in l for item in sublist]
 
-use_ld=all_ld[0:4]
-
+use_ld=all_ld[0]
+all_rssp=expand(config["OUTPUT_DIR"]+"sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{nc}_{useConfounding}.txt.gz",
+                chrom="1-22",
+                nc=range(0,2),
+                AF=["0.05"],
+                SNPCT=[0],
+                N=[0],
+                simulation=["gwas"],
+                dataset="fram0.05",
+                panel_dataset=["fram0.05"],
+                geneticMap=["omni"],
+                useLDetect=["T"],
+                percentEigen=[".1"],
+                useConfounding="F",
+                scenario=SCEN,
+                useLDshrink=["T","F"])
+all_ldsc=expand(config["OUTPUT_DIR"]+"ldsc_res/sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_ldsc_res_{scenario}_{useLDshrink}_{nc}_{useIntercept}.txt.gz",
+                chrom="1-22",
+                nc=range(0,2),
+                AF=["0.01","0.05"],
+                SNPCT=[0],
+                N=[0],
+                simulation=["gwas"],
+                dataset="cd",
+                panel_dataset=["bd"],
+                geneticMap=["omni"],
+                useLDetect=["T"],
+                scenario=SCEN,
+                useLDshrink=["T","F"],
+                useIntercept=["F","T"])
 
 
 
@@ -34,34 +62,8 @@ localrules: all, phase_chr_prep
 
 rule all:
     input:
-        use_ld
-        # expand(config["OUTPUT_DIR"]+"sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{useConfounding}.txt.gz",
-        #        chrom="1-22",
-        #        AF=["0.01","0.05","0.1"],
-        #        SNPCT=[0,150000,75000,50000],
-        #        N=[0,2000],
-        #        simulation=["gwas"],
-        #        dataset="cd",
-        #        panel_dataset=["bd"],
-        #        geneticMap=["omni"],
-        #        useLDetect=["T"],
-        #        percentEigen=[".1"],
-        #        useConfounding="F",
-        #        scenario=SCEN,
-        #        useLDshrink=["T","F"]),
-        # expand(config["OUTPUT_DIR"]+"ldsc_res/sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_ldsc_res_{scenario}_{useLDshrink}_{useIntercept}.txt.gz",
-        #        chrom="1-22",
-        #        AF=["0.01","0.05","0.1"],
-        #        SNPCT=[0,150000,75000,50000],
-        #        N=[0,2000],
-        #        simulation=["gwas"],
-        #        dataset="cd",
-        #        panel_dataset=["bd"],
-        #        geneticMap=["omni"],
-        #        useLDetect=["T"],
-        #        scenario=SCEN,
-        #        useLDshrink=["T","F"],
-        #        useIntercept=["F"])
+        all_rssp
+
 
 
 # rule ldsc_rss_report:

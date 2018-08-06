@@ -2,9 +2,9 @@
 rule gen_quh:
     input:
         evdf=config["EVD_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}.h5",
-        uhf=config["KG_DIRECTORY"]+"gwas_uh/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{scenario}_sim.h5"
+        uhf=config["KG_DIRECTORY"]+"gwas_uh/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{scenario}_{ncovar}_sim.h5"
     output:
-        quhf=config["KG_DIRECTORY"]+"quh/gwas_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}.h5"
+        quhf=config["KG_DIRECTORY"]+"quh/gwas_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}_{ncovar}.h5"
     resources:
         fh5=1
     script:
@@ -24,9 +24,9 @@ rule quantile_quh:
 
 rule RSSp_est:
     input:
-        rdsf=config["KG_DIRECTORY"]+"quh/{simulation}_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}.h5"
+        rdsf=config["KG_DIRECTORY"]+"quh/{simulation}_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}_{ncovar}.h5"
     output:
-        dff=config["OUTPUT_DIR"]+"sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{useConfounding}.txt.gz"
+        dff=config["OUTPUT_DIR"]+"sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{ncovar}_{useConfounding}.txt.gz"
     params:
         doConfound="{useConfounding}",
         pvv="{percentEigen}"
