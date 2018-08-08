@@ -3,8 +3,6 @@ library(LDshrink)
 library(tidyverse)
 library(SeqArray)
 library(progress)
-
-
 writefn <- saveRDS
 
 
@@ -50,7 +48,6 @@ stopifnot(file.exists(input_file), !file.exists(output_file))
 
 
 ind_v <- readRDS(subldf)
-## num_b <- length(snp_dfl)
 tgds_a <- seqOpen(input_file,allow.duplicate=TRUE)
 
 seqSetFilter(tgds_a,variant.id=snp_dfa$ld_snp_id,sample.sel=ind_v)

@@ -48,19 +48,19 @@ D <- map(q_l,~read_vector_h5(filename = .x$filename,datapath=paste0("EVD/",.x$re
 stopifnot(length(D)==p)
 
 
-EigenH5::write_df_h5(tparam_df,"SimulationInfo",quhf)
+EigenH5::write_df_h5(tparam_df, quhf, "SimulationInfo")
 pl <- snakemake@wildcards
 if(is.null(pl[["simulation"]])){
   pl[["simulation"]] <-"gwas"
 }
 pl <- as_data_frame(pl[names(pl)!=""])
-write_df_h5(pl,groupname = "Wildcards",filename=quhf)
+write_df_h5(pl, filename = quhf, datapath = "Wildcards")
 
 
-EigenH5::write_vector_h5(quhf,"/","D",D)
-create_matrix_h5(quhf,"/","quh",numeric(),dims=c(p,g),chunksizes = c(pmin(1024,p),1))
+EigenH5::write_vector_h5(D,quhf,"D")
+create_matrix_h5(quhf,"quh",numeric(),dims=c(p,g),chunksizes = c(pmin(1024,p),1))
 
-EigenH5::write_df_h5(snp_df,"SNPinfo",quhf)
+EigenH5::write_df_h5(snp_df,quhf,"SNPinfo")
 SeqSupport::crossprod_quh_h5(list(Q=q_l,uh=uh_l,quh=quh_l),TRUE)
 
 

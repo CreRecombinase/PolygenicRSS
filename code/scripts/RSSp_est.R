@@ -9,7 +9,7 @@ library(readr)
 
 
 #
-# save.image("trsp.RData")
+# # save.image("trsp.RData")
 # stop()
 # setwd("~/Dropbox/PolygenicRSS/code/snakemake_files")
 # load("trsp.RData")
@@ -46,7 +46,7 @@ stopifnot(file.exists(rdsf),
 pl <- snakemake@wildcards
 pl <- as_data_frame(pl[names(pl)!=""]) %>% mutate(ttca=NA)
 tparam_df <- read_df_h5(rdsf,"SimulationInfo") %>% mutate(ttca=NA) %>% inner_join(pl) %>% select(-ttca)
-ldgrp <- "/"
+
 
 exec_fn <-  function(quhl,tpdfl,D,region_id){
     max_sigu <- calc_sigu(1,tpdfl$p/tpdfl$n)[1]
@@ -66,9 +66,9 @@ exec_fn <-  function(quhl,tpdfl,D,region_id){
 
 
 rss_res <- map2_df(
-  array_branch(read_matrix_h5(rdsf,ldgrp,"quh"),margin=2),
-  transpose(tparam_df),exec_fn,D=read_vector_h5(rdsf,ldgrp,"D"),
-  region_id=read_vector_h5(rdsf,"SNPinfo","region_id"))
+  array_branch(read_matrix_h5(rdsf,"quh"),margin=2),
+  transpose(tparam_df),exec_fn,D=read_vector_h5(rdsf,datapath="/D"),
+  region_id=read_vector_h5(rdsf,"SNPinfo/region_id"))
 
 
 write_delim(rss_res,outf,delim="\t")

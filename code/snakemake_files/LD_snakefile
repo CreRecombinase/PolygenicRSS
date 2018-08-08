@@ -6,7 +6,8 @@ rule ld_chunk_1kg:
         bdf=config["INPUT_DIR"]+"ldetect_{useLDetect}.txt.gz",
         mapf=config["KG_MAPDIR"]+"interpolated_{geneticMap}.h5"
     params:
-        useLDshrink="{useLDshrink}"
+        useLDshrink="{useLDshrink}",
+        useLDetect="{useLDetect}"
     output:
         evdf=config["EVD_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}.h5"
     threads: 1
@@ -46,19 +47,13 @@ rule ld_sp:
         useLDshrink="{useLDshrink}",
         useLDetect="{useLDetect}",
         r2c="{r2cutoff}",
-        pop="{geneticMap}",
-        chunk_a="{x}",
-        chunk_b="{y}",
-        chunk_tot="{chunktot}"
+        pop="{geneticMap}"
     output:
-        evdf=config["EVD_DIR"]+"{dataset}/LD_DF/chr{chrom}/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}_{x}_{y}_{chunktot}.RDS"
+        evdf=config["EVD_DIR"]+"{dataset}/LD_DF/chr{chrom}/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}.h5"
     threads:
         4
     script:
-        "../scripts/ld_df_gds.R"
-
-
-
+        "../scripts/ld_mat_h5.R"
 
 
 
@@ -89,6 +84,19 @@ rule ld_chunkdf:
         snpdff=config["EVD_DIR"]+"{dataset}/LD_DF_SNPList/chr{chrom}/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}_{x}_{chunktot}.RDS"
     script:
         "../scripts/LDchunk.R"
+
+
+
+rule chunksize_breakpoint:
+    input:
+        ldetectf=config["INPUT_DIR"]+"ldetect_F.txt.gz"
+    params:
+        use_ldetect="{chunksize}"
+    output:
+        bdf=config["INPUT_DIR"]+"ldetect_{chunksize}.txt.gz"
+    script:
+        "../scripts/break_df.R"
+
 
 
 

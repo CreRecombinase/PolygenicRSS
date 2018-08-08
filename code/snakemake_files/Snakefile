@@ -1,4 +1,4 @@
-bigdata = True
+bigdata = False
 include: "param_snakefile"
 #include: "wtcc_snakefile"
 #include: "combined_snakefile"
@@ -6,7 +6,7 @@ include: "param_snakefile"
 #include: "crossover_snakefile"
 #include: "impute_snakefile"
 #include: "manip_snakefile"
-include: "fram_snakefile"
+#include: "fram_snakefile"
 #include: "kg_snakefile"
 #include: "genred_snakefile"
 include: "trait_snakefile"
@@ -32,10 +32,10 @@ all_rssp=expand(config["OUTPUT_DIR"]+"sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{datase
                 SNPCT=[0],
                 N=[0],
                 simulation=["gwas"],
-                dataset="fram0.05",
-                panel_dataset=["fram0.05"],
+                dataset="cd",
+                panel_dataset=["bd"],
                 geneticMap=["omni"],
-                useLDetect=["T"],
+                useLDetect=["T","20","50"],
                 percentEigen=[".1"],
                 useConfounding="F",
                 scenario=SCEN,
@@ -50,7 +50,7 @@ all_ldsc=expand(config["OUTPUT_DIR"]+"ldsc_res/sim_chr{chrom}AF{AF}SNP{SNPCT}N{N
                 dataset="cd",
                 panel_dataset=["bd"],
                 geneticMap=["omni"],
-                useLDetect=["T"],
+                useLDetect=["T","20"],
                 scenario=SCEN,
                 useLDshrink=["T","F"],
                 useIntercept=["F","T"])
@@ -62,7 +62,7 @@ localrules: all, phase_chr_prep
 
 rule all:
     input:
-        expand(config["GDS_DIR"]+"fram_{chrom}_geno.gds",chrom=range(1,23))
+       all_rssp
 
 
 

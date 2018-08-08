@@ -23,6 +23,14 @@ subldf <- snakemake@input[["subldf"]]
 bdf <- snakemake@input[["bdf"]]
 output_file <- snakemake@output[["evdf"]]
 useLDshrink <- snakemake@params[["useLDshrink"]]=="T"
+chunking <-snakemake@params[["useLDetect"]]
+stopifnot(!is.null(chunking))
+
+useLDetect <-chunking=="T"
+useChunking <- !is.na(as.numeric(chunking))
+if(useChunking){
+    chunking <- as.integer(chunking)
+}
 
 cutoff <- formals(LDshrink::LDshrink)[["cutoff"]]
 m <- formals(LDshrink::LDshrink)[["m"]]
@@ -40,13 +48,15 @@ ind_v <- readRDS(subldf)
 snp_df <- read_delim(subsnpf,delim="\t")
 op <- nrow(snp_df)
 tsnp_df <- snp_df
-snp_df <-assign_snp_block(snp_df,break_df,assign_all = T)
-semi_join(break_df,snp_df) %>% distinct(chr)
+if(!useChunking){
+    snp_df <-assign_snp_block(snp_df,break_df,assign_all = T)
+    semi_join(break_df,snp_df) %>% distinct(chr)
+}else{
+    snp_df <- chunk_genome(snp_df,n_chunks=chunking)
+}
 stopifnot(nrow(snp_df)==op)
 p <- nrow(snp_df)
-
 stopifnot(sorted_snp_df(snp_df))
-
 map_df <- read_df_h5(mapf,"SNPinfo")
 cat("Assigning Map\n")
 snp_df <- assign_map(snp_df,map_df)
@@ -54,45 +64,31 @@ cat("Removing Map\n")
 rm(map_df)
 stopifnot(!is.unsorted(snp_df$chr))
 stopifnot(!is.unsorted(snp_df$snp_id,strictly = T))
-
 stopifnot(group_by(snp_df,chr) %>%
-            summarise(sorted=!is.unsorted(map)) %>%
-            summarise(sorted=all(sorted)) %>%
-            pull(1))
-
-## LDshrink::chunkwise_LD_h5(input_file = input_file,
-##                                 output_file = output_file,
-##                                 snp_df = snp_df,
-##                                 useLDshrink=useLDshrink)
-
+          summarise(sorted=!is.unsorted(map)) %>%
+          summarise(sorted=all(sorted)) %>%
+          pull(1))
 
 stopifnot(file.exists(input_file),
           !file.exists(output_file),
           !is.null(snp_df[["region_id"]]),
           !is.null(snp_df[["map"]]))
-
-
-
-
 p <- nrow(snp_df)
-dosage_dims <-EigenH5::dim_h5(input_file,"dosage")
-tch <- EigenH5::dim_h5(input_file,"SNPinfo/chr")
-
-
+dosage_dims <-EigenH5::dim_h5(input_file, "dosage")
+tch <- EigenH5::dim_h5(input_file, "SNPinfo/chr")
 SNPfirst <-  dosage_dims[1]==tch
 N <- length(ind_v)
 if(!SNPfirst){
   stopifnot(dosage_dims[2]==tch)
 }
+snp_df <- dplyr::mutate(snp_df, ld_snp_id = snp_id)
 
-snp_df <- dplyr::mutate(snp_df,ld_snp_id=snp_id)
-write_df_h5(snp_df,"LDinfo",output_file)
+write_df_h5(snp_df, output_file, "LDinfo")
 pl <- snakemake@wildcards
 pl <- as_data_frame(pl[names(pl)!=""])
-write_df_h5(pl,groupname = "Wildcards",filename=output_file)
+write_df_h5(pl, filename = output_file, datapath = "Wildcards")
 
-
-snp_dfl <- split(snp_df,snp_df$region_id)
+snp_dfl <- split(snp_df, snp_df$region_id)
 
 cat("Estimating LD")
 num_b <- length(snp_dfl)
@@ -103,9 +99,9 @@ for(i in 1:num_b){
   # retl <- snp_dfl %>% purrr::map(function(tdf,m,Ne,cutoff,useLDshrink,SNPfirst,ind_l){
   #   return(future::future({
   if(SNPfirst){
-    dosage <- EigenH5::read_matrix_h5(input_file,"/","dosage",subset_rows=tdf$ld_snp_id,subset_cols=ind_v,doTranspose=T)
+    dosage <- EigenH5::read_matrix_h5(input_file,"dosage",subset_rows=tdf$ld_snp_id,subset_cols=ind_v,doTranspose=T)
   }else{
-    dosage <- EigenH5::read_matrix_h5(input_file,"/","dosage",subset_cols=tdf$ld_snp_id,subset_rows=ind_v)
+    dosage <- EigenH5::read_matrix_h5(input_file,"dosage",subset_cols=tdf$ld_snp_id,subset_rows=ind_v)
   }
   mrid <- unique(tdf$region_id)
   stopifnot(length(mrid)==1)
@@ -117,13 +113,9 @@ for(i in 1:num_b){
                        useLDshrink=useLDshrink,
                        na.rm=T)
   stopifnot(length(retl$D)==length(tdf$pos))
-  EigenH5::write_vector_h5(output_file,paste0("EVD/",mrid),"D",retl$D)
-  EigenH5::write_matrix_h5(output_file,paste0("EVD/",mrid),"Q",retl$Q)
-  EigenH5::write_vector_h5(output_file,paste0("L2/",mrid),"L2",retl$L2)
-  # EigenH5::write_matrix_h5(output_file,paste0("LD/",mrid),"R",retl$R)
-  # EigenH5::write_vector_h5(output_file,paste0("LDi/",mrid),"chr",tdf$chr)
-  # EigenH5::write_vector_h5(output_file,paste0("LDi/",mrid),"pos",tdf$pos)
-  # EigenH5::write_vector_h5(output_file,paste0("LDi/",mrid),"allele",tdf$allele)
+  EigenH5::write_vector_h5(retl$D,output_file,paste0("EVD/", mrid, "/D"))
+  EigenH5::write_matrix_h5(retl$Q,output_file,paste0("EVD/", mrid, "/Q"))
+  EigenH5::write_vector_h5(retl$L2,output_file,paste0("L2/", mrid, "/L2"))
   pb$tick()
 }
 #   },packages=c("EigenH5","LDshrink")))
