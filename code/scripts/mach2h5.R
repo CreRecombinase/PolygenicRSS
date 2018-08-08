@@ -1,3 +1,5 @@
+
+
 library(tidyverse)
 library(EigenH5)
 # library(GWASTools)
@@ -47,7 +49,16 @@ good_snp_df <- snp_df %>% filter(MAF >= AFc|!is.na(more)) %>% select(-more)
 
 index_cols <- good_snp_df$orig_snp_id
 
-EigenH5::mach2h5(dosagefile = snpdf,h5file = output_f,datapath = "dosage",snp_idx = index_cols-1,names = sample_i,p = p,buffer_size = 500000*6,SNPfirst = F)
+stopifnot(length(index_cols)>1,
+          length(sample_i)>1)
+EigenH5::mach2h5(dosagefile = snpdf,
+                 h5file = output_f,
+                 datapath = "dosage",
+                 snp_idx = index_cols-1,
+                 names = sample_i,
+                 p = p,options=list(
+                           buffer_size = 50000*6,
+                           SNPfirst = F,progress=T))
 
 good_snp_df %>% mutate(Genotyped=as.integer(Genotyped)) %>% mutate(snp_id=1:n()) %>% write_df_h5(groupname = "SNPinfo",filename = output_f)
 #

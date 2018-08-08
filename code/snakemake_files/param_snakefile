@@ -2,14 +2,14 @@ import numpy as np
 import gzip
 
 configpath = None
-gardner_dir="../../../../../../../../group/xhe-lab/1KG/"
+gardner_dir="../../../../../../../../gpfs/data/xhe-lab/1KG/"
 rcc_dir="../../../../../../../project/xinhe/eQTL/1kg/"
 helab_dir="../../../../Desktop/scratch/polyg_scratch/"
 xps_dir="/home/nwknoblauch/Desktop/im_xps13"
 if os.path.exists(gardner_dir):
     print("On Gardner\n")
     configpath="../workflow_params_gardner.json"
-    shell.prefix("module load shapeit; module load plink; module load minimac3")
+    shell.prefix("conda activate rssp")
 if os.path.exists(rcc_dir):
     print("On RCC\n")
     configpath="../workflow_params_rcc.json"

@@ -1,10 +1,31 @@
 rule count_n_chr:
     input:
-        config["FRAM_DIR"]+"machout.chr22.dose_NPU.gz"
+        config["FRAM_DIR"]+"machout.chr22.dose_GRU.gz"
     output:
-        config["FRAM_DIR"]+"all_ind_NPU.txt"
+        config["FRAM_DIR"]+"all_ind_GRU.txt"
     shell:
         "zcat {input} |cut -f 1 >{output}"
+
+# rule fram_vcf_gds:
+#     input:
+#         vcff=expand(config["FRAM_VCF_DIR"]+"chr{chrom}.dose.vcf.gz",chrom=range(1,23))
+#     output:
+#         temp_gds=config["SNPGDS_DIR"]+"ALL_fram_geno.gds"
+#     script:
+#         "../scripts/vcf2snp_gds.R"
+
+
+rule fram_vcf_seq_gds:
+    input:
+        vcff=config["FRAM_VCF_DIR"]+"chr{chrom}.dose.vcf.gz"
+    output:
+        temp_gds=config["GDS_DIR"]+"fram_{chrom}_geno.gds"
+    threads:
+        11
+    script:
+        "../scripts/vcf2seq_gds.R"
+
+
 
 rule fram_chr_gds:
     input:
@@ -23,9 +44,9 @@ rule fram_chr_gds:
 
 rule fram_chr_h5:
     input:
-        snpdosage=config["FRAM_DIR"]+"machout.chr{chrom}.dose_NPU.gz",
+        snpdosage=config["FRAM_DIR"]+"machout.chr{chrom}.dose_GRU.gz",
         snpinfo=config["FRAM_DIR"]+"imputed-metrics/machout.chr{chrom}.info.gz",
-        sampleidf=config["FRAM_DIR"]+"all_ind_NPU.txt"
+        sampleidf=config["FRAM_DIR"]+"all_ind_GRU.txt"
     params:
         AF="{AF}",
         chrom="{chrom}"

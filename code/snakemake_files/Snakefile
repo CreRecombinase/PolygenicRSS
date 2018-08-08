@@ -62,7 +62,8 @@ localrules: all, phase_chr_prep
 
 rule all:
     input:
-        all_rssp
+        expand(config["GDS_DIR"]+"fram_{chrom}_geno.gds",chrom=range(1,23))
+
 
 
 
