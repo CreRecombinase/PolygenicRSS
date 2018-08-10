@@ -29,7 +29,7 @@ expdims <- dim_h5(ymatf,"trait/ymat")
 stopifnot(g==expdims[1],
           length(ind_v)==expdims[2])
 if(ncovar>0){
-    covarmat <- read_matrix_h5(covarf,"/","covariates",subset_cols=seq_len(ncovar))
+    covarmat <- read_matrix_h5(covarf,"covariates",subset_cols=seq_len(ncovar))
 }else{
     covarmat <- matrix(1,length(ind_v),1)
 }
@@ -52,26 +52,26 @@ uh_lff <-  snp_l %>% map(~list(subset_rows=.x$snp_chunk_id,filename=uhf,datapath
 se_lff <-  map(uh_lff,~update_list(.,datapath="se"))
 
 cat("Creating output matrices\n")
-EigenH5::create_matrix_h5(uhf,"/","uh",numeric(),dims=c(p,g),chunksizes=c(1000L,g))
-EigenH5::create_matrix_h5(uhf,"/","se",numeric(),dims=c(p,g),chunksizes=c(1000L,g))
+EigenH5::create_matrix_h5(uhf,"uh",numeric(),dims=c(p,g),chunksizes=c(1000L,g))
+EigenH5::create_matrix_h5(uhf,"se",numeric(),dims=c(p,g),chunksizes=c(1000L,g))
 
 stopifnot(nrow(tparam_df)>0)
 stopifnot(!is.null(snp_df$AF),
           all(!is.na(snp_df$AF)))
 
 cat("Writing simulation/data info\n")
-write_df_h5(snp_df,"SNPinfo",uhf)
-write_df_h5(tparam_df,"SimulationInfo",uhf)
+write_df_h5(snp_df,uhf,"SNPinfo")
+write_df_h5(tparam_df,uhf,"SimulationInfo")
 pl <- snakemake@wildcards
 pl <- as_data_frame(pl[names(pl)!=""])
-write_df_h5(pl,groupname = "Wildcards",filename=uhf)
+write_df_h5(pl,uhf, "Wildcards")
 
 cat("Mapping traits\n")
 SeqSupport::map_eQTL_chunk_h5(snp_lff,exp_lff,uh_lff,se_lff,covarmat)
 
 
 cat("Checking uh\n")
-tuh <- EigenH5::read_matrix_h5(uhf,"/","uh",
+tuh <- EigenH5::read_matrix_h5(uhf,"uh",
                                subset_rows=sort(sample(1:p,min(p,100),replace=F)),
                                subset_cols=sort(sample(1:g,min(g,100),replace=F)))
 stopifnot(all(!is.na(c(tuh))))

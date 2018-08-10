@@ -52,7 +52,7 @@ if(!useChunking){
     snp_df <-assign_snp_block(snp_df,break_df,assign_all = T)
     semi_join(break_df,snp_df) %>% distinct(chr)
 }else{
-    snp_df <- chunk_genome(snp_df,n_chunks=chunking)
+    snp_df <- chunk_genome(snp_df,chunk_size = chunking)
 }
 stopifnot(nrow(snp_df)==op)
 p <- nrow(snp_df)

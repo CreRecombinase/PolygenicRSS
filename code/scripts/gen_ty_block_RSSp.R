@@ -32,10 +32,9 @@ if(ncol(ymat)==g && nrow(ymat)==n){
 stopifnot(nrow(ymat)==g,
           ncol(ymat)==n)
 stopifnot(all(!is.na(ymat)))
-EigenH5::write_matrix_h5(out_h5f,"trait","ymat",ymat)
-EigenH5::write_df_h5(tparam_df,groupname = "SimulationInfo",out_h5f)
+EigenH5::write_matrix_h5(ymat,out_h5f,"trait/ymat")
+EigenH5::write_df_h5(tparam_df,out_h5f,"SimulationInfo")
 
 pl <- snakemake@wildcards
 pl <- as_data_frame(pl[names(pl)!=""])
-EigenH5::write_df_h5(pl,groupname = "Wildcards",filename=out_h5f)
-
+EigenH5::write_df_h5(pl,filename=out_h5f, "Wildcards")

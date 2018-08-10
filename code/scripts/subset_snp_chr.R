@@ -26,8 +26,8 @@ break_df <- read_delim(ldetectf,delim="\t",trim_ws = T) %>% mutate(chr=as.intege
 stopifnot(!is.na(AF_cutoff),!is.na(SNPCT),!is.na(N),length(AF_cutoff)>0,
           length(SNPCT)>0,length(N)>0)
 #gwas_inds <- sort(sample(1:N,ceiling(N/2),replace = F))
-inds_a  <- read_vector_h5(inf_a,"SampleInfo","sample_id")
-inds_b  <- read_vector_h5(inf_b,"SampleInfo","sample_id")
+inds_a  <- read_vector_h5(inf_a,"SampleInfo/sample_id")
+inds_b  <- read_vector_h5(inf_b,"SampleInfo/sample_id")
 if(N>0){
     sN <- min(c(length(inds_a),length(inds_b)))
     subset_ind_a <- 1:N

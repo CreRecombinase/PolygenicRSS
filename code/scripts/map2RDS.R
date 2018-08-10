@@ -21,4 +21,4 @@ map_df <- map2_dfr(map_file_df$map_file, map_file_df$chr,
                    })
 
 
-write_df_h5(map_df, "SNPinfo", outf)
+write_df_h5(map_df,outf, "SNPinfo")
