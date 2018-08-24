@@ -6,14 +6,15 @@ include: "param_snakefile"
 #include: "crossover_snakefile"
 #include: "impute_snakefile"
 #include: "manip_snakefile"
-#include: "fram_snakefile"
+include: "fram_snakefile"
 #include: "kg_snakefile"
 #include: "genred_snakefile"
-include: "trait_snakefile"
+#include: "sim_snakefile"
+#include: "trait_snakefile"
 include: "LD_snakefile"
-include: "direct_snakefile"
-include: "ldsc_snakefile"
-include: "rssp_snakefile"
+#include: "direct_snakefile"
+#include: "ldsc_snakefile"
+#include: "rssp_snakefile"
 #include: "grm_snakefile"
 
 wildcard_constraints:
@@ -21,48 +22,68 @@ wildcard_constraints:
     pop="[A-Z]+"
     
 
-all_ld = [config["EVD_DIR"]+"{dataset}/LD_DF/chr{chrom}/chr{chrom}AF{AF}SNP0N0_{dataset}_{dataset}_F_{dataset}_T_{r2cutoff}_{x}_{y}_20.RDS".format(chrom=z,dataset="CEU",AF="0.01",r2cutoff=0.01,x=x,y=y) for x in range(1,21) for y in range(x,21) for z in range(1,23)]
-#flat_list = [item for sublist in l for item in sublist]
+# all_ld = [config["EVD_DIR"]+"{dataset}/LD_DF/chr{chrom}/chr{chrom}AF{AF}SNP0N0_{dataset}_{dataset}_F_{dataset}_T_{r2cutoff}_{x}_{y}_20.RDS".format(chrom=z,dataset="CEU",AF="0.01",r2cutoff=0.01,x=x,y=y) for x in range(1,21) for y in range(x,21) for z in range(1,23)]
+# #flat_list = [item for sublist in l for item in sublist]
 
-use_ld=all_ld[0]
-all_rssp=expand(config["OUTPUT_DIR"]+"sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{nc}_{useConfounding}.txt.gz",
-                chrom="1-22",
-                nc=range(0,2),
-                AF=["0.05"],
-                SNPCT=[0],
-                N=[0],
-                simulation=["gwas"],
-                dataset="cd",
-                panel_dataset=["bd"],
-                geneticMap=["omni"],
-                useLDetect=["T","20","50"],
-                percentEigen=[".1"],
-                useConfounding="F",
-                scenario=SCEN,
-                useLDshrink=["T","F"])
-all_ldsc=expand(config["OUTPUT_DIR"]+"ldsc_res/sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_ldsc_res_{scenario}_{useLDshrink}_{nc}_{useIntercept}.txt.gz",
-                chrom="1-22",
-                nc=range(0,2),
-                AF=["0.01","0.05"],
-                SNPCT=[0],
-                N=[0],
-                simulation=["gwas"],
-                dataset="cd",
-                panel_dataset=["bd"],
-                geneticMap=["omni"],
-                useLDetect=["T","20"],
-                scenario=SCEN,
-                useLDshrink=["T","F"],
-                useIntercept=["F","T"])
-
-
+# use_ld=all_ld[0]
+# all_rssp=expand(config["OUTPUT_DIR"]+"sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{nc}_{useConfounding}.txt.gz",
+#                 chrom="1-22",
+#                 nc=range(0,2),
+#                 AF=["0.05"],
+#                 SNPCT=[0],
+#                 N=[0],
+#                 simulation=["gwas"],
+#                 dataset="cd",
+#                 panel_dataset=["bd"],
+#                 geneticMap=["omni"],
+#                 useLDetect=["T","20","50"],
+#                 percentEigen=[".1"],
+#                 useConfounding="F",
+#                 scenario=SCEN,
+#                 useLDshrink=["T","F"])
+# all_ldsc=expand(config["OUTPUT_DIR"]+"ldsc_res/sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_ldsc_res_{scenario}_{useLDshrink}_{nc}_{useIntercept}.txt.gz",
+#                 chrom="1-22",
+#                 nc=range(0,2),
+#                 AF=["0.01","0.05"],
+#                 SNPCT=[0],
+#                 N=[0],
+#                 simulation=["gwas"],
+#                 dataset="cd",
+#                 panel_dataset=["bd"],
+#                 geneticMap=["omni"],
+#                 useLDetect=["T","20"],
+#                 scenario=SCEN,
+#                 useLDshrink=["T","F"],
+#                 useIntercept=["F","T"])
 
 
+
+
+
+
+gf=[config["GDS_DIR"]+ "fram_" + str(chrom)+"_geno.gds" for chrom in range(1,23)]
+hf=expand(config["HDF5_DIR"]+"fram_{chrom}_AF{AF}.h5",chrom=range(1,23),AF="0.05")
+#print(gf)
 localrules: all, phase_chr_prep
+# config["HDF5_DIR"]+"fram_{chrom}_AF{AF}.h5"
 
+dff=config["OUTPUT_DIR"]+"est_fram_{AF}_{ncovar}_{useLDetect}_{geneticMap}_{useLDshrink}_{percentEigen}_{useConfounding}.txt.gz".format(AF="0.05",
+                                                                                                                                                ncovar=10,
+                                                                                                                                                useLDetect="T",
+                                                                                                                                                geneticMap="omni",
+                                                                                                                                                percentEigen="0.1",
+                                                                                                                                                useConfounding="F",
+                                                                                                                                                useLDshrink="T")
+evdf=config["EVD_DIR"]+"fram_{AF}_{useLDetect}_{geneticMap}_{useLDshrink}.h5".format(AF="0.05",
+                                                                                     useLDetect="T",
+                                                                                     geneticMap="omni",
+                                                                                     useLDshrink="T")
+uhf=expand(config["KG_DIRECTORY"]+"gwas_uh/chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_data_{ncovar}_sim.h5",chrom=range(1,23),AF="0.05",SNPCT=0,N=0,ncovar=10)
+evdf=expand(config["EVD_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_{useLDetect}_{geneticMap}_{useLDshrink}.h5",chrom=range(1,23),AF="0.05",SNPCT=0,N=0,useLDetect="T",geneticMap="omni",useLDshrink=["T","F"])
+quhf=expand(config["KG_DIRECTORY"]+"quh/chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_{useLDetect}_{geneticMap}_{useLDshrink}_{ncovar}.h5",chrom=range(1,23),AF="0.05",SNPCT=0,N=0,useLDetect="T",geneticMap="omni",useLDshrink=["T","F"],ncovar=10)
 rule all:
     input:
-       all_rssp
+        "/scratch/t.cri.nknoblauch/polyg_scratch/trait/fram_exp.h5"
 
 
 

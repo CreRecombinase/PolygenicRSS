@@ -1,6 +1,5 @@
 library(SeqArray)
 library(EigenH5)
-#library(LDshrink)
 library(SeqSupport)
 library(tidyverse)
 #data("break_df")
@@ -27,4 +26,4 @@ cat("Beginning HDF5 Conversion\n")
 SeqSupport::gds2hdf5(tgds,outf)
 pl <- snakemake@wildcards
 pl <- as_data_frame(pl[names(pl)!=""])
-write_df_h5(pl,groupname = "Wildcards",filename=outf)
+write_df_h5(pl,outf, "Wildcards")

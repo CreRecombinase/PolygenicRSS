@@ -21,6 +21,12 @@ outf <- snakemake@output[["dff"]]
 doConfound <- snakemake@params[["doConfound"]]
 pvv <- snakemake@params[["pvv"]]
 
+y_grp <- snakemake@params[["y_grp"]]
+
+if(is.null(y_grp)){
+    y_grp  <- "SimulationInfo"
+}
+
 if(is.null(pvv)){
     pvv <- 0
 }else{
@@ -45,7 +51,7 @@ stopifnot(file.exists(rdsf),
           !is.null(rdsf))
 pl <- snakemake@wildcards
 pl <- as_data_frame(pl[names(pl)!=""]) %>% mutate(ttca=NA)
-tparam_df <- read_df_h5(rdsf,"SimulationInfo") %>% mutate(ttca=NA) %>% inner_join(pl) %>% select(-ttca)
+tparam_df <- read_df_h5(rdsf,y_grp) %>% mutate(ttca=NA) %>% inner_join(pl) %>% select(-ttca)
 
 
 exec_fn <-  function(quhl,tpdfl,D,region_id){
@@ -72,3 +78,6 @@ rss_res <- map2_df(
 
 
 write_delim(rss_res,outf,delim="\t")
+
+
+cat("Done!")
