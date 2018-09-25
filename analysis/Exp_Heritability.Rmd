@@ -3,7 +3,13 @@ title: "Expression Heritability"
 output: html_notebook
 ---
 
-#Heritability of Gene Expression from Summary Statistics
+
+```{r echo=F,message=F,warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+```
+
+# Heritability of Gene Expression from Summary Statistics
 
 ## Framingham eQTL Data
 
