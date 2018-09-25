@@ -60,21 +60,21 @@ There is a correlation coefficient of `r cor(ncomp_exp$RSSp_pve,ncomp_exp$Fram_p
 
 
 
-# ```{r}
-# explf <- str_split(exp_df$gene_assignment,pattern="///") %>% map(str_trim) %>% map(str_split,pattern = "//")
-# 
-# 
-# 
-# expi_df <- go_df <- map(explf,function(x){
-#   map(x,str_trim) %>% map_df(~data_frame(genbank_id=.x[1],symbol=.x[2],gene_name=.x[3],loc=.x[4],entrez_id=.x[5]))
-# })
-# ```
-# 
-# 
-# ```{r}
-# #exp_df <- mutate(exp_df,new_exp=str_trim(str_split_fixed(gene_assignment,pattern = "//",n=3)[,2]))
-# go_df <- str_split(exp_df$GO_molecular_function,pattern="///") %>% map(str_trim) %>% map(str_split,pattern="//") %>% map(function(x){
-#   map(x,str_trim) %>% map_df(~data_frame(id=.x[1],term=.x[2],name=.x[3],evidence=.x[4]))
-# })
-# ```
+<!-- # ```{r} -->
+<!-- # explf <- str_split(exp_df$gene_assignment,pattern="///") %>% map(str_trim) %>% map(str_split,pattern = "//") -->
+<!-- #  -->
+<!-- #  -->
+<!-- #  -->
+<!-- # expi_df <- go_df <- map(explf,function(x){ -->
+<!-- #   map(x,str_trim) %>% map_df(~data_frame(genbank_id=.x[1],symbol=.x[2],gene_name=.x[3],loc=.x[4],entrez_id=.x[5])) -->
+<!-- # }) -->
+<!-- # ``` -->
+<!-- #  -->
+<!-- #  -->
+<!-- # ```{r} -->
+<!-- # #exp_df <- mutate(exp_df,new_exp=str_trim(str_split_fixed(gene_assignment,pattern = "//",n=3)[,2])) -->
+<!-- # go_df <- str_split(exp_df$GO_molecular_function,pattern="///") %>% map(str_trim) %>% map(str_split,pattern="//") %>% map(function(x){ -->
+<!-- #   map(x,str_trim) %>% map_df(~data_frame(id=.x[1],term=.x[2],name=.x[3],evidence=.x[4])) -->
+<!-- # }) -->
+<!-- # ``` -->
 
