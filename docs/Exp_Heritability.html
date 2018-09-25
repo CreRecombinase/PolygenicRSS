@@ -356,7 +356,7 @@ div.section {
 </li>
 <li>
 <details>
-<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/cba28b71e85ed00aad4f2eafaf989ae1632c2143" target="_blank">cba28b7</a> </summary></p>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/ab17cedb7f509f5ba81849af72651a542b515b23" target="_blank">ab17ced</a> </summary></p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
 <pre><code>
 Ignored files:
@@ -365,7 +365,6 @@ Ignored files:
     Ignored:    .Rproj.user/
     Ignored:    .httr-oauth
     Ignored:    analysis/PolygenicEstimation_cache/
-    Ignored:    analysis/figure/
     Ignored:    code/.Rhistory
     Ignored:    code/scripts/.Rhistory
     Ignored:    code/snakemake_files/.Rhistory
@@ -498,6 +497,7 @@ Unstaged changes:
     Modified:   analysis/index.Rmd
     Modified:   analysis/license.Rmd
     Modified:   analysis/lnzDist.Rmd
+    Modified:   analysis/results.Rmd
     Modified:   analysis/simulatingGWAS.Rmd
     Modified:   analysis/simulation.Rmd
     Modified:   code/TF_LDshrink.ipynb
@@ -535,6 +535,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/ab17cedb7f509f5ba81849af72651a542b515b23/analysis/Exp_Heritability.Rmd" target="_blank">ab17ced</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-09-25
+</td>
+<td style="text-align:left;">
+analysis/results.Rmd
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/79a2e50de493395f08ee5bf39431c06853fdc126/docs/Exp_Heritability.html" target="_blank">79a2e50</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-09-25
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
 <tr>
 <td style="text-align:left;">
 Rmd
@@ -583,7 +617,39 @@ exp_df &lt;- readRDS(rdsf)
 
 exp_df &lt;- select_if(exp_df,~length(unique(.x))&gt;1)</code></pre>
 <pre class="r"><code>ggplot(exp_df,aes(x=pve))+geom_histogram(bins=75)+ggtitle(&quot;Heritability of Gene Expression in Framingham Data&quot;,&quot;17873 genes in total&quot;)</code></pre>
-<p><img src="figure/Exp_Heritability.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /> Some summary statistics for the estimates</p>
+<p><img src="figure/Exp_Heritability.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<details>
+<summary><em>Expand here to see past versions of unnamed-chunk-2-1.png:</em></summary>
+<table style = "border-collapse:separate; border-spacing:5px;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Version
+</th>
+<th style="text-align:left;">
+Author
+</th>
+<th style="text-align:left;">
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/79a2e50de493395f08ee5bf39431c06853fdc126/docs/figure/Exp_Heritability.Rmd/unnamed-chunk-2-1.png" target="_blank">79a2e50</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-09-25
+</td>
+</tr>
+</tbody>
+</table>
+</details>
+<p>Some summary statistics for the estimates</p>
 <pre class="r"><code>DT::datatable(broom::tidy(summary(exp_df$pve)))</code></pre>
 <pre><code>Loading required namespace: shiny</code></pre>
 <div id="htmlwidget-b8e0c2e2742a5382bafd" style="width:100%;height:auto;" class="datatables html-widget"></div>
@@ -599,6 +665,37 @@ ncomp_exp &lt;- select(comp_exp,transcript_cluster_id=Transcript_ID,h2=`h2 (gene
 <p>I compared heritability estimates of <code>RSSp</code> to the <code>1607</code> heritability estimates published in <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4339826/">A Systematic Heritability Analysis of the Human Whole Blood Transcriptome</a></p>
 <pre class="r"><code>ncomp_exp%&gt;% ggplot(aes(x=Fram_pve,y=RSSp_pve))+geom_point()+geom_smooth(method=&quot;lm&quot;)+ggtitle(&quot;Comparison of original Heritability estimates to RSSp&quot;,&quot;1607 genes&quot;)</code></pre>
 <p><img src="figure/Exp_Heritability.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<details>
+<summary><em>Expand here to see past versions of unnamed-chunk-5-1.png:</em></summary>
+<table style = "border-collapse:separate; border-spacing:5px;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Version
+</th>
+<th style="text-align:left;">
+Author
+</th>
+<th style="text-align:left;">
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/79a2e50de493395f08ee5bf39431c06853fdc126/docs/figure/Exp_Heritability.Rmd/unnamed-chunk-5-1.png" target="_blank">79a2e50</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-09-25
+</td>
+</tr>
+</tbody>
+</table>
+</details>
 <pre class="r"><code>broom::tidy(summary(lm(RSSp_pve~Fram_pve,data=ncomp_exp)))</code></pre>
 <pre><code># A tibble: 2 x 5
   term        estimate std.error statistic   p.value
@@ -606,18 +703,24 @@ ncomp_exp &lt;- select(comp_exp,transcript_cluster_id=Transcript_ID,h2=`h2 (gene
 1 (Intercept)    0.412    0.0435      9.47 9.49e- 21
 2 Fram_pve       6.05     0.131      46.3  8.50e-298</code></pre>
 <p>There is a correlation coefficient of 0.756083 between the two results.</p>
+<!-- # ```{r} -->
+<!-- # explf <- str_split(exp_df$gene_assignment,pattern="///") %>% map(str_trim) %>% map(str_split,pattern = "//") -->
+<!-- #  -->
+<!-- #  -->
+<!-- #  -->
+<!-- # expi_df <- go_df <- map(explf,function(x){ -->
+<!-- #   map(x,str_trim) %>% map_df(~data_frame(genbank_id=.x[1],symbol=.x[2],gene_name=.x[3],loc=.x[4],entrez_id=.x[5])) -->
+<!-- # }) -->
+<!-- # ``` -->
+<!-- #  -->
+<!-- #  -->
+<!-- # ```{r} -->
+<!-- # #exp_df <- mutate(exp_df,new_exp=str_trim(str_split_fixed(gene_assignment,pattern = "//",n=3)[,2])) -->
+<!-- # go_df <- str_split(exp_df$GO_molecular_function,pattern="///") %>% map(str_trim) %>% map(str_split,pattern="//") %>% map(function(x){ -->
+<!-- #   map(x,str_trim) %>% map_df(~data_frame(id=.x[1],term=.x[2],name=.x[3],evidence=.x[4])) -->
+<!-- # }) -->
+<!-- # ``` -->
 </div>
-<div id="r-explf---str_splitexp_dfgene_assignmentpattern-mapstr_trim-mapstr_splitpattern-expi_df---go_df---mapexplffunctionx-mapxstr_trim-map_dfdata_framegenbank_id.x1symbol.x2gene_name.x3loc.x4entrez_id.x5" class="section level1">
-<h1><code>{r} # explf &lt;- str_split(exp_df$gene_assignment,pattern=&quot;///&quot;) %&gt;% map(str_trim) %&gt;% map(str_split,pattern = &quot;//&quot;) #  #  #  # expi_df &lt;- go_df &lt;- map(explf,function(x){ #   map(x,str_trim) %&gt;% map_df(~data_frame(genbank_id=.x[1],symbol=.x[2],gene_name=.x[3],loc=.x[4],entrez_id=.x[5])) # }) #</code></h1>
-</div>
-<div id="section" class="section level1">
-<h1></h1>
-</div>
-<div id="section-1" class="section level1">
-<h1></h1>
-</div>
-<div id="r-exp_df---mutateexp_dfnew_expstr_trimstr_split_fixedgene_assignmentpattern-n32-go_df---str_splitexp_dfgo_molecular_functionpattern-mapstr_trim-mapstr_splitpattern-mapfunctionx-mapxstr_trim-map_dfdata_frameid.x1term.x2name.x3evidence.x4" class="section level1">
-<h1><code>{r} # #exp_df &lt;- mutate(exp_df,new_exp=str_trim(str_split_fixed(gene_assignment,pattern = &quot;//&quot;,n=3)[,2])) # go_df &lt;- str_split(exp_df$GO_molecular_function,pattern=&quot;///&quot;) %&gt;% map(str_trim) %&gt;% map(str_split,pattern=&quot;//&quot;) %&gt;% map(function(x){ #   map(x,str_trim) %&gt;% map_df(~data_frame(id=.x[1],term=.x[2],name=.x[3],evidence=.x[4])) # }) #</code></h1>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <pre class="r"><code>sessionInfo()</code></pre>
@@ -667,7 +770,6 @@ loaded via a namespace (and not attached):
 [58] rmarkdown_1.10    httr_1.3.1        rstudioapi_0.7   
 [61] R6_2.2.2          nlme_3.1-137      git2r_0.23.0     
 [64] compiler_3.5.1   </code></pre>
-</div>
 </div>
 
 <hr>
