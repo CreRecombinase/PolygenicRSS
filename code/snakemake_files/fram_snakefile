@@ -6,15 +6,6 @@ rule count_n_chr:
     shell:
         "zcat {input} |cut -f 1 >{output}"
 
-# rule fram_vcf_gds:
-#     input:
-#         vcff=expand(config["FRAM_VCF_DIR"]+"chr{chrom}.dose.vcf.gz",chrom=range(1,23))
-#     output:
-#         temp_gds=config["SNPGDS_DIR"]+"ALL_fram_geno.gds"
-#     script:
-#         "../scripts/vcf2snp_gds.R"
-
-
 rule fram_vcf_seq_gds:
     input:
         vcff=config["FRAM_VCF_DIR"]+"chr{chrom}.dose.vcf.gz"
@@ -24,8 +15,6 @@ rule fram_vcf_seq_gds:
         11
     script:
         "../scripts/vcf2seq_gds.R"
-
-
 
 rule fram_chr_gds:
     input:
@@ -41,12 +30,51 @@ rule fram_chr_gds:
     script:
         "../scripts/mach2gds.R"
 
+rule fram_exp_h5:
+    input:
+        expf= "/group/im-lab/nas40t2/Data/dbGaP/Transcriptome/Framingham/keston-analysis/mRNA_matrixeqtl_EXP_N22011.txt",
+        expif= "/group/im-lab/nas40t2/Data/dbGaP/Transcriptome/Framingham/keston-analysis/HuEx-1_0-st-v2.na35.hg19.transcript_fixed.csv"
+    output:
+        h5f=config["KG_DIRECTORY"]+"trait/fram_exp.h5",
+        sample_list=config["FRAM_DIR"]+"all_ind_NPU_GRU.txt"
+    script:
+        "../scripts/exp2h5.R"
+
+rule fram_cov_h5:
+    input:
+        expf= "/group/im-lab/nas40t2/Data/dbGaP/Transcriptome/Framingham/keston-analysis/mRNA_matrixeqtl_COV_P40.txt",
+        sample_list=config["FRAM_DIR"]+"all_ind_NPU_GRU.txt"
+    output:
+        h5f=config["KG_DIRECTORY"]+"covardata/fram_covar.h5"
+    script:
+        "../scripts/cov2h5.R"
+
+rule subsnp_fram:
+    ''' Subset SNPs according to which chromosomes you want in the simulation, and what Allele Frequency
+ cutoff you want to use '''
+    input:
+        gdsf_a=config["HDF5_DIR"]+"ALL_fram{AF}_geno.h5",
+        ldetectf=config["LDETECT_BREAK_FILE"],
+    params:
+        chrom="{chrom}",
+        AF="{AF}",
+        SNPCT="{SNPCT}",
+        N="{N}"
+    output:
+        trait_snpf=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_trait_snps.h5",
+        ld_snpf=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_LD_snps.h5",
+        ld_indf=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_LD_inds.h5",
+        trait_indf=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_trait_inds.h5"
+    script:
+        "../scripts/subset_snp_h5.R"
+
 
 rule fram_chr_h5:
     input:
-        snpdosage=config["FRAM_DIR"]+"machout.chr{chrom}.dose_GRU.gz",
-        snpinfo=config["FRAM_DIR"]+"imputed-metrics/machout.chr{chrom}.info.gz",
-        sampleidf=config["FRAM_DIR"]+"all_ind_GRU.txt"
+        snpdosage_a=config["FRAM_DIR"]+"phg000679.v1.FHS_SHARe_Imputed_1000G.genotype-imputed-data.c1/machout.chr{chrom}.dose_GRU.gz",
+        snpdosage_b=config["FRAM_DIR"]+"phg000679.v1.FHS_SHARe_Imputed_1000G.genotype-imputed-data.c2/machout.chr{chrom}.dose_NPU.gz",
+        snpinfo=config["FRAM_DIR"]+"phg000679.v1.FHS_SHARe_Imputed_1000G.genotype-imputed-data.c2/imputed-metrics/machout.chr{chrom}.info.gz",
+        sampleidf=config["FRAM_DIR"]+"all_ind_NPU_GRU.txt"
     params:
         AF="{AF}",
         chrom="{chrom}"
@@ -57,10 +85,82 @@ rule fram_chr_h5:
 
 rule merge_fram_h5:
     input:
-        dosagef=expand(config["HDF5_DIR"]+"fram_{chrom}_AF{{AF}}.h5",chrom=range(1,23))
+        dosagef=expand(config["HDF5_DIR"]+"fram_{chrom}_AF{{AF}}.h5",chrom=range(1,23)),
+        sampleidf=config["FRAM_DIR"]+"all_ind_NPU_GRU.txt"
     params:
         chrom=expand("{chrom}",chrom=range(1,23))
     output:
         outf=config["HDF5_DIR"]+"ALL_fram{AF}_geno.h5"
     script:
         "../scripts/v_concat.R"
+
+rule framgds2h5:
+    ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are possibly rearranged)'''
+    input:
+        input_gds=config["GDS_DIR"]+"fram_{chr}_geno.gds"
+    output:
+        outf=config["HDF5_DIR"]+"fram_{chr}_geno.h5"
+    script:
+        "../scripts/gds2h5.R"
+
+
+
+rule fram_uh:
+    input:
+        h5f=rules.merge_fram_h5.output.outf,
+        covarf=rules.fram_cov_h5.output.h5f,
+        ymatf=rules.fram_exp_h5.output.h5f,
+        subsnpf=rules.subsnp_fram.output.trait_snpf,
+        subgwasf=rules.subsnp_fram.output.trait_indf
+    params:
+        ncovar="{ncovar}",
+        y_grp="TraitInfo",
+        chunksize_snp=20000
+    output:
+        uhf=config["KG_DIRECTORY"]+"gwas_uh/chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_data_{ncovar}_sim.h5"
+    threads: 12
+    script:
+        "../scripts/map_uh_covar.R"
+
+rule fram_ld:
+    input:
+        input_file=rules.merge_fram_h5.output.outf,
+        bdf=config["INPUT_DIR"]+"ldetect_{useLDetect}.txt.gz",
+        mapf=config["KG_MAPDIR"]+"interpolated_{geneticMap}.h5",
+        subsnpf=rules.subsnp_fram.output.ld_snpf,
+        subldf=rules.subsnp_fram.output.ld_indf,
+    params:
+        useLDshrink="{useLDshrink}",
+        useLDetect="{useLDetect}"
+    output:
+        evdf=config["EVD_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_{useLDetect}_{geneticMap}_{useLDshrink}.h5"
+    threads: 4
+    script:
+        "../scripts/evd_1kg_h5.R"
+
+
+
+
+rule fram_quh:
+    input:
+        evdf=rules.fram_ld.output.evdf,
+        uhf=rules.fram_uh.output.uhf
+    params:
+        y_grp="TraitInfo"
+    output:
+        quhf=config["KG_DIRECTORY"]+"quh/chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_{useLDetect}_{geneticMap}_{useLDshrink}_{ncovar}.h5"
+    script:
+        "../scripts/gen_quh_chunk_h5.R"
+
+
+rule fram_RSSp:
+    input:
+        rdsf=rules.fram_quh.output.quhf
+    output:
+        dff=config["OUTPUT_DIR"]+"est_fram_{AF}_{ncovar}_{useLDetect}_{geneticMap}_{useLDshrink}_{percentEigen}_{useConfounding}.txt.gz"
+    params:
+        doConfound="{useConfounding}",
+        pvv="{percentEigen}",
+        y_grp="TraitInfo"
+    script:
+        "../scripts/RSSp_est.R"

@@ -3,26 +3,42 @@ __default__:
   time: '05:30:00'
   nodes: '1'
   ntasks: '1'
-  cpuspertask: '1'
+  mincpus: '1'
   mem: '25gb'
 ld_df:
-  cpuspertask: '10'
+  mincpus: '10'
   time: '06:30:00'
   mem: '6G'
+fram_chr_h5:
+  time : '06:00:00'
+  mem: '32gb'
+fram_ld:
+  time : '05:00:00'
+  mem : '45gb'
+  mincpus : 4
+fram_uh:
+  time : '08:00:00'
+  mem  : '16gb'
+  mincpus: 12
+fram_quh:
+  time : '04:00:00'
+  mem  : '16gb'
+  mincpus: 6
+
 kggds2h5:
-  cpuspertask: '6'
+  mincpus: '6'
   time: '03:30:00'
   mem: '30gb'
 pop_map_h5:
-  cpuspertask: '1'
+  mincpus: '1'
   time: '01:30:00'
   mem: '25gb'
 fram_vcf_seq_gds:
-  cpuspertask: '15'
-  time: '12:00:00'
-  mem: '32gb'
+  mincpus: '1'
+  time: '24:00:00'
+  mem: '18gb'
 subsnp_chr:
-  cpuspertask: '1'
+  mincpus: '1'
   time: '01:30:00'
   mem: '25gb'
 

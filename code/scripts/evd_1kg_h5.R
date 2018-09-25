@@ -9,11 +9,12 @@ library(progress)
 # plan(sequential)
 # mb <-profvis({
 
-# setwd("~/Dropbox/PolygenicRSS/code/snakemake_files/")
-# load("ssSNP.RData")
-# stop()
 
+                                        # load("ssSNP.RData")
+## save.image("evd.RData")
+## stop()
 
+#file.remove("evd.RData")
 cutoff <- 1e-3
 input_file <- snakemake@input[["input_file"]]
 mapf <- snakemake@input[["mapf"]]
@@ -40,20 +41,34 @@ Ne <- formals(LDshrink::LDshrink)[["Ne"]]
 stopifnot( !is.null(input_file), !is.null(output_file),!is.null(mapf),!is.null(bdf))
 
 stopifnot(file.exists(input_file), !file.exists(output_file),file.exists(mapf),file.exists(bdf))
-break_df <- read_delim(bdf,delim="\t") #%>% group_by(chr) %>% mutate(start=ifelse(start==min(start),0,start),
-                                       #                             stop=ifelse(stop==max(stop),max(stop)*2,stop)) %>% ungroup()
+break_df <- read_delim(bdf,delim="\t")
 
 
-ind_v <- readRDS(subldf)
-snp_df <- read_delim(subsnpf,delim="\t")
+if(!is.null(subsnpf)){
+    if(tools::file_ext(subsnpf)=="h5"){
+        snp_df <- read_df_h5(subsnpf,"SNPinfo")
+    }else{
+        snp_df <- read_delim(subsnpf,delim="\t")
+    }
+}else{
+    snp_df <- read_df_h5(input_file,"SNPinfo")
+    all_alleles  <- outer(c("A","C","T","G"),c("A","C","T","G"),function(x,y)paste(x,y,sep=","))
+    all_alleles <- data_frame(allele=c(all_alleles[upper.tri(all_alleles)],all_alleles[lower.tri(all_alleles)]))
+    snp_df <- semi_join(snp_df,all_alleles)
+}
 op <- nrow(snp_df)
-tsnp_df <- snp_df
 if(!useChunking){
     snp_df <-assign_snp_block(snp_df,break_df,assign_all = T)
     semi_join(break_df,snp_df) %>% distinct(chr)
 }else{
     snp_df <- chunk_genome(snp_df,chunk_size = chunking)
 }
+
+#anti_join(snp_df,distinct(snp_df,chr,pos,.keep_all=T) %>% select(snp_id))
+
+
+
+
 stopifnot(nrow(snp_df)==op)
 p <- nrow(snp_df)
 stopifnot(sorted_snp_df(snp_df))
@@ -77,10 +92,28 @@ p <- nrow(snp_df)
 dosage_dims <-EigenH5::dim_h5(input_file, "dosage")
 tch <- EigenH5::dim_h5(input_file, "SNPinfo/chr")
 SNPfirst <-  dosage_dims[1]==tch
-N <- length(ind_v)
 if(!SNPfirst){
   stopifnot(dosage_dims[2]==tch)
 }
+if(!is.null(subldf)){
+    if(tools::file_ext(subldf)=="h5"){
+        ind_v <- read_vector_h5(subldf,"SampleInfo/sample_id")
+    }else{
+        ind_v <- readRDS(subldf)
+    }
+    N <- length(ind_v)
+
+}else{
+    if(SNPfirst){
+        N <-dosage_dims[2]
+    }else{
+        N <- dosage_dims[1]
+    }
+    ind_v <- 1:N
+}
+
+
+
 snp_df <- dplyr::mutate(snp_df, ld_snp_id = snp_id)
 
 write_df_h5(snp_df, output_file, "LDinfo")
@@ -93,6 +126,8 @@ snp_dfl <- split(snp_df, snp_df$region_id)
 cat("Estimating LD")
 num_b <- length(snp_dfl)
 pb <- progress::progress_bar$new(total = num_b)
+
+
 for(i in 1:num_b){
   tdf <- snp_dfl[[i]]
   # }
