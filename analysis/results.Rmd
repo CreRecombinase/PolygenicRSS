@@ -26,6 +26,8 @@ output: workflowr::wflow_html
 * [Effect of Downsampling](DownsamplingResults2.html)
 * [Out of Sample LD](OutOfSampleLD.html)
 * [Visualizing RSSp vs LDSc](ConfoundingAdj.html)
+* [Heritability results from Framingham Data](Exp_Heritability.html)
+
 
 
 
