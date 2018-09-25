@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>Expression Heritability</title>
+
+<script src="site_libs/jquery-1.12.4/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/htmlwidgets-1.2.1/htmlwidgets.js"></script>
+<link href="site_libs/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet" />
+<script src="site_libs/datatables-binding-0.4.17/datatables.js"></script>
+<link href="site_libs/dt-core-1.10.16/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="site_libs/dt-core-1.10.16/css/jquery.dataTables.extra.css" rel="stylesheet" />
+<script src="site_libs/dt-core-1.10.16/js/jquery.dataTables.min.js"></script>
+<link href="site_libs/crosstalk-1.0.0/css/crosstalk.css" rel="stylesheet" />
+<script src="site_libs/crosstalk-1.0.0/js/crosstalk.min.js"></script>
+<link href="site_libs/font-awesome-5.0.13/css/fa-svg-with-js.css" rel="stylesheet" />
+<script src="site_libs/font-awesome-5.0.13/js/fontawesome-all.min.js"></script>
+<script src="site_libs/font-awesome-5.0.13/js/fa-v4-shims.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">PolygenicRSS</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Expression Heritability</h1>
+
+</div>
+
+
+<p><strong>Last updated:</strong> 2018-09-25</p>
+<strong>workflowr checks:</strong> <small>(Click a bullet for more information)</small>
+<ul>
+<li>
+<details>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>R Markdown file:</strong> up-to-date </summary></p>
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</details>
+</li>
+<li>
+<details>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>Environment:</strong> empty </summary></p>
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</details>
+</li>
+<li>
+<details>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>Seed:</strong> <code>set.seed(12345)</code> </summary></p>
+<p>The command <code>set.seed(12345)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</details>
+</li>
+<li>
+<details>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>Session information:</strong> recorded </summary></p>
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</details>
+</li>
+<li>
+<details>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/cba28b71e85ed00aad4f2eafaf989ae1632c2143" target="_blank">cba28b7</a> </summary></p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+<pre><code>
+Ignored files:
+    Ignored:    .RData
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    .httr-oauth
+    Ignored:    analysis/PolygenicEstimation_cache/
+    Ignored:    analysis/figure/
+    Ignored:    code/.Rhistory
+    Ignored:    code/scripts/.Rhistory
+    Ignored:    code/snakemake_files/.Rhistory
+    Ignored:    code/snakemake_files/.snakemake/
+    Ignored:    code/snakemake_files/parameter_generation/
+    Ignored:    code/snakemake_files/subset_data_pipeline/.RData
+    Ignored:    data/rep_polygenic/
+
+Untracked files:
+    Untracked:  _workflowr.yml
+    Untracked:  analysis/#RSSp_WTCC_noConfounding.Rmd#
+    Untracked:  analysis/AFvsp.Rmd
+    Untracked:  analysis/ChunkingEffect.Rmd
+    Untracked:  analysis/ChunkingLD.Rmd
+    Untracked:  analysis/DownSamplingResults.Rmd
+    Untracked:  analysis/EVD_SVD.Rmd
+    Untracked:  analysis/GRM_estimation.Rmd
+    Untracked:  analysis/GenomeWideSimulation.Rmd
+    Untracked:  analysis/Heritability.Rmd
+    Untracked:  analysis/LDshrink_effect.Rmd
+    Untracked:  analysis/MeetingSummary1.Rmd
+    Untracked:  analysis/RSSR_PolygenicData.Rmd
+    Untracked:  analysis/RSSp.stan
+    Untracked:  analysis/RSSp2.stan
+    Untracked:  analysis/RSSp_LDshrink.Rmd
+    Untracked:  analysis/RSSp_Large_WTCC_noConfounding.Rmd
+    Untracked:  analysis/RSSp_Largest_Simulation.Rmd
+    Untracked:  analysis/RSSp_WTCC_noConfounding.Rmd
+    Untracked:  analysis/RSSp_ldsc_highPVE_chr1.Rmd
+    Untracked:  analysis/RSSp_ldsc_highPVE_hr.Rmd
+    Untracked:  analysis/RSSp_ldsc_noConfounding.Rmd
+    Untracked:  analysis/Running_ldetect.Rmd
+    Untracked:  analysis/SPVE.Rmd
+    Untracked:  analysis/SharedSNPAnalysis (dell-desktop's conflicted copy 2018-09-04).Rmd
+    Untracked:  analysis/SharedSNPAnalysis.Rmd
+    Untracked:  analysis/Summary.Rmd
+    Untracked:  analysis/Summary.org
+    Untracked:  analysis/Vanilla_LDSC.Rmd
+    Untracked:  analysis/chr_16.Rmd
+    Untracked:  analysis/derby.log
+    Untracked:  analysis/eQTL_Pipelines.Rmd
+    Untracked:  analysis/fquh_mod.RDS
+    Untracked:  analysis/importFramExp.Rmd
+    Untracked:  analysis/ltximg/
+    Untracked:  analysis/nquh_mod.RDS
+    Untracked:  analysis/out_res.RDS
+    Untracked:  analysis/pvv_opt.Rmd
+    Untracked:  analysis/quh_mod.RDS
+    Untracked:  analysis/scz_data.org
+    Untracked:  analysis/shrinkage_effect.Rmd
+    Untracked:  code/.ipynb_checkpoints/
+    Untracked:  code/RSSp_abstract.org
+    Untracked:  code/RSSp_abstract_notes.org
+    Untracked:  code/RSSp_talk_notes.org
+    Untracked:  code/RSSp_talk_notes.pdf
+    Untracked:  code/RSSp_talk_notes.tex
+    Untracked:  code/Untitled.ipynb
+    Untracked:  code/Untitled1.ipynb
+    Untracked:  code/ideas.org
+    Untracked:  code/ltximg/
+    Untracked:  code/rssp.yml
+    Untracked:  code/scripts/#compare_eqtl.R#
+    Untracked:  code/scripts/RSSp_ldsc_results.Rmd
+    Untracked:  code/scripts/bin/
+    Untracked:  code/scripts/compare_eqtl.R
+    Untracked:  code/scripts/ldsc_rssp.Rmd
+    Untracked:  code/scripts/matlab2h5.py
+    Untracked:  code/scripts/vcf-liftover.sh
+    Untracked:  code/scripts/vcf2allel.py
+    Untracked:  code/snakemake_files/#LD_snakefile#
+    Untracked:  code/snakemake_files/environment_rssp.yml
+    Untracked:  code/snakemake_files/eqtl_check.RDS
+    Untracked:  code/snakemake_files/kg_snakefile~
+    Untracked:  code/snakemake_files/ldsc/
+    Untracked:  code/snakemake_files/plink.log
+    Untracked:  code/snakemake_files/rssp_ldsc_report/
+    Untracked:  code/snakemake_files/temp_map_19.RDS
+    Untracked:  code/snakemake_files/temp_target_19.RDS
+    Untracked:  code/snakemake_files/vert.txt
+    Untracked:  code/snakemake_files/vgcore.30188
+    Untracked:  code/workflow_params.json~
+    Untracked:  data/NCBI34_to_GRCh38.chain.gz
+    Untracked:  data/SNP_ws.RData
+    Untracked:  data/Snakemake_inputs/
+    Untracked:  data/all_df.RDS
+    Untracked:  data/temp_ws.RData
+    Untracked:  docs/#RSSp_WTCC_noConfounding.Rmd#
+    Untracked:  docs/RSSp.stan
+    Untracked:  docs/RSSp2.stan
+    Untracked:  docs/Summary.org
+    Untracked:  docs/derby.log
+    Untracked:  docs/figure/LDshrink_effect.Rmd/
+    Untracked:  docs/figure/RSSp_Large_WTCC_noConfounding.Rmd/
+    Untracked:  docs/figure/RSSp_WTCC_noConfounding.Rmd/
+    Untracked:  docs/figure/RSSp_ldsc_highPVE_chr1.Rmd/
+    Untracked:  docs/figure/RSSp_ldsc_highPVE_hr.Rmd/
+    Untracked:  docs/figure/SharedSNPAnalysis.Rmd/
+    Untracked:  docs/fquh_mod.RDS
+    Untracked:  docs/log4j.spark.log
+    Untracked:  docs/ltximg/
+    Untracked:  docs/nquh_mod.RDS
+    Untracked:  docs/quh_mod.RDS
+    Untracked:  docs/scz_data.org
+    Untracked:  dosage.scan.RData
+    Untracked:  dosage.snp.RData
+    Untracked:  output/RSSp_snakemake/
+
+Unstaged changes:
+    Modified:   .gitignore
+    Modified:   PolygenicRSS.Rproj
+    Modified:   analysis/DownsamplingResults2.Rmd
+    Modified:   analysis/IndependenceCheck.Rmd
+    Modified:   analysis/Meeting_Notes.Rmd
+    Modified:   analysis/New_WholeGenome.Rmd
+    Modified:   analysis/OutOfSampleLD.Rmd
+    Modified:   analysis/PolygenicEstimation.Rmd
+    Modified:   analysis/RSSP_standard_error.Rmd
+    Modified:   analysis/RSSp_Chunksize_Investigation.Rmd
+    Modified:   analysis/RSSp_Large_Simulation.Rmd
+    Modified:   analysis/RSSp_Posterior.Rmd
+    Modified:   analysis/RSSp_Prediction.Rmd
+    Modified:   analysis/RSSp_ldsc.Rmd
+    Modified:   analysis/RSSp_ldsc_gwas_direct_noConfounding.Rmd
+    Modified:   analysis/RSSp_ldsc_highPVE.Rmd
+    Modified:   analysis/SimulationPipeline.Rmd
+    Modified:   analysis/_site.yml
+    Modified:   analysis/about.Rmd
+    Modified:   analysis/chr_2.Rmd
+    Deleted:    analysis/chunks.R
+    Modified:   analysis/index.Rmd
+    Modified:   analysis/license.Rmd
+    Modified:   analysis/lnzDist.Rmd
+    Modified:   analysis/simulatingGWAS.Rmd
+    Modified:   analysis/simulation.Rmd
+    Modified:   code/TF_LDshrink.ipynb
+    Modified:   code/dask_LDshrink.ipynb
+    Modified:   code/scripts/gds2h5.R
+    Modified:   code/snakemake_files/Snakefile
+    Modified:   code/snakemake_files/param_snakefile
+
+</code></pre>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</details>
+</li>
+</ul>
+<details>
+<summary> <small><strong>Expand here to see past versions:</strong></small> </summary>
+<ul>
+<table style="border-collapse:separate; border-spacing:5px;">
+<thead>
+<tr>
+<th style="text-align:left;">
+File
+</th>
+<th style="text-align:left;">
+Version
+</th>
+<th style="text-align:left;">
+Author
+</th>
+<th style="text-align:left;">
+Date
+</th>
+<th style="text-align:left;">
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/cba28b71e85ed00aad4f2eafaf989ae1632c2143/analysis/Exp_Heritability.Rmd" target="_blank">cba28b7</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-09-25
+</td>
+<td style="text-align:left;">
+wflow_publish(“analysis/Exp_Heritability.Rmd”)
+</td>
+</tr>
+</tbody>
+</table>
+</ul>
+</details>
+<hr />
+<p>#Heritability of Gene Expression from Summary Statistics</p>
+<div id="framingham-eqtl-data" class="section level2">
+<h2>Framingham eQTL Data</h2>
+<p>The Framingham eQTL data consists of the marginal association between gene expression and genotype for <em>5253 individuals</em> across <em>17873 genes</em>. Expression was corrected for <code>PEER</code> factors in a method described in the paper. After an <code>0.01</code> allele frequency cutoff, there were <code>7357647</code> variants (of a possible <code>36648992</code> mono-allelic SNV) for a total of 1.315032210^{11} associations.</p>
+</div>
+<div id="ld-data" class="section level2">
+<h2>LD data</h2>
+<p>For a first pass, I used in-sample LD, with the <code>interpolated_omni</code> genetic map. I used <code>LDshrink</code> to compute correlation, and LD was calculated within LD blocks defined by <code>LDetect</code>.</p>
+</div>
+<div id="rssp-parameters" class="section level2">
+<h2>RSSp parameters</h2>
+<p><code>RSSp</code> was run for each of the genes with default settings. Because <code>RSSp</code> uses a bounded optimizer, where <code>PVE</code> is bound between 0 and 4. 4 was choosen so that I could distinguish between the optimizer getting stuck at the boundary and a “true” PVE of 1. As you’ll see in the histogram below, there is a noticeable peak at 4, and this is the reason for that.</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>── Attaching packages ──────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>✔ ggplot2 3.0.0     ✔ purrr   0.2.5
+✔ tibble  1.4.2     ✔ dplyr   0.7.6
+✔ tidyr   0.8.1     ✔ stringr 1.3.1
+✔ readr   1.1.1     ✔ forcats 0.3.0</code></pre>
+<pre><code>── Conflicts ─────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>rdsf &lt;- &quot;../data/all_df.RDS&quot;
+exp_df &lt;- readRDS(rdsf)
+
+exp_df &lt;- select_if(exp_df,~length(unique(.x))&gt;1)</code></pre>
+<pre class="r"><code>ggplot(exp_df,aes(x=pve))+geom_histogram(bins=75)+ggtitle(&quot;Heritability of Gene Expression in Framingham Data&quot;,&quot;17873 genes in total&quot;)</code></pre>
+<p><img src="figure/Exp_Heritability.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /> Some summary statistics for the estimates</p>
+<pre class="r"><code>DT::datatable(broom::tidy(summary(exp_df$pve)))</code></pre>
+<pre><code>Loading required namespace: shiny</code></pre>
+<div id="htmlwidget-b8e0c2e2742a5382bafd" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-b8e0c2e2742a5382bafd">{"x":{"filter":"none","data":[["1"],[5.6668966853987e-06],[0.0960400705219315],[0.371672837238005],[0.628387742352602],[0.899360028769888],[3.99999431408985]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>minimum<\/th>\n      <th>q1<\/th>\n      <th>median<\/th>\n      <th>mean<\/th>\n      <th>q3<\/th>\n      <th>maximum<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[1,2,3,4,5,6]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"none","selected":null,"target":"row"}},"evals":[],"jsHooks":[]}</script>
+<pre class="r"><code>exp_xlsf &lt;- &quot;~/Downloads/NIHMS655674-supplement-439_2014_1524_MOESM1_ESM.xlsx&quot;
+comp_exp &lt;- readxl::read_excel(exp_xlsf,sheet = 4,skip=1,guess_max=20000)
+
+ncomp_exp &lt;- select(comp_exp,transcript_cluster_id=Transcript_ID,h2=`h2 (geneExp)`) %&gt;% inner_join(exp_df) %&gt;% rename(RSSp_pve=pve,Fram_pve=h2)</code></pre>
+<pre><code>Joining, by = &quot;transcript_cluster_id&quot;</code></pre>
+</div>
+<div id="comparison-of-estimates-with-previous-estimates" class="section level2">
+<h2>Comparison of estimates with previous estimates</h2>
+<p>I compared heritability estimates of <code>RSSp</code> to the <code>1607</code> heritability estimates published in <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4339826/">A Systematic Heritability Analysis of the Human Whole Blood Transcriptome</a></p>
+<pre class="r"><code>ncomp_exp%&gt;% ggplot(aes(x=Fram_pve,y=RSSp_pve))+geom_point()+geom_smooth(method=&quot;lm&quot;)+ggtitle(&quot;Comparison of original Heritability estimates to RSSp&quot;,&quot;1607 genes&quot;)</code></pre>
+<p><img src="figure/Exp_Heritability.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>broom::tidy(summary(lm(RSSp_pve~Fram_pve,data=ncomp_exp)))</code></pre>
+<pre><code># A tibble: 2 x 5
+  term        estimate std.error statistic   p.value
+  &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+1 (Intercept)    0.412    0.0435      9.47 9.49e- 21
+2 Fram_pve       6.05     0.131      46.3  8.50e-298</code></pre>
+<p>There is a correlation coefficient of 0.756083 between the two results.</p>
+</div>
+<div id="r-explf---str_splitexp_dfgene_assignmentpattern-mapstr_trim-mapstr_splitpattern-expi_df---go_df---mapexplffunctionx-mapxstr_trim-map_dfdata_framegenbank_id.x1symbol.x2gene_name.x3loc.x4entrez_id.x5" class="section level1">
+<h1><code>{r} # explf &lt;- str_split(exp_df$gene_assignment,pattern=&quot;///&quot;) %&gt;% map(str_trim) %&gt;% map(str_split,pattern = &quot;//&quot;) #  #  #  # expi_df &lt;- go_df &lt;- map(explf,function(x){ #   map(x,str_trim) %&gt;% map_df(~data_frame(genbank_id=.x[1],symbol=.x[2],gene_name=.x[3],loc=.x[4],entrez_id=.x[5])) # }) #</code></h1>
+</div>
+<div id="section" class="section level1">
+<h1></h1>
+</div>
+<div id="section-1" class="section level1">
+<h1></h1>
+</div>
+<div id="r-exp_df---mutateexp_dfnew_expstr_trimstr_split_fixedgene_assignmentpattern-n32-go_df---str_splitexp_dfgo_molecular_functionpattern-mapstr_trim-mapstr_splitpattern-mapfunctionx-mapxstr_trim-map_dfdata_frameid.x1term.x2name.x3evidence.x4" class="section level1">
+<h1><code>{r} # #exp_df &lt;- mutate(exp_df,new_exp=str_trim(str_split_fixed(gene_assignment,pattern = &quot;//&quot;,n=3)[,2])) # go_df &lt;- str_split(exp_df$GO_molecular_function,pattern=&quot;///&quot;) %&gt;% map(str_trim) %&gt;% map(str_split,pattern=&quot;//&quot;) %&gt;% map(function(x){ #   map(x,str_trim) %&gt;% map_df(~data_frame(id=.x[1],term=.x[2],name=.x[3],evidence=.x[4])) # }) #</code></h1>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.5.1 (2018-07-02)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Manjaro Linux
+
+Matrix products: default
+BLAS/LAPACK: /opt/intel/compilers_and_libraries_2018.1.163/linux/mkl/lib/intel64_lin/libmkl_gf_lp64.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] forcats_0.3.0   stringr_1.3.1   dplyr_0.7.6     purrr_0.2.5    
+[5] readr_1.1.1     tidyr_0.8.1     tibble_1.4.2    ggplot2_3.0.0  
+[9] tidyverse_1.2.1
+
+loaded via a namespace (and not attached):
+ [1] tidyselect_0.2.4  haven_1.1.2       lattice_0.20-35  
+ [4] colorspace_1.3-2  htmltools_0.3.6   yaml_2.2.0       
+ [7] utf8_1.1.4        rlang_0.2.2.9000  later_0.7.3.9000 
+[10] R.oo_1.22.0       pillar_1.3.0      glue_1.3.0       
+[13] withr_2.1.2       R.utils_2.6.0     modelr_0.1.2     
+[16] readxl_1.1.0      bindrcpp_0.2.2    bindr_0.1.1      
+[19] plyr_1.8.4        munsell_0.5.0     gtable_0.2.0     
+[22] workflowr_1.1.1   cellranger_1.1.0  rvest_0.3.2      
+[25] R.methodsS3_1.7.1 htmlwidgets_1.2.1 evaluate_0.11    
+[28] labeling_0.3      knitr_1.20        crosstalk_1.0.0  
+[31] httpuv_1.4.3      fansi_0.3.0       broom_0.5.0      
+[34] Rcpp_0.12.18      xtable_1.8-2      promises_1.0.1   
+[37] DT_0.4.17         scales_1.0.0      backports_1.1.2  
+[40] jsonlite_1.5      mime_0.5          hms_0.4.2        
+[43] digest_0.6.17     stringi_1.2.4     shiny_1.1.0      
+[46] grid_3.5.1        rprojroot_1.3-2   cli_1.0.0        
+[49] tools_3.5.1       magrittr_1.5      lazyeval_0.2.1   
+[52] crayon_1.3.4      whisker_0.3-2     pkgconfig_2.0.2  
+[55] xml2_1.2.0        lubridate_1.7.4   assertthat_0.2.0 
+[58] rmarkdown_1.10    httr_1.3.1        rstudioapi_0.7   
+[61] R6_2.2.2          nlme_3.1-137      git2r_0.23.0     
+[64] compiler_3.5.1   </code></pre>
+</div>
+</div>
+
+<hr>
+<p>
+    
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+<hr>
+<p>
+  This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a>
+  analysis was created with
+  <a href="https://github.com/jdblischak/workflowr">workflowr</a> 1.1.1
+</p>
+<hr>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
