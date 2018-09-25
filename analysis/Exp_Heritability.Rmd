@@ -1,0 +1,80 @@
+---
+title: "Expression Heritability"
+output: html_notebook
+---
+
+#Heritability of Gene Expression from Summary Statistics
+
+## Framingham eQTL Data
+
+The Framingham eQTL data consists of the marginal association between gene expression and genotype for *5253 individuals* across *17873 genes*.  Expression was corrected for `PEER` factors in a method described in the paper.  After an `0.01` allele frequency cutoff, there were `7357647` variants (of a possible `36648992` mono-allelic SNV) for a total of `r 7357647*17873` associations.
+
+## LD data
+
+For a first pass, I used in-sample LD, with the `interpolated_omni` genetic map. I used `LDshrink` to compute correlation, and LD was calculated within LD blocks defined by `LDetect`.
+
+
+## RSSp parameters
+
+`RSSp` was run for each of the genes with default settings.  Because `RSSp` uses a bounded optimizer, where `PVE` is bound between 0 and 4. 4 was choosen so that I could distinguish between the optimizer getting stuck at the boundary and a "true" PVE of 1. As you'll see in the histogram below, there is a noticeable peak at 4, and this is the reason for that.
+```{r}
+library(tidyverse)
+rdsf <- "../data/all_df.RDS"
+exp_df <- readRDS(rdsf)
+
+exp_df <- select_if(exp_df,~length(unique(.x))>1)
+
+```
+
+
+```{r}
+ggplot(exp_df,aes(x=pve))+geom_histogram(bins=75)+ggtitle("Heritability of Gene Expression in Framingham Data","17873 genes in total")
+```
+Some summary statistics for the estimates
+```{r}
+DT::datatable(broom::tidy(summary(exp_df$pve)))
+```
+
+
+```{r}
+exp_xlsf <- "~/Downloads/NIHMS655674-supplement-439_2014_1524_MOESM1_ESM.xlsx"
+comp_exp <- readxl::read_excel(exp_xlsf,sheet = 4,skip=1,guess_max=20000)
+
+ncomp_exp <- select(comp_exp,transcript_cluster_id=Transcript_ID,h2=`h2 (geneExp)`) %>% inner_join(exp_df) %>% rename(RSSp_pve=pve,Fram_pve=h2)
+```
+## Comparison of estimates with previous estimates
+
+I compared heritability estimates of `RSSp` to the `1607` heritability estimates published in  [A Systematic Heritability Analysis of the Human Whole Blood Transcriptome](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4339826/)
+
+```{r}
+ncomp_exp%>% ggplot(aes(x=Fram_pve,y=RSSp_pve))+geom_point()+geom_smooth(method="lm")+ggtitle("Comparison of original Heritability estimates to RSSp","1607 genes")
+```
+
+```{r}
+broom::tidy(summary(lm(RSSp_pve~Fram_pve,data=ncomp_exp)))
+```
+
+
+There is a correlation coefficient of `r cor(ncomp_exp$RSSp_pve,ncomp_exp$Fram_pve)` between the two results.
+
+
+
+
+# ```{r}
+# explf <- str_split(exp_df$gene_assignment,pattern="///") %>% map(str_trim) %>% map(str_split,pattern = "//")
+# 
+# 
+# 
+# expi_df <- go_df <- map(explf,function(x){
+#   map(x,str_trim) %>% map_df(~data_frame(genbank_id=.x[1],symbol=.x[2],gene_name=.x[3],loc=.x[4],entrez_id=.x[5]))
+# })
+# ```
+# 
+# 
+# ```{r}
+# #exp_df <- mutate(exp_df,new_exp=str_trim(str_split_fixed(gene_assignment,pattern = "//",n=3)[,2]))
+# go_df <- str_split(exp_df$GO_molecular_function,pattern="///") %>% map(str_trim) %>% map(str_split,pattern="//") %>% map(function(x){
+#   map(x,str_trim) %>% map_df(~data_frame(id=.x[1],term=.x[2],name=.x[3],evidence=.x[4]))
+# })
+# ```
+
