@@ -356,7 +356,7 @@ div.section {
 </li>
 <li>
 <details>
-<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/ab17cedb7f509f5ba81849af72651a542b515b23" target="_blank">ab17ced</a> </summary></p>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/99c749f9ec14e195645f2a4061d0ef6c123a3cf2" target="_blank">99c749f</a> </summary></p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
 <pre><code>
 Ignored files:
@@ -540,6 +540,40 @@ Message
 Rmd
 </td>
 <td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/99c749f9ec14e195645f2a4061d0ef6c123a3cf2/analysis/Exp_Heritability.Rmd" target="_blank">99c749f</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-09-25
+</td>
+<td style="text-align:left;">
+analysis/results.Rmd
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/4ec052ceba3ae743614f9fb8d7d399a0f0bd870e/docs/Exp_Heritability.html" target="_blank">4ec052c</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-09-25
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/ab17cedb7f509f5ba81849af72651a542b515b23/analysis/Exp_Heritability.Rmd" target="_blank">ab17ced</a>
 </td>
 <td style="text-align:left;">
@@ -591,7 +625,8 @@ wflow_publish(“analysis/Exp_Heritability.Rmd”)
 </ul>
 </details>
 <hr />
-<p>#Heritability of Gene Expression from Summary Statistics</p>
+<div id="heritability-of-gene-expression-from-summary-statistics" class="section level1">
+<h1>Heritability of Gene Expression from Summary Statistics</h1>
 <div id="framingham-eqtl-data" class="section level2">
 <h2>Framingham eQTL Data</h2>
 <p>The Framingham eQTL data consists of the marginal association between gene expression and genotype for <em>5253 individuals</em> across <em>17873 genes</em>. Expression was corrected for <code>PEER</code> factors in a method described in the paper. After an <code>0.01</code> allele frequency cutoff, there were <code>7357647</code> variants (of a possible <code>36648992</code> mono-allelic SNV) for a total of 1.315032210^{11} associations.</p>
@@ -603,7 +638,6 @@ wflow_publish(“analysis/Exp_Heritability.Rmd”)
 <div id="rssp-parameters" class="section level2">
 <h2>RSSp parameters</h2>
 <p><code>RSSp</code> was run for each of the genes with default settings. Because <code>RSSp</code> uses a bounded optimizer, where <code>PVE</code> is bound between 0 and 4. 4 was choosen so that I could distinguish between the optimizer getting stuck at the boundary and a “true” PVE of 1. As you’ll see in the histogram below, there is a noticeable peak at 4, and this is the reason for that.</p>
-<pre class="r"><code>library(tidyverse)</code></pre>
 <pre><code>── Attaching packages ──────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
 <pre><code>✔ ggplot2 3.0.0     ✔ purrr   0.2.5
 ✔ tibble  1.4.2     ✔ dplyr   0.7.6
@@ -612,91 +646,16 @@ wflow_publish(“analysis/Exp_Heritability.Rmd”)
 <pre><code>── Conflicts ─────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
 ✖ dplyr::filter() masks stats::filter()
 ✖ dplyr::lag()    masks stats::lag()</code></pre>
-<pre class="r"><code>rdsf &lt;- &quot;../data/all_df.RDS&quot;
-exp_df &lt;- readRDS(rdsf)
-
-exp_df &lt;- select_if(exp_df,~length(unique(.x))&gt;1)</code></pre>
-<pre class="r"><code>ggplot(exp_df,aes(x=pve))+geom_histogram(bins=75)+ggtitle(&quot;Heritability of Gene Expression in Framingham Data&quot;,&quot;17873 genes in total&quot;)</code></pre>
-<p><img src="figure/Exp_Heritability.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
-<details>
-<summary><em>Expand here to see past versions of unnamed-chunk-2-1.png:</em></summary>
-<table style = "border-collapse:separate; border-spacing:5px;">
-<thead>
-<tr>
-<th style="text-align:left;">
-Version
-</th>
-<th style="text-align:left;">
-Author
-</th>
-<th style="text-align:left;">
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/79a2e50de493395f08ee5bf39431c06853fdc126/docs/figure/Exp_Heritability.Rmd/unnamed-chunk-2-1.png" target="_blank">79a2e50</a>
-</td>
-<td style="text-align:left;">
-CreRecombinase
-</td>
-<td style="text-align:left;">
-2018-09-25
-</td>
-</tr>
-</tbody>
-</table>
-</details>
-<p>Some summary statistics for the estimates</p>
-<pre class="r"><code>DT::datatable(broom::tidy(summary(exp_df$pve)))</code></pre>
+<p><img src="figure/Exp_Heritability.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /> Some summary statistics for the estimates</p>
 <pre><code>Loading required namespace: shiny</code></pre>
 <div id="htmlwidget-b8e0c2e2742a5382bafd" style="width:100%;height:auto;" class="datatables html-widget"></div>
 <script type="application/json" data-for="htmlwidget-b8e0c2e2742a5382bafd">{"x":{"filter":"none","data":[["1"],[5.6668966853987e-06],[0.0960400705219315],[0.371672837238005],[0.628387742352602],[0.899360028769888],[3.99999431408985]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>minimum<\/th>\n      <th>q1<\/th>\n      <th>median<\/th>\n      <th>mean<\/th>\n      <th>q3<\/th>\n      <th>maximum<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[1,2,3,4,5,6]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"none","selected":null,"target":"row"}},"evals":[],"jsHooks":[]}</script>
-<pre class="r"><code>exp_xlsf &lt;- &quot;~/Downloads/NIHMS655674-supplement-439_2014_1524_MOESM1_ESM.xlsx&quot;
-comp_exp &lt;- readxl::read_excel(exp_xlsf,sheet = 4,skip=1,guess_max=20000)
-
-ncomp_exp &lt;- select(comp_exp,transcript_cluster_id=Transcript_ID,h2=`h2 (geneExp)`) %&gt;% inner_join(exp_df) %&gt;% rename(RSSp_pve=pve,Fram_pve=h2)</code></pre>
 <pre><code>Joining, by = &quot;transcript_cluster_id&quot;</code></pre>
 </div>
 <div id="comparison-of-estimates-with-previous-estimates" class="section level2">
 <h2>Comparison of estimates with previous estimates</h2>
 <p>I compared heritability estimates of <code>RSSp</code> to the <code>1607</code> heritability estimates published in <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4339826/">A Systematic Heritability Analysis of the Human Whole Blood Transcriptome</a></p>
-<pre class="r"><code>ncomp_exp%&gt;% ggplot(aes(x=Fram_pve,y=RSSp_pve))+geom_point()+geom_smooth(method=&quot;lm&quot;)+ggtitle(&quot;Comparison of original Heritability estimates to RSSp&quot;,&quot;1607 genes&quot;)</code></pre>
-<p><img src="figure/Exp_Heritability.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
-<details>
-<summary><em>Expand here to see past versions of unnamed-chunk-5-1.png:</em></summary>
-<table style = "border-collapse:separate; border-spacing:5px;">
-<thead>
-<tr>
-<th style="text-align:left;">
-Version
-</th>
-<th style="text-align:left;">
-Author
-</th>
-<th style="text-align:left;">
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/79a2e50de493395f08ee5bf39431c06853fdc126/docs/figure/Exp_Heritability.Rmd/unnamed-chunk-5-1.png" target="_blank">79a2e50</a>
-</td>
-<td style="text-align:left;">
-CreRecombinase
-</td>
-<td style="text-align:left;">
-2018-09-25
-</td>
-</tr>
-</tbody>
-</table>
-</details>
-<pre class="r"><code>broom::tidy(summary(lm(RSSp_pve~Fram_pve,data=ncomp_exp)))</code></pre>
+<p><img src="figure/Exp_Heritability.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre><code># A tibble: 2 x 5
   term        estimate std.error statistic   p.value
   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
@@ -723,7 +682,6 @@ CreRecombinase
 </div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
-<pre class="r"><code>sessionInfo()</code></pre>
 <pre><code>R version 3.5.1 (2018-07-02)
 Platform: x86_64-pc-linux-gnu (64-bit)
 Running under: Manjaro Linux
@@ -770,6 +728,7 @@ loaded via a namespace (and not attached):
 [58] rmarkdown_1.10    httr_1.3.1        rstudioapi_0.7   
 [61] R6_2.2.2          nlme_3.1-137      git2r_0.23.0     
 [64] compiler_3.5.1   </code></pre>
+</div>
 </div>
 
 <hr>
