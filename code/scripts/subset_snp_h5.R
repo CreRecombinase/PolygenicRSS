@@ -1,4 +1,7 @@
 
+## save.image("subset.RData")
+## stop()
+
 library(tidyverse)
 library(EigenH5)
 library(SeqSupport)
@@ -7,6 +10,8 @@ library(LDshrink)
 
 inf_a <- snakemake@input[["gdsf_a"]]
 inf_b <- snakemake@input[["gdsf_b"]]
+dosagef <- snakemake@input[["dosagef"]]
+
 
 if(is.null(inf_b)){
     inf_b <- inf_a
@@ -30,7 +35,7 @@ N  <- as.integer(as.numeric(snakemake@params[["N"]]))
 
 stopifnot(file.exists(ldetectf),!is.null(ldetectf))
 break_df <- read_delim(ldetectf,delim="\t",trim_ws = T) %>%
-    mutate(chr=as.integer(gsub("chr","",chr))) %>%
+    mutate(chr=as.integer(gsub("chr","",chr)),start=as.integer(start),stop=as.integer(stop)) %>%
     filter(!is.na(chr)) %>%
     filter(chr %in% 1:22) %>%
     mutate(region_id=1:n())
@@ -43,6 +48,10 @@ stopifnot(!is.na(AF_cutoff),
           length(N)>0)
 #gwas_inds <- sort(sample(1:N,ceiling(N/2),replace = F))
 inds_a  <- read_vector_h5(inf_a,"SampleInfo/sample_id")
+dosage_dims <- dim_h5(inf_a,"dosage")
+SNPfirst  <- length(inds_a)==dosage_dims[2]
+
+
 inds_b  <- read_vector_h5(inf_b,"SampleInfo/sample_id")
 
 if(N>0){
@@ -87,15 +96,27 @@ subset_snp_df <- function(inf,chromosome,AF_cutoff=0,subset_ind){
 
     if(is.null(subsnp_df$MAF)||(length(subset_ind)>0)){
         if(length(subset_ind)>0){
-            snp_idl <- BBmisc::chunk(subsnp_df$snp_id, chunk.size=10000) %>% map(~list(subset_rows=.x,
-                                                                                      filename=inf,subset_cols=subset_ind,
-                                                                                      datapath="dosage"))
+            if(SNPfirst){
+                snp_idl <- BBmisc::chunk(subsnp_df$snp_id, chunk.size=10000) %>% map(~list(subset_rows=.x,
+                                                                                           filename=inf,subset_cols=subset_ind,
+                                                                                           datapath="dosage"))
+            }else{
+                snp_idl <- BBmisc::chunk(subsnp_df$snp_id, chunk.size=10000) %>% map(~list(subset_cols=.x,
+                                                                                           filename=inf,subset_rows=subset_ind,
+                                                                                           datapath="dosage"))
+            }
         }else{
-            snp_idl <- BBmisc::chunk(subsnp_df$snp_id, chunk.size = 10000) %>% map(~list(subset_rows=.x,
-                                                                                      filename=inf,
-                                                                                      datapath="dosage"))
+            if(SNPfirst){
+                snp_idl <- BBmisc::chunk(subsnp_df$snp_id, chunk.size = 10000) %>% map(~list(subset_rows=.x,
+                                                                                             filename=inf,
+                                                                                             datapath="dosage"))
+            }else{
+                snp_idl <- BBmisc::chunk(subsnp_df$snp_id, chunk.size = 10000) %>% map(~list(subset_cols=.x,
+                                                                                             filename=inf,
+                                                                                             datapath="dosage"))
+            }
+            subsnp_df <- mutate(subsnp_df, AF=calc_af_h5(snp_idl,list(SNPfirst=SNPfirst)))
         }
-        subsnp_df <- mutate(subsnp_df, AF=calc_af_h5(snp_idl))
     }else{
         subsnp_df <-rename(subsnp_df, AF=MAF)
     }

@@ -1,0 +1,154 @@
+localrules: dl_snplist,split_ch,cut_ch
+
+
+
+
+rule dl_snplist:
+    output:
+        temp("allsnps_hapmap_common_positions_gmap.txt")
+    shell:
+        "wget https://www.dropbox.com/s/wj8h2i0igjv5nob/allsnps_hapmap_common_positions_gmap.txt?dl=0 -O {output}"
+
+
+
+rule dl_tbi:
+    output:
+        tbi=config["KG_DIRECTORY"]+"vcf/"+config["KG_VCF_PATH"]+".tbi"
+    params:
+        chrom="{chrom}"
+    shell:
+        "wget http://hgdownload.cse.ucsc.edu/gbdb/hg19/1000Genomes/phase3/ALL.chr{params.chrom}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz.tbi -O {output.tbi}"
+
+rule change_inp:
+    input:
+        "allsnps_hapmap_common_positions_gmap.txt"
+    output:
+        config["INPUT_DIR"]+"ntr_snps.txt"
+    shell:
+        """ paste -d ' ' {input} <(seq 1 (wc -l {input} | awk '{{print $1}}')) | tr ' ' '\t' > {output}"""
+
+
+rule split_ch:
+    input:
+        config["INPUT_DIR"]+"ntr_snps.txt"
+    output:
+        expand(config["INPUT_DIR"]+"{ch}_hapmap_snps.txt",ch=range(1,23))
+    shell:
+        """awk  '{{print>$1"_hapmap_snps.txt"}}' {input} """
+
+
+
+rule pull_pop_list:
+    input:
+        panel_file=config["INPUT_DIR"]+"integrated_call_samples_v3.20130502.ALL.panel"
+    output:
+        pop_list=config["INPUT_DIR"]+"{pop}.samples"
+    params:
+        pop="{pop}"
+    script:
+        "../scripts/pop_pull.R"
+
+
+
+
+rule cut_ch:
+    input:
+        "{ch}_hapmap_snps.txt"
+    output:
+        "{ch}_hapmap_snplist.txt"
+    shell:
+        """ cut -f 1,3 {input} > {output}"""
+
+
+rule subset_vcf:
+    input:
+        vcff=config["KG_DIRECTORY"]+"vcf/"+config["KG_VCF_PATH"],
+        listf="{chrom}_hapmap_snplist.txt",
+        filt_f=config["INPUT_DIR"]+"{pop}.samples"
+    output:
+        config["KG_DIRECTORY"]+"hapmap_kg_vcf/{pop}/"+"{chrom}_vcf.gz"
+    shell:
+        "bcftools view {input.vcff} -R {input.listf} -S {input.filt_f} -Oz -o {output}"
+
+rule vcf_snps:
+    input:
+        vcff=config["KG_DIRECTORY"]+"vcf/"+config["KG_VCF_PATH"],
+        filt_f=config["INPUT_DIR"]+"EUR.samples"
+    output:
+        config["KG_DIRECTORY"]+"vcf_snplist/EUR/{chrom}.txt"
+    shell:
+        """bcftools view -a -i 'INFO/EUR_AF>0.00 && INFO/VT="SNP"' -H -G {input.vcff} -m2 -M2 -S {input.filt_f} | cut -f 1-5 > {output}"""
+
+rule found_matched_snps:
+    input:
+        ntrf=config["INPUT_DIR"]+"ntr_snps.txt",
+        vcff=expand(config["KG_DIRECTORY"]+"vcf_snplist/EUR/{chrom}.txt",chrom=range(1,23))
+    output:
+        match_df=expand("{chrom}_matched_kg.txt.gz",chrom=range(1,23))
+    script:
+        "../scripts/ntr_snpmerge.R"
+
+
+rule ld_vcf:
+    input:
+        input_file=config["KG_DIRECTORY"]+"vcf/"+config["KG_VCF_PATH"],
+        subsnpf="{chrom}_matched_kg.txt.gz",
+        subldf=config["INPUT_DIR"]+"EUR.samples"
+    params:
+        chrom="{chrom}",
+        useLDshrink="{useLDshrink}",
+        useLDetect="{useLDetect}"
+    output:
+        evdf=config["EVD_DIR"]+"chr{chrom}AF0SNP0N0_ntr_EUR_{useLDetect}_ntr_{useLDshrink}.h5"
+    script:
+        "../scripts/evd_1kg_vcf.R"
+
+
+rule ntr_uh:
+    input:
+        snp_inf=expand("{chrom}_matched_kg.txt.gz",chrom=range(1,23))
+    output:
+        outf="/scratch/t.cri.nknoblauch/polyg_scratch/gwas_uh/chr1-22AF0SNP0N0_ntr_EUR_data_0_sim.h5"
+    script:
+        "../scripts/ntrexp2h5.R"
+
+
+rule gen_quh_ntr:
+    input:
+        evdf=config["EVD_DIR"]+"chr{chrom}AF0SNP0N0_ntr_EUR_{useLDetect}_ntr_{useLDshrink}.h5",
+        uhf=config["KG_DIRECTORY"]+"gwas_uh/chr1-22AF0SNP0N0_ntr_EUR_data_0_sim.h5"
+    output:
+        quhf=config["KG_DIRECTORY"]+"quh/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}_{ncovar}.h5"
+    script:
+        "../scripts/ntr_gen_quh_chunk.R"
+
+rule concat_quh:
+    input:
+        input_f=expand(config["KG_DIRECTORY"]+"quh/chr{chrom}AF0SNP0N0_ntr_EUR_{{useLDetect}}_ntr_data_{{useLDshrink}}_0.h5",chrom=range(1,23))
+    params:
+        idx=expand("{chrom}",chrom=range(1,23)),
+        concat_mat="quh",
+        concat_v="D",
+        keep_df="EXPinfo",
+        concat_df="SNPinfo"
+    output:
+        outf=config["KG_DIRECTORY"]+"quh/chr1-22AF0SNP0N0_ntr_EUR_{useLDetect}_ntr_data_{useLDshrink}_0.h5"
+    script:
+        "../scripts/concat_g.R"
+
+
+
+rule RSSp_est:
+    input:
+        rdsf=config["KG_DIRECTORY"]+"quh/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}_{ncovar}.h5"
+    output:
+        dff=config["OUTPUT_DIR"]+"est_ntr_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_F_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{ncovar}_F_{trait}.txt.gz"
+    params:
+        doConfound="F",
+        trait="{trait}",
+        numtraits=100,
+        pvv="{percentEigen}",
+        samp_size=3754,
+        y_grp="EXPinfo"
+    script:
+        "../scripts/RSSp_est.R"

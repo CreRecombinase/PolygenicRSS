@@ -10,8 +10,13 @@ gene_df <- read_delim(sample_idf, delim=" ")
 
 gene_df %>% select(covariate=ID)  %>%  mutate(covariate_id=1:n())  %>% write_df_h5(h5f,"CovarInfo")
 
-sample_df <- read_delim(sample_f, delim = "\t", col_names = c("SampleID"))
-sample_cdf <- data_frame(SampleID=colnames(gene_df)[-1])
-stopifnot(all(sample_df$SampleID==sample_cdf$SampleID))
+sample_df <- read_delim(sample_f, delim = "\t")
 
-select(gene_df,-ID) %>% data.matrix() %>% write_matrix_h5(h5f,"covariates")
+sample_cdf <- data_frame(SampleID=colnames(gene_df)[-1])
+stopifnot(all(sample_df$SubjectID==sample_cdf$SampleID))
+
+cvrt_matrix  <- select(gene_df, -ID) %>% data.matrix()
+
+stopifnot(all(colnames(cvrt_matrix) %in% sample_df$SubjectID))
+
+cvrt_matrix[, as.character(sample_df$SubjectID)] %>% write_matrix_h5(h5f, "covariates")

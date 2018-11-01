@@ -41,8 +41,13 @@ Ne <- formals(LDshrink::LDshrink)[["Ne"]]
 stopifnot( !is.null(input_file), !is.null(output_file),!is.null(mapf),!is.null(bdf))
 
 stopifnot(file.exists(input_file), !file.exists(output_file),file.exists(mapf),file.exists(bdf))
-break_df <- read_delim(bdf,delim="\t")
+break_df <- read_delim(bdf,delim="\t")  %>% mutate(chr=as.integer(chr),
+                                                   start=as.integer(start),
+                                                   stop=as.integer(stop),
+                                                   region_id=as.integer(region_id))
+head(break_df)
 
+stopifnot(is.integer(break_df$chr))
 
 if(!is.null(subsnpf)){
     if(tools::file_ext(subsnpf)=="h5"){

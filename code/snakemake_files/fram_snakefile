@@ -1,3 +1,217 @@
+# # import pandas as pd
+
+# rule merge_temp_dose:
+#     input:
+#         dosef_1="/gpfs/data/xhe-lab/ncbi_2/dbGaP-17426/files/phg000679.v1.FHS_SHARe_Imputed_1000G.genotype-imputed-data.c1/machout.chr{chrom}.dose_GRU.gz",
+#         dosef_2="/gpfs/data/xhe-lab/ncbi_2/dbGaP-17426/files/phg000679.v1.FHS_SHARe_Imputed_1000G.genotype-imputed-data.c2/machout.chr{chrom}.dose_NPU.gz",
+#         infof="/gpfs/data/xhe-lab/ncbi_2/dbGaP-17426/files/phg000679.v1.FHS_SHARe_Imputed_1000G.genotype-imputed-data.c1/imputed-metrics/machout.chr{chrom}.info.gz"
+#     output:
+#         infof=temp("/scratch/t.cri.nknoblauch/polyg_scratch/merged_dose/{chrom}/imputed-metrics/machout.chr{chrom}.info.gz"),
+#         dosef=temp("/scratch/t.cri.nknoblauch/polyg_scratch/merged_dose/{chrom}/machout.dose.gz")
+#     shell:
+#         "cat {input.dosef_1} {input.dosef_2} > {output.dosef}; cp {input.infof} {output.infof}"
+
+
+
+# rule split_dose_gz:
+#     input:
+#         dosef="/scratch/t.cri.nknoblauch/polyg_scratch/merged_dose/{chrom}/machout.dose.gz"
+#     params:
+#         line_no="500",
+#         out_pref="/scratch/t.cri.nknoblauch/polyg_scratch/split_dose/chr{chrom}.dose"
+#     output:
+#         dosef=expand("/scratch/t.cri.nknoblauch/polyg_scratch/split_dose/chr{{chrom}}.dose_{sl}.gz",sl=range(1,15))
+#     shell:
+#         "../scripts/split_gz.pl {input.dosef} {params.out_pref} {params.line_no}"
+
+
+
+
+# rule missing_f:
+#     input:
+#         bimf="/gpfs/data/xhe-lab/ncbi_2/dbGaP-17426/files/phg000679.v1.FHS_SHARe_Imputed_1000G.genotype-imputed-data.c1/imputed-metrics/machout.chr{chrom}.info.gz"
+#     output:
+#         outf=temp("/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/missing/chr{chrom}.txt")
+#     shell:"""
+#     zcat {input.bimf} | awk '$2==$3 {{print $1}}' > {output.outf}
+#     """
+
+# rule remove_monoall:
+#     input:
+#         famf="/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/chr{chrom}.dose_{sl}.fam",
+#         bimf="/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/chr{chrom}.dose_{sl}.bim",
+#         bedf="/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/chr{chrom}.dose_{sl}.bed",
+#         badf="/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/missing/chr{chrom}.txt"
+#     params:
+#         in_pref="/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/chr{chrom}.dose_{sl}",
+#         out_pref="/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/nodup/chr{chrom}.dose_{sl}"
+#     output:
+#         famf="/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/nodup/chr{chrom}.dose_{sl}.fam",
+#         bimf="/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/nodup/chr{chrom}.dose_{sl}.bim",
+#         bedf="/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/nodup/chr{chrom}.dose_{sl}.bed",
+#         nosf=temp("/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/nodup/chr{chrom}.dose_{sl}.nosex"),
+#         logf=temp("/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/nodup/chr{chrom}.dose_{sl}.log")
+#     shell:
+#         "plink --bfile {params.in_pref} --exclude {input.badf} --make-bed --out {params.out_pref}"
+
+
+# rule gcta2bed:
+#     input:
+#         infof="/scratch/t.cri.nknoblauch/polyg_scratch/merged_dose/{chrom}/imputed-metrics/machout.chr{chrom}.info.gz",
+#         dosef="/scratch/t.cri.nknoblauch/polyg_scratch/split_dose/chr{chrom}.dose_{sl}.gz"
+#     params:
+#         pref="/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/chr{chrom}.dose_{sl}"
+#     output:
+#         famf="/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/chr{chrom}.dose_{sl}.fam",
+#         bimf="/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/chr{chrom}.dose_{sl}.bim",
+#         bedf="/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/chr{chrom}.dose_{sl}.bed"
+#     shell:
+#         "gcta64 --thread-num {threads} --dosage-mach-gz {input.dosef} {input.infof} --make-bed --out {params.pref}"
+
+
+rule merge_plink:
+    input:
+        famf=expand("/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/nodup/chr{{chrom}}.dose_{sl}.fam",sl=range(1,15)),
+        bimf=expand("/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/nodup/chr{{chrom}}.dose_{sl}.bim",sl=range(1,15)),
+        bedf=expand("/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/nodup/chr{{chrom}}.dose_{sl}.bed",sl=range(1,15)),
+        mergef="merge_f_{chrom}.txt"
+    params:
+        out_pref="/scratch/t.cri.nknoblauch/polyg_scratch/bed/chr{chrom}.dose",
+        in_pref="/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/nodup/chr{chrom}.dose_1"
+    output:
+        famf=temp("/scratch/t.cri.nknoblauch/polyg_scratch/bed/chr{chrom}.dose.fam"),
+        bimf=temp("/scratch/t.cri.nknoblauch/polyg_scratch/bed/chr{chrom}.dose.bim"),
+        bedf=temp("/scratch/t.cri.nknoblauch/polyg_scratch/bed/chr{chrom}.dose.bed")
+    threads:
+        12
+    shell:
+        "plink --bfile {params.in_pref} --merge-list {input.mergef} --make-bed --out {params.out_pref} --threads {threads}"
+
+rule gen_merge_f:
+    input:
+        famf=expand("/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/nodup/chr{{chrom}}.dose_{sl}.fam",sl=range(1,15)),
+        bimf=expand("/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/nodup/chr{{chrom}}.dose_{sl}.bim",sl=range(1,15)),
+        bedf=expand("/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/nodup/chr{{chrom}}.dose_{sl}.bed",sl=range(1,15))
+    params:
+        in_pref=expand("/scratch/t.cri.nknoblauch/polyg_scratch/split_bed/nodup/chr{{chrom}}.dose_{sl}",sl=range(1,15)),
+        chrom="{chrom}"
+    output:
+        temp("merge_f_{chrom}.txt")
+    run:
+        with open(output[0],"w") as out:
+            for f in params.in_pref[1:]:
+                out.write(f.format(chrom=params.chrom)+"\n")
+
+    
+rule which_ld_prune:
+    input:
+        famf="/scratch/t.cri.nknoblauch/polyg_scratch/sorted_bed/chr{chrom}.fam",
+        bimf="/scratch/t.cri.nknoblauch/polyg_scratch/sorted_bed/chr{chrom}.bim",
+        bedf="/scratch/t.cri.nknoblauch/polyg_scratch/sorted_bed/chr{chrom}.bed"
+    params:
+        in_pref="/scratch/t.cri.nknoblauch/polyg_scratch/sorted_bed/chr{chrom}",
+        out_pref="/scratch/t.cri.nknoblauch/polyg_scratch/ldp_out/{chrom}"
+    output:
+        inf="/scratch/t.cri.nknoblauch/polyg_scratch/ldp_out/{chrom}.prune.in",
+        outf="/scratch/t.cri.nknoblauch/polyg_scratch/ldp_out/{chrom}.prune.out"
+    shell:
+        "plink --bfile {params.in_pref} --indep 50 5 2 --out {params.out_pref} --threads {threads}"
+
+rule ld_prune:
+    input:
+        famf="/scratch/t.cri.nknoblauch/polyg_scratch/sorted_bed/chr{chrom}.fam",
+        bimf="/scratch/t.cri.nknoblauch/polyg_scratch/sorted_bed/chr{chrom}.bim",
+        bedf="/scratch/t.cri.nknoblauch/polyg_scratch/sorted_bed/chr{chrom}.bed",
+        inf="/scratch/t.cri.nknoblauch/polyg_scratch/ldp_out/{chrom}.prune.in"
+    params:
+        in_pref="/scratch/t.cri.nknoblauch/polyg_scratch/sorted_bed/chr{chrom}",
+        out_pref="/scratch/t.cri.nknoblauch/polyg_scratch/ldi_bed/chr{chrom}",
+    output:
+        famf="/scratch/t.cri.nknoblauch/polyg_scratch/ldi_bed/chr{chrom}.fam",
+        bimf="/scratch/t.cri.nknoblauch/polyg_scratch/ldi_bed/chr{chrom}.bim",
+        bedf="/scratch/t.cri.nknoblauch/polyg_scratch/ldi_bed/chr{chrom}.bed",
+    shell:
+        "plink --bfile {params.in_pref} --extract {input.inf} --make-bed --out {params.out_pref} --threads {threads}"
+
+rule gen_merge_cf:
+    input:
+        famf=expand("/scratch/t.cri.nknoblauch/polyg_scratch/ldi_bed/chr{chrom}.fam",chrom=range(1,23)),
+        bimf=expand("/scratch/t.cri.nknoblauch/polyg_scratch/ldi_bed/chr{chrom}.bim",chrom=range(1,23)),
+        bedf=expand("/scratch/t.cri.nknoblauch/polyg_scratch/ldi_bed/chr{chrom}.bed",chrom=range(1,23))
+    params:
+        in_pref=expand("/scratch/t.cri.nknoblauch/polyg_scratch/ldi_bed/chr{chrom}",chrom=range(1,23))
+    output:
+        temp("merge_cf.txt")
+    script:
+        "../scripts/merge_cf.py"
+
+
+rule merge_plink_c:
+    input:
+        famf=expand("/scratch/t.cri.nknoblauch/polyg_scratch/ldi_bed/chr{chrom}.fam",chrom=range(1,23)),
+        bimf=expand("/scratch/t.cri.nknoblauch/polyg_scratch/ldi_bed/chr{chrom}.bim",chrom=range(1,23)),
+        bedf=expand("/scratch/t.cri.nknoblauch/polyg_scratch/ldi_bed/chr{chrom}.bed",chrom=range(1,23)),
+        mergef="merge_cf.txt"
+    params:
+        out_pref="/scratch/t.cri.nknoblauch/polyg_scratch/master_bed/all",
+        in_pref="/scratch/t.cri.nknoblauch/polyg_scratch/ldi_bed/chr1"
+    output:
+        famf="/scratch/t.cri.nknoblauch/polyg_scratch/master_bed/all.fam",
+        bimf="/scratch/t.cri.nknoblauch/polyg_scratch/master_bed/all.bim",
+        bedf="/scratch/t.cri.nknoblauch/polyg_scratch/master_bed/all.bed"
+    threads:
+        12
+    shell:
+        "plink --bfile {params.in_pref} --merge-list {input.mergef} --make-bed --out {params.out_pref} --threads {threads}"
+
+
+
+
+
+
+rule sort_plink:
+    input:
+        famf="/scratch/t.cri.nknoblauch/polyg_scratch/bed/chr{chrom}.dose.fam",
+        bimf="/scratch/t.cri.nknoblauch/polyg_scratch/bed/sorted_chr{chrom}.dose.bim",
+        bedf="/scratch/t.cri.nknoblauch/polyg_scratch/bed/chr{chrom}.dose.bed"
+    params:
+        in_pref="/scratch/t.cri.nknoblauch/polyg_scratch/bed/chr{chrom}.dose",
+        out_pref="/scratch/t.cri.nknoblauch/polyg_scratch/sorted_bed/chr{chrom}",
+    output:
+        famf="/scratch/t.cri.nknoblauch/polyg_scratch/sorted_bed/chr{chrom}.fam",
+        bimf="/scratch/t.cri.nknoblauch/polyg_scratch/sorted_bed/chr{chrom}.bim",
+        bedf="/scratch/t.cri.nknoblauch/polyg_scratch/sorted_bed/chr{chrom}.bed",
+    shell:
+        "plink --bed {input.bedf} --bim {input.bimf} --fam {input.famf} --make-bed --out {params.out_pref} --threads {threads}"
+
+
+
+rule fix_bim:
+    input:
+        inf="/scratch/t.cri.nknoblauch/polyg_scratch/bed/chr{chrom}.dose.bim"
+    params:
+        chrom="{chrom}"
+    output:
+        outf="/scratch/t.cri.nknoblauch/polyg_scratch/bed/sorted_chr{chrom}.dose.bim"
+    script:
+        "../scripts/fix_bim.R"
+
+rule split_ind_fam:
+    input:
+        famf="/scratch/t.cri.nknoblauch/polyg_scratch/master_bed/all.fam"
+
+
+
+
+
+
+
+
+
+
+
+
+
 rule count_n_chr:
     input:
         config["FRAM_DIR"]+"machout.chr22.dose_GRU.gz"
@@ -32,8 +246,13 @@ rule fram_chr_gds:
 
 rule fram_exp_h5:
     input:
-        expf= "/group/im-lab/nas40t2/Data/dbGaP/Transcriptome/Framingham/keston-analysis/mRNA_matrixeqtl_EXP_N22011.txt",
-        expif= "/group/im-lab/nas40t2/Data/dbGaP/Transcriptome/Framingham/keston-analysis/HuEx-1_0-st-v2.na35.hg19.transcript_fixed.csv"
+        off_expf_c1 = "/gpfs/data/xhe-lab/ncbi_2/dbGaP-17426/files/phe000002.v6.FHS_SABRe_project3.expression-data-matrixfmt.c1/FinalFile_Gene_OFF_2446_Adjusted_c1.txt.gz",
+        off_expf_c2 = "/gpfs/data/xhe-lab/ncbi_2/dbGaP-17426/files/phe000002.v6.FHS_SABRe_project3.expression-data-matrixfmt.c2/FinalFile_Gene_OFF_2446_Adjusted_c2.txt.gz",
+        gen3_expf_c1 = "/gpfs/data/xhe-lab/ncbi_2/dbGaP-17426/files/phe000002.v6.FHS_SABRe_project3.expression-data-matrixfmt.c1/Final_Gene_GENIII_3180_c1.txt.gz",
+        gen3_expf_c2 = "/gpfs/data/xhe-lab/ncbi_2/dbGaP-17426/files/phe000002.v6.FHS_SABRe_project3.expression-data-matrixfmt.c2/Final_Gene_GENIII_3180_c2.txt.gz",
+        expif= "/gpfs/data/xhe-lab/ncbi_2/dbGaP-17426/files/phe000002.v6.FHS_SABRe_project3.sample-info.MULTI/phe000002.v6_release_manifest.txt",
+        snpif = "/gpfs/data/xhe-lab/ncbi_2/dbGaP-17426/files/phg000679.v1.FHS_SHARe_Imputed_1000G.sample-info.MULTI/phg000679.v1_release_manifest.txt",
+        expinfof = "/group/im-lab/nas40t2/Data/dbGaP/Transcriptome/Framingham/keston-analysis/HuEx-1_0-st-v2.na35.hg19.transcript_fixed.csv"
     output:
         h5f=config["KG_DIRECTORY"]+"trait/fram_exp.h5",
         sample_list=config["FRAM_DIR"]+"all_ind_NPU_GRU.txt"
@@ -53,7 +272,8 @@ rule subsnp_fram:
     ''' Subset SNPs according to which chromosomes you want in the simulation, and what Allele Frequency
  cutoff you want to use '''
     input:
-        gdsf_a=config["HDF5_DIR"]+"ALL_fram{AF}_geno.h5",
+        gdsf_a=config["HDF5_DIR"]+"ALL_fram_geno.h5",
+        dosagef=expand(config["HDF5_DIR"]+"fram_{chrom}.h5",chrom=range(1,23)),
         ldetectf=config["LDETECT_BREAK_FILE"],
     params:
         chrom="{chrom}",
@@ -76,21 +296,20 @@ rule fram_chr_h5:
         snpinfo=config["FRAM_DIR"]+"phg000679.v1.FHS_SHARe_Imputed_1000G.genotype-imputed-data.c2/imputed-metrics/machout.chr{chrom}.info.gz",
         sampleidf=config["FRAM_DIR"]+"all_ind_NPU_GRU.txt"
     params:
-        AF="{AF}",
         chrom="{chrom}"
     output:
-        dosagef=config["HDF5_DIR"]+"fram_{chrom}_AF{AF}.h5"
+        dosagef=config["HDF5_DIR"]+"fram_{chrom}.h5"
     script:
         "../scripts/mach2h5.R"
 
 rule merge_fram_h5:
     input:
-        dosagef=expand(config["HDF5_DIR"]+"fram_{chrom}_AF{{AF}}.h5",chrom=range(1,23)),
+        dosagef=expand(config["HDF5_DIR"]+"fram_{chrom}.h5",chrom=range(1,23)),
         sampleidf=config["FRAM_DIR"]+"all_ind_NPU_GRU.txt"
     params:
         chrom=expand("{chrom}",chrom=range(1,23))
     output:
-        outf=config["HDF5_DIR"]+"ALL_fram{AF}_geno.h5"
+        outf=config["HDF5_DIR"]+"ALL_fram_geno.h5"
     script:
         "../scripts/v_concat.R"
 
@@ -108,13 +327,12 @@ rule framgds2h5:
 rule fram_uh:
     input:
         h5f=rules.merge_fram_h5.output.outf,
-        covarf=rules.fram_cov_h5.output.h5f,
         ymatf=rules.fram_exp_h5.output.h5f,
         subsnpf=rules.subsnp_fram.output.trait_snpf,
         subgwasf=rules.subsnp_fram.output.trait_indf
     params:
         ncovar="{ncovar}",
-        y_grp="TraitInfo",
+        y_grp="Traitinfo",
         chunksize_snp=20000
     output:
         uhf=config["KG_DIRECTORY"]+"gwas_uh/chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_data_{ncovar}_sim.h5"
@@ -122,7 +340,78 @@ rule fram_uh:
     script:
         "../scripts/map_uh_covar.R"
 
-rule fram_ld:
+# rule fram_ld:
+#     input:
+#         input_file=rules.merge_fram_h5.output.outf,
+#         bdf=config["INPUT_DIR"]+"ldetect_{useLDetect}.txt.gz",
+#         mapf=config["KG_MAPDIR"]+"interpolated_{geneticMap}.h5",
+#         subsnpf=rules.subsnp_fram.output.ld_snpf,
+#         subldf=rules.subsnp_fram.output.ld_indf,
+#     params:
+#         useLDshrink="{useLDshrink}",
+#         useLDetect="{useLDetect}"
+#     output:
+#         evdf=config["EVD_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_{useLDetect}_{geneticMap}_{useLDshrink}.h5"
+#     threads: 4
+#     script:
+#         "../scripts/evd_1kg_h5.R"
+
+
+def chr_split(ch_text):
+    mychr=ch_text
+    ch_b=mychr.split("-")
+    if len(ch_b) == 2:
+        ch_r=[x for x in range(int(ch_b[0]),int(ch_b[1])+1)]
+    else:
+        ch_r=[int(mychr)]
+    return ch_r
+
+
+def region_rule(ch_text,useLDetect):
+    ch_r = chr_split(ch_text)
+    break_df=pd.read_csv(config["INPUT_DIR"]+"ldetect_{useLDetect}.txt.gz".format(useLDetect=useLDetect),delim_whitespace = True)
+    ch_df=pd.DataFrame({'chr':ch_r})
+    subset_df=pd.merge(ch_df,break_df)
+    return(list(subset_df['region_id']))
+
+def region_input_rule(wildcards):
+    r_id=region_rule(wildcards.chrom,wildcards.useLDetect)
+    return [temp(config["EVD_DIR"]+"input_chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_{useLDetect}_{geneticMap}_{useLDshrink}_{rid}.h5".format(
+        chrom=wildcards.chrom,
+        AF=wildcards.AF,
+        SNPCT=wildcards.SNPCT,
+        N=wildcards.N,
+        useLDetect=wildcards.useLDetect,
+        geneticMap=wildcards.geneticMap,
+        useLDshrink=wildcards.useLDshrink,
+        rid=x)for x in r_id)]
+
+def region_merge_rule(wildcards):
+    r_id=region_rule(wildcards.chrom,wildcards.useLDetect)
+    return {'evdfl': [config["EVD_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_{useLDetect}_{geneticMap}_{useLDshrink}_{rid}.h5".format(
+        chrom=wildcards.chrom,
+        AF=wildcards.AF,
+        SNPCT=wildcards.SNPCT,
+        N=wildcards.N,
+        useLDetect=wildcards.useLDetect,
+        geneticMap=wildcards.geneticMap,
+        useLDshrink=wildcards.useLDshrink,
+        rid=str(x)) for x in r_id]}
+
+
+
+
+
+
+rule merge_ld:
+    input:unpack(region_merge_rule)
+    output:
+        evdf=config["EVD_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_{useLDetect}_{geneticMap}_{useLDshrink}.h5"
+    script:
+        "../scripts/merge_evd.R"
+
+
+rule generate_ld_region_rid:
     input:
         input_file=rules.merge_fram_h5.output.outf,
         bdf=config["INPUT_DIR"]+"ldetect_{useLDetect}.txt.gz",
@@ -133,34 +422,94 @@ rule fram_ld:
         useLDshrink="{useLDshrink}",
         useLDetect="{useLDetect}"
     output:
-        evdf=config["EVD_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_{useLDetect}_{geneticMap}_{useLDshrink}.h5"
+        output_f=config["EVD_DIR"]+"input_chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_{useLDetect}_{geneticMap}_{useLDshrink}.h5"
+    script:
+        "../scripts/subset_ld.R"
+
+rule fram_ld_region:
+    input:
+        input_subset_file=config["EVD_DIR"]+"input_chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_{useLDetect}_{geneticMap}_{useLDshrink}.h5",
+        input_file=rules.merge_fram_h5.output.outf,
+        subldf=rules.subsnp_fram.output.ld_indf,
+    params:
+        useLDshrink="{useLDshrink}",
+        useLDetect="{useLDetect}",
+        region_id="{rid}"
+    output:
+        evdf=config["EVD_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_{useLDetect}_{geneticMap}_{useLDshrink}_{rid}.h5"
     threads: 4
     script:
-        "../scripts/evd_1kg_h5.R"
+        "../scripts/evd_1kg_region.R"
 
 
+# rule fram_quh:
+#     input:
+#         traitf=rules.fram_exp_h5.output.h5f,
+#         evdf=rules.merge_ld.output.evdf,
+#         uhf=rules.fram_uh.output.uhf
+#     params:
+#         y_grp="TraitInfo"
+#     output:
+#         quhf=config["KG_DIRECTORY"]+"quh/chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_{useLDetect}_{geneticMap}_{useLDshrink}_{ncovar}.h5"
+#     script:
+#         "../scripts/gen_quh_chunk_h5.R"
 
 
-rule fram_quh:
+rule merge_fram_quh:
     input:
-        evdf=rules.fram_ld.output.evdf,
-        uhf=rules.fram_uh.output.uhf
+        input_f=expand(config["KG_DIRECTORY"]+"quh/chr{chrom}AF{{AF}}SNP{{SNPCT}}N{{N}}_fram_fram_{{useLDetect}}_{{geneticMap}}_{{useLDshrink}}_{{ncovar}}.h5",chrom=range(1,23)),
     params:
-        y_grp="TraitInfo"
+        idx=expand("{chrom}",chrom=range(1,23)),
+        idx_pth="SNPinfo/chrom",
+        concat_mat=["quh"],
+        keep_mat=[],
+        concat_v=["D"],
+        keep_v=[],
+        concat_df=["SNPinfo"],
+        keep_df=["TraitInfo","Wildcards"]
     output:
-        quhf=config["KG_DIRECTORY"]+"quh/chr{chrom}AF{AF}SNP{SNPCT}N{N}_fram_fram_{useLDetect}_{geneticMap}_{useLDshrink}_{ncovar}.h5"
+        outf=config["KG_DIRECTORY"]+"quh/chr1-22AF{AF}SNP{SNPCT}N{N}_fram_fram_{useLDetect}_{geneticMap}_{useLDshrink}_{ncovar}.h5"
     script:
-        "../scripts/gen_quh_chunk_h5.R"
+        "../scripts/concat_g.R"
 
 
-rule fram_RSSp:
+rule trait_fram_RSSp:
     input:
-        rdsf=rules.fram_quh.output.quhf
+        rdsf=rules.merge_fram_quh.output.outf
     output:
-        dff=config["OUTPUT_DIR"]+"est_fram_{AF}_{ncovar}_{useLDetect}_{geneticMap}_{useLDshrink}_{percentEigen}_{useConfounding}.txt.gz"
+        dff=config["OUTPUT_DIR"]+"est_fram_AF{AF}SNP{SNPCT}N{N}_{ncovar}_{useLDetect}_{geneticMap}_{useLDshrink}_{percentEigen}_{useConfounding}_{trait}.txt.gz"
     params:
         doConfound="{useConfounding}",
+        trait="{trait}",
+        numtraits=100,
+        samp_size=5253,
         pvv="{percentEigen}",
-        y_grp="TraitInfo"
+        y_grp="EXPInfo"
     script:
         "../scripts/RSSp_est.R"
+
+
+# rule merge_rssp_fram:
+#     input:
+#         input_files=expand(
+#             config["OUTPUT_DIR"]+"est_fram_AF{{AF}}SNP{{SNPCT}}N{{N}}_{{ncovar}}_{{useLDetect}}_{{geneticMap}}_{{useLDshrink}}_{{percentEigen}}_{{useConfounding}}_{trait}.txt.gz",
+#             trait=[x for x in range(1,17873,100)])
+#     output:
+#         output_file=config["OUTPUT_DIR"]+"est_fram_AF{AF}SNP{SNPCT}N{N}_{ncovar}_{useLDetect}_{geneticMap}_{useLDshrink}_{percentEigen}_{useConfounding}.txt.gz"
+#     params:
+#         delim="\t"
+#     script:
+#         "../scripts/concat_df.R"
+        
+
+# rule fram_RSSp:
+#     input:
+#         rdsf=rules.merge_fram_quh.output.outf
+#     output:
+#         dff=config["OUTPUT_DIR"]+"est_fram_{AF}_{ncovar}_{useLDetect}_{geneticMap}_{useLDshrink}_{percentEigen}_{useConfounding}.txt.gz"
+#     params:
+#         doConfound="{useConfounding}",
+#         pvv="{percentEigen}",
+#         y_grp="TraitInfo"
+#     script:
+#         "../scripts/RSSp_est.R"

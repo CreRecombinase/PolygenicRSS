@@ -1,3 +1,6 @@
+## save.image("snpdone.RDS")
+## stop()
+
 library(tidyverse)
 library(EigenH5)
 
@@ -13,8 +16,7 @@ snp_anno_f <-snakemake@output[["snp_anno_f"]]
 scan_anno_f <-snakemake@output[["scan_anno_f"]]
 
 
-sample_i <- scan(sample_idf,what=character())
-sample_df <- read_delim(sample_idf, delim = "\t", col_names = c("SampleName")) %>% mutate(sample_id=1:n())
+sample_df <- read_delim(sample_idf, delim = "\t")
 write_df_h5(sample_df,output_f,"SampleInfo")
 
 
@@ -31,12 +33,11 @@ p <- nrow(snp_df)
 all_alleles  <- outer(c("A", "C", "T", "G"),c("A", "C", "T", "G"), function(x,y)paste(x, y, sep=","))
 all_alleles <- data_frame(allele=c(all_alleles[upper.tri(all_alleles)], all_alleles[lower.tri(all_alleles)]))
 
-good_snp_df <- snp_df %>% filter(!is.na(more)) %>% select(-more)  %>% semi_join(all_alleles)
+good_snp_df <- snp_df %>% filter(is.na(more)) %>% select(-more)  %>% semi_join(all_alleles)
 
 index_cols <- good_snp_df$orig_snp_id
 
-stopifnot(length(index_cols)>1,
-          length(sample_i)>1)
+stopifnot(length(index_cols)>1)
 good_snp_df %>% mutate(Genotyped=as.integer(Genotyped)) %>% mutate(snp_id=1:n()) %>% write_df_h5(filename = output_f,"SNPinfo")
 
 n_p <- length(index_cols)
@@ -46,7 +47,7 @@ EigenH5::mach2h5(dosagefile = snpdf_a,
                  h5file = output_f,
                  datapath = "dosage",
                  snp_idx = index_cols-1,
-                 names = sample_i,
+                 names = as.character(sample_df$SubjectID),
                  p = p, options=list(
                            buffer_size = 50000*6,
                            progress=T))
@@ -56,7 +57,7 @@ EigenH5::mach2h5(dosagefile = snpdf_b,
                  h5file = output_f,
                  datapath = "dosage",
                  snp_idx = index_cols-1,
-                 names = sample_i,
+                 names = as.character(sample_df$SubjectID),
                  p = p, options=list(
                            buffer_size = 50000*6,
                            progress=T))

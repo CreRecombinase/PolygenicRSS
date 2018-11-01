@@ -1,4 +1,3 @@
-
 rule calc_covar:
     input:
         snpgdsf=config["SNPGDS_DIR"]+"ALL_{dataset}_geno.gds",

@@ -32,6 +32,7 @@ snp_df <- read_df_h5(evdf,"LDinfo") %>% rename(CHR=chr,BP=pos,CM=map)
   #    %>% select(-snp_id)
 
 if(is.null(snp_df[["MAF"]])){
+    stopifnot(!is.null(snp_df[["AF"]]))
     snp_df <- mutate(snp_df,MAF=AF)
 }
 snp_df <- group_by(snp_df,region_id) %>% do(mutate(.,L2=read_vector_h5(evdf,paste0("L2/",as.character(.$region_id[1]),"/L2")))) %>% ungroup() %>% select(-region_id)

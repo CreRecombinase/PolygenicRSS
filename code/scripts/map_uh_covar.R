@@ -29,8 +29,8 @@ cat("Using ",cores," cores\n")
 
 map_eqtl_h5(snp_h5=h5f,
             exp_h5=ymatf,
-            covar_h5=covarf,
-            uh_h5=uhf,ncovar=ncovar,subsnpf=subsnpf,subgwasf=subgwasf,snp_chunksize=as.integer(snp_chunksize),threads=cores)
+            covar_h5=covarf,exp_info=y_grp,
+            uh_h5=uhf,ncovar=ncovar,exp_path="ymat/trait",subsnpf=subsnpf,subgwasf=subgwasf,snp_chunksize=as.integer(snp_chunksize),threads=cores)
 cat("Done!")
 
 

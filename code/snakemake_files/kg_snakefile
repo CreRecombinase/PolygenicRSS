@@ -19,7 +19,6 @@ rule subsnp_gds:
         "../scripts/subset_snp_chr_gds.R"
 
 
-
 rule vcf_2_pop:
     input:
         vcff=config["VCF_DIR"]+"ALL.chr{chr}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
@@ -30,17 +29,19 @@ rule vcf_2_pop:
         pop="[A-Z]+",
         chr="[0-9]+"
     shell:
-        "bcftools view {input.vcff} -m2 -M2 -S {input.filt_f} -Oz -o {output.vcff} --threads {threads}"
+        "bcftools view {inputq.vcff} -m2 -M2 -S {input.filt_f} -Oz -o {output.vcff} --threads {threads}"
 
 
 rule pull_pop_list:
+    input:
+        panel_file=config["INPUT_DIR"]+"integrated_call_samples_v3.20130502.ALL.panel"
     output:
         pop_list=temp("{pop}.samples")
     params:
         pop="{pop}"
     script:
         "../scripts/pop_pull.R"
-        
+
 rule kg2gds:
     ''' This rule converts a vcf file to SNPrelate format'''
     input:
@@ -54,6 +55,92 @@ rule kg2gds:
     script:
         "../scripts/vcf2seq_gds.R"
 
+        
+rule chkg2gds:
+    ''' This rule converts a vcf file to SNPrelate format'''
+    input:
+        vcff=config["VCF_DIR"]+"{pop}.chr{chr}.vcf.gz",
+    output:
+        temp_gds=config["GDS_DIR"]+"chr{chr}_{pop}_geno.gds"
+    wildcard_constraints:
+        pop="[A-Z]+"
+    threads:
+        9
+    script:
+        "../scripts/vcf2seq_gds.R"
+
+
+rule subsetgds:
+    ''' This rule subsets a gds file based on AF'''
+    input:
+        gdsf=config["GDS_DIR"]+"chr{chr}_{pop}_geno.gds",
+    output:
+        temp_gds=config["GDS_DIR"]+"AF{AF}chr{chr}_{pop}_geno.gds"
+    params:
+        AF="{AF}"
+    wildcard_constraints:
+        pop="[A-Z]+"
+    threads:
+        9
+    script:
+        "../scripts/seqgds2seq_gds.R"
+
+
+
+
+rule chkggds2h5:
+    ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are possibly rearranged)'''
+    input:
+        input_gds=config["GDS_DIR"]+"AF{AF}chr{chr}_{pop}_geno.gds"
+    output:
+        outf=config["HDF5_DIR"]+"AF{AF}chr{chr}_{pop}_geno.h5"
+    script:
+        "../scripts/gds2h5.R"
+
+
+rule make_kg_subset_h5:
+    input:
+        input_file=config["HDF5_DIR"]+"AF{AF}chr{chrom}_{pop}_geno.h5",
+        bdf=config["INPUT_DIR"]+"ldetect_{useLDetect}.txt.gz",
+        mapf=config["KG_MAPDIR"]+"interpolated_{geneticMap}.h5"
+    params:
+        useLDetect="{useLDetect}",
+        chrom="{chrom}",
+        chunk_tot="{chunktot}"
+    output:
+        output_f=config["INPUT_DIR"]+"AF{AF}chr{chrom}_{pop}_{geneticMap}_{useLDetect}_{chunktot}.h5"
+    script:
+        "../scripts/subset_ld.R"
+
+
+rule chunksize_breakpoint:
+    params:
+        use_ldetect="{chunksize}"
+    output:
+        bdf=config["INPUT_DIR"]+"ldetect_{chunksize}.txt.gz"
+    script:
+        "../scripts/break_df.R"
+
+
+
+rule ld_chunk_df_h5:
+    input:
+        input_file=config["HDF5_DIR"]+"AF{AF}chr{chrom}_{pop}_geno.h5",
+        subsnpf=config["INPUT_DIR"]+"AF{AF}chr{chrom}_{pop}_{geneticMap}_{useLDetect}_{chunktot}.h5"
+    params:
+        useLDshrink="{useLDshrink}",
+        useLDetect="{useLDetect}",
+        r2c="{r2cutoff}",
+        pop="{geneticMap}",
+        chunk_ind="{x}",
+        chunk_tot="{chunktot}"
+    output:
+        evdf=config["EVD_DIR"]+"{pop}/LD_DF/chr{chrom}/AF{AF}chr{chrom}_{pop}_{useLDetect}_{geneticMap}_{useLDshrink}_{r2cutoff}_{x}_{chunktot}.RDS"
+    script:
+        "../scripts/ld_df_h5.R"
+
+
+
 rule kggds2h5:
     ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are possibly rearranged)'''
     input:
@@ -62,3 +149,4 @@ rule kggds2h5:
         outf=config["HDF5_DIR"]+"ALL_{pop}_geno.h5"
     script:
         "../scripts/gds2h5.R"
+

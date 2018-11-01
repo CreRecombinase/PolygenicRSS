@@ -1,6 +1,6 @@
 library(tidyverse)
 library(EigenH5)
-
+library(progress)
 input_file <- "/scratch/t.cri.nknoblauch/polyg_scratch/eqtl-gene-annot.txt"
 output_file <- "/scratch/t.cri.nknoblauch/polyg_scratch/eqtl-gene-annot.h5"
 eqtl_df <- read_csv(input_file,progress=T,n_max=189269666)
@@ -8,6 +8,9 @@ eqtl_df <- read_csv(input_file,progress=T,n_max=189269666)
 cn <- colnames(eqtl_df)
 bad_cols <- character()
 ext_ls <- character()
+
+
+pb <- progress_bar$new(total=length(cn))
 for(i in cn){
     if(!i %in% ext_ls){
         if(typeof(eqtl_df[[i]])=="character"){
@@ -23,6 +26,7 @@ for(i in cn){
 
         }
     }
+    pb$tick()
 }
 cat(paste0(c("Bad Cols:",bad_cols,collapse="\n")))
 saveRDS(bad_cols,"~/Downloads/bad_cols.RDS")
