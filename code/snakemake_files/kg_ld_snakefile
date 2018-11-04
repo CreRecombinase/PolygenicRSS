@@ -1,0 +1,86 @@
+rule vcf_2_pop:
+    input:
+        vcff=config["VCF_DIR"]+"ALL.chr{chr}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
+        filt_f="{pop}.samples"
+    output:
+        vcff=config["VCF_DIR"]+"{pop}/{pop}.chr{chr}.vcf.gz"
+    wildcard_constraints:
+        pop="[A-Z]+",
+        chr="[0-9]+"
+    shell:
+        "bcftools view {input.vcff} -m2 -M2 -S {input.filt_f} -Oz -o {output.vcff} --threads {threads}"
+
+
+rule tabix_pop:
+    input:
+        vcff=config["VCF_DIR"]+"{pop}/{pop}.chr{chr}.vcf.gz"
+    output:
+        config["VCF_DIR"]+"{pop}/{pop}.chr{chr}.vcf.gz.tbi"
+    shell:
+         "tabix {input}"
+
+rule snplist_vcf:
+    input:
+        vcff=config["VCF_DIR"]+"{pop}/{pop}.chr{chr}.vcf.gz"
+    output:
+        snplistf=config["VCF_DIR"]+"{pop}/snplist/{pop}.chr{chr}.txt"
+    shell:
+        "bcftools view -H -G {input.vcff} > {output.snplistf}"
+
+rule merge_snplist:
+    input:
+        gwasf=config["KG_DIRECTORY"]+"summary_statistics/{consortia}_{trait}_summary_statistics.tsv.gz",
+        vcff=config["VCF_DIR"]+"{pop}/snplist/{pop}.chr{chr}.txt"
+    output:
+        outputf=config["VCF_DIR"]+"snplist/{consortia}/{trait}_{pop}.chr{chr}.txt"
+    script:
+        "../scripts/merge_snplist.R"
+
+
+rule pull_pop_list:
+    input:
+        panel_file=config["INPUT_DIR"]+"integrated_call_samples_v3.20130502.ALL.panel"
+    output:
+        pop_list="{pop}.samples"
+    params:
+        pop="{pop}"
+    script:
+        "../scripts/pop_pull.R"
+
+
+rule merge_gwasf:
+    input:
+        inputf=expand(config["VCF_DIR"]+"snplist/{{consortia}}/{{trait}}_{{pop}}.chr{chrom}.txt",chrom=range(1,23))
+    params:
+        chrom=range(1,23)
+    output:
+        outputf=config["VCF_DIR"]+"snplist/{{consortia}}/{{trait}}_{{pop}}.full.txt"
+    script:
+        "../scripts/merge_split.R"
+
+
+# rule chunk_mergelist:
+#     input:
+#          inputf=config["VCF_DIR"]+"snplist/{consortia}/{trait}_{pop}.chr{chrom}.txt"
+#     params:
+#         out_pref=config["VCF_DIR"]+"chunk_snplist/{consortia}/{trait}_{pop}.chr{chrom}_",
+#         chunk_size=30000
+#     output:
+#         tpref=config["VCF_DIR"]+"chunk_snplist/{consortia}/fake_{trait}_{pop}.chr{chrom}.txt"
+#     shell:
+#         "split -l {params.chunk_size} -d --verbose {input.inputf} {params.out_pref}; touch {output.tpref}"
+
+rule evd_ld_kg:
+    input:
+        out_pref=config["VCF_DIR"]+"chunk_snplist/{consortia}/{trait}_{pop}.chr{chrom}_{chunk}",
+        c_pref=config["VCF_DIR"]+"chunk_snplist/{consortia}/{trait}_{pop}.chr{chrom}_00",
+        vcff=config["VCF_DIR"]+"{pop}/{pop}.chr{chrom}.vcf.gz",
+        mapf=config["KG_MAPDIR"]+"interpolated_{geneticMap}.h5"
+    params:
+        chrom="{chrom}",
+        useLDetect="{useLDetect}"
+        evdf="{useLDshrink}"
+    output:
+        ldf=config["EVD_DIR"]+"chr{chrom}AF0SNP0N0_{consortia}-{trait}_{pop}_30000_{geneticMap}_{useLDshrink}.h5"
+    script:
+        "../scripts/evd_1kg_vcf.R"

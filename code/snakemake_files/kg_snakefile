@@ -19,29 +19,6 @@ rule subsnp_gds:
         "../scripts/subset_snp_chr_gds.R"
 
 
-rule vcf_2_pop:
-    input:
-        vcff=config["VCF_DIR"]+"ALL.chr{chr}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-        filt_f="{pop}.samples"
-    output:
-        vcff=temp(config["VCF_DIR"]+"{pop}.chr{chr}.vcf.gz")
-    wildcard_constraints:
-        pop="[A-Z]+",
-        chr="[0-9]+"
-    shell:
-        "bcftools view {inputq.vcff} -m2 -M2 -S {input.filt_f} -Oz -o {output.vcff} --threads {threads}"
-
-
-rule pull_pop_list:
-    input:
-        panel_file=config["INPUT_DIR"]+"integrated_call_samples_v3.20130502.ALL.panel"
-    output:
-        pop_list=temp("{pop}.samples")
-    params:
-        pop="{pop}"
-    script:
-        "../scripts/pop_pull.R"
-
 rule kg2gds:
     ''' This rule converts a vcf file to SNPrelate format'''
     input:

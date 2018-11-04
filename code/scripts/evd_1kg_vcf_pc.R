@@ -4,45 +4,25 @@ input_file <- "/scratch/t.cri.nknoblauch/polyg_scratch/vcf/EUR/EUR.chr2.vcf.gz"
 input_tbi  <- paste0(input_file,".tbi")
 c_pref <- "/scratch/t.cri.nknoblauch/polyg_scratch/vcf/chunk_snplist/bc/baso-p_EUR.chr2_00"
 subsnpf <- "/scratch/t.cri.nknoblauch/polyg_scratch/vcf/chunk_snplist/bc/baso-p_EUR.chr2_01"
-subsnpf <- "/scratch/t.cri.nknoblauch/polyg_scratch/vcf/chunk_snplist/bc/baso-p_EUR.chr2_01"
 ## subldf <- "~/Downloads/PolygenicRSS/data/Snakemake_inputs/EUR.samples"
 ## asnp_df <- read_delim("~/Downloads/PolygenicRSS/data/Snakemake_inputs/ntr_snps.txt",col_names=c("chrom","snp","pos","map","snp_id"),delim=" ",,col_types=cols(chrom="i",
 ##                                                                                                       snp="c",
 ##                                                                                                       map="d",pos="i",snp_id="i"))
-cn_df <- scan(c_pref,what=character(),sep="\t",nlines=1)
-subsnp_df <- read_delim(subsnpf,delim="\t",col_names=cn_df)
-mchr <- as.character(unique(as.integer(subsnp_df$chrom)))
-reg <- range(subsnp_df$pos)
 
 
-#library(profvis)
+
+
 library(EigenH5)
 library(LDshrink)
 library(tidyverse)
-# library(future)
 library(progress)
-# plan(sequential)
-                                        # mb <-profvis({
 
 
 
-## read_LDetect <- function(subset=c("all",paste0("chr",1:22)),pop="EUR"){
-##   if(length(subset)>1){
-##     warning("In function read_LDetect: length(subset)>1, taking first element of `subset`\n",call.=F)
-##     subset <- subset[1]
-##   }
-##   base_url <- "https://bitbucket.org/nygcresearch/ldetect-data/raw/ac125e47bf7ff3e90be31f278a7b6a61daaba0dc/"
-##   dl_url <- paste0(base_url,pop,"/fourier_ls-",subset,".bed")
-##   quietly_read <- purrr::quietly(read_delim) #read_delim is really chatty
-##   return(quietly_read(dl_url,delim="\t",trim_ws = T) %>% magrittr::extract2("result") %>%  dplyr::mutate(chrom=as.integer(gsub("chr","",chr))) %>% dplyr::select(chrom,start,stop))
-## }
 
 
-                                        # load("ssSNP.RData")
-## save.image("evd.RData")
-## stop()
 
-#file.remove("evd.RData")
+
 cutoff <- 1e-3
 input_file <- snakemake@input[["input_file"]]
 input_tbi  <- paste0(input_file,".tbi")
@@ -54,41 +34,17 @@ useLDetect <- snakemake@params[["useLDetect"]]
 output_file <- snakemake@output[["evdf"]]
 useLDshrink <- snakemake@params[["useLDshrink"]]=="T"
 my_vcf <- Rsamtools::TabixFile(input_file,input_tbi)
-ld_ind <- scan(subldf,what=character())
+#ld_ind <- scan(subldf,what=character())
+
+cn_df <- scan(c_pref,what=character(),sep="\t",nlines=1)
+subsnp_df <- read_delim(subsnpf,delim="\t",col_names=cn_df)
+mchr <- as.character(unique(as.integer(subsnp_df$chrom)))
+reg <- range(subsnp_df$pos)
 
 
 
 
 
-
-
-
-subsnp_df <- readr::read_delim(subsnpf,col_names=T,delim="\t") %>%
-    mutate(chrom=as.integer(chrom),pos=as.integer(pos)) %>% mutate(map=if_else(map<0,if_else(snp_id==max(snp_id),
-                                                                                             max(map)+.Machine$double.eps,
-                                                                                             0),map))
-p <- nrow(subsnp_df)
-
-if(useLDetect=="T"){
-    break_df <- read_LDetect() %>%   dplyr::mutate(region_id=1:n(),start=as.integer(start),stop=as.integer(stop)) %>% dplyr::filter(chrom %in% my_chrom) %>% group_by(chrom) %>% mutate(start=if_else(start==min(start),0L,start),stop=if_else(stop==max(stop),536870912L,stop)) %>% ungroup()
-    snp_df <- LDshrink::assign_snp_block(dplyr::rename(subsnp_df,chr=chrom),dplyr::rename(break_df,chr=chrom),assign_all = T)
-break_df <- semi_join(break_df, distinct(snp_df, region_id))
-}else{
-
-    chunksize <- as.integer(useLDetect)
-    num_chunks <- ceiling(p / chunksize)
-    stopifnot(length(unique(subsnp_df$chrom))==1, !is.na(chunksize))
-    snp_df <- mutate(subsnp_df, region_id= as.integer(gl(num_chunks, chunksize, length=p))) %>%
-        rename(chr=chrom)
-
-    break_df <- group_by(snp_df, region_id) %>% summarise(start=min(pos)-1, stop = max(pos)+1)
-}
-
-ldetect_regions <- break_df  %>%
-  purrr::pmap(function(chrom,start,stop,region_id){ # for each list apply the `pmap` function, which if passed a dataframe, will be call the function once for each row of a dataframe
-    GenomicRanges::GRanges(chrom,IRanges::IRanges(start,stop,name=region_id))
-  })
-names(ldetect_regions) <-  as.character(break_df$region_id)
 
 
 cutoff <- formals(LDshrink::LDshrink)[["cutoff"]]
