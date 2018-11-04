@@ -8,7 +8,7 @@ include: "param_snakefile"
 #include: "manip_snakefile"
 #include: "ntr_snakefile"
 #include: "fram_snakefile"
-#include: "kg_snakefile"
+include: "kg_snakefile"
 include: "kg_ld_snakefile"
 #include: "genred_snakefile"
 #include: "sim_snakefile"
@@ -32,7 +32,7 @@ localrules: all
 
 rule all:
     input:
-        expand(config["VCF_DIR"]+"{pop}/{pop}.chr{chrom}.vcf.gz.tbi",pop="EUR",chrom=range(1,23))
+        expand(config["VCF_DIR"]+"{pop}/{pop}.chr{chrom}.vcf.gz.tbi",pop="EUR",chrom=["19","20"])
         # dynamic(
         #     expand(config["VCF_DIR"]+"chunk_snplist/{consortia}/{trait}_{pop}.chr{chrom}_{{chunk}}"
         # expand(config["VCF_DIR"]+"chunk_snplist/{consortia}/fake_{trait}_{pop}.chr{chrom}.txt",consortia="bc",trait=["mchc","rdw","baso-p"],

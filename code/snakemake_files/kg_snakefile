@@ -1,3 +1,29 @@
+
+rule dl_samples:
+    output:
+        config["INPUT_DIR"]+"integrated_call_samples_v3.20130502.ALL.panel"
+    shell:
+        "wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/integrated_call_samples_v3.20130502.ALL.panel -O {output}"
+
+
+rule dl_tbi:
+    output:
+        tbi=config["KG_DIRECTORY"]+"vcf/"+config["KG_VCF_PATH"]+".tbi"
+    params:
+        chrom="{chrom}"
+    shell:
+        "wget http://hgdownload.cse.ucsc.edu/gbdb/hg19/1000Genomes/phase3/ALL.chr{params.chrom}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz.tbi -O {output.tbi}"
+
+rule dl_vcf:
+    output:
+        vcf=config["KG_DIRECTORY"]+"vcf/"+config["KG_VCF_PATH"]
+    params:
+        chrom="{chrom}"
+    shell:
+        "wget http://hgdownload.cse.ucsc.edu/gbdb/hg19/1000Genomes/phase3/ALL.chr{params.chrom}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz -O {output.vcf}"
+
+
+
 rule subsnp_gds:
     ''' Subset SNPs according to which chromosomes you want in the simulation, and what Allele Frequency
  cutoff you want to use (uses gds format)'''

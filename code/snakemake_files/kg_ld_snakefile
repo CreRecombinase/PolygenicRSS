@@ -56,8 +56,8 @@ rule merge_gwasf:
         outf_pref=expand(config["VCF_DIR"]+"chunk_snplist/{{consortia}}/{{trait}}_{{pop}}.chr{chrom}_",chrom=range(1,23)),
         chunk_size=30000
     output:
-        outputf=config["VCF_DIR"]+"snplist/{{consortia}}/{{trait}}_{{pop}}.full.txt",
-        outf_tf=config["VCF_DIR"]+"chunk_snplist/{consortia}/{trait}_{pop}.chr{chrom}_00.txt"
+        outputf=config["VCF_DIR"]+"snplist/{consortia}/{trait}_{pop}.full.txt",
+        outf_tf=expand(config["VCF_DIR"]+"chunk_snplist/{{consortia}}/{{trait}}_{{pop}}.chr{chrom}_00.txt",chrom=range(1,23))
     script:
         "../scripts/merge_split.R"
 

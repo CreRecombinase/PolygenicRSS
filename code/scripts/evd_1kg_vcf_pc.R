@@ -1,14 +1,8 @@
 
-## my_chrom <- 17
 input_file <- "/scratch/t.cri.nknoblauch/polyg_scratch/vcf/EUR/EUR.chr2.vcf.gz"
-input_tbi  <- paste0(input_file,".tbi")
+input_tbi  <- paste0(input_file, ".tbi")
 c_pref <- "/scratch/t.cri.nknoblauch/polyg_scratch/vcf/chunk_snplist/bc/baso-p_EUR.chr2_00"
 subsnpf <- "/scratch/t.cri.nknoblauch/polyg_scratch/vcf/chunk_snplist/bc/baso-p_EUR.chr2_01"
-## subldf <- "~/Downloads/PolygenicRSS/data/Snakemake_inputs/EUR.samples"
-## asnp_df <- read_delim("~/Downloads/PolygenicRSS/data/Snakemake_inputs/ntr_snps.txt",col_names=c("chrom","snp","pos","map","snp_id"),delim=" ",,col_types=cols(chrom="i",
-##                                                                                                       snp="c",
-##                                                                                                       map="d",pos="i",snp_id="i"))
-
 
 
 

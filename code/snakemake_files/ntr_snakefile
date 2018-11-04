@@ -2,7 +2,6 @@ localrules: dl_snplist,split_ch,cut_ch
 
 
 
-
 rule dl_snplist:
     output:
         temp("allsnps_hapmap_common_positions_gmap.txt")
