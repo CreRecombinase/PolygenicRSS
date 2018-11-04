@@ -52,9 +52,12 @@ rule merge_gwasf:
     input:
         inputf=expand(config["VCF_DIR"]+"snplist/{{consortia}}/{{trait}}_{{pop}}.chr{chrom}.txt",chrom=range(1,23))
     params:
-        chrom=range(1,23)
+        chrom=range(1,23),
+        outf_pref=expand(config["VCF_DIR"]+"chunk_snplist/{{consortia}}/{{trait}}_{{pop}}.chr{chrom}_",chrom=range(1,23)),
+        chunk_size=30000
     output:
-        outputf=config["VCF_DIR"]+"snplist/{{consortia}}/{{trait}}_{{pop}}.full.txt"
+        outputf=config["VCF_DIR"]+"snplist/{{consortia}}/{{trait}}_{{pop}}.full.txt",
+        outf_tf=config["VCF_DIR"]+"chunk_snplist/{consortia}/{trait}_{pop}.chr{chrom}_00.txt"
     script:
         "../scripts/merge_split.R"
 
@@ -63,7 +66,7 @@ rule merge_gwasf:
 #     input:
 #          inputf=config["VCF_DIR"]+"snplist/{consortia}/{trait}_{pop}.chr{chrom}.txt"
 #     params:
-#         out_pref=config["VCF_DIR"]+"chunk_snplist/{consortia}/{trait}_{pop}.chr{chrom}_",
+#         out_pref=
 #         chunk_size=30000
 #     output:
 #         tpref=config["VCF_DIR"]+"chunk_snplist/{consortia}/fake_{trait}_{pop}.chr{chrom}.txt"
@@ -72,15 +75,15 @@ rule merge_gwasf:
 
 rule evd_ld_kg:
     input:
-        out_pref=config["VCF_DIR"]+"chunk_snplist/{consortia}/{trait}_{pop}.chr{chrom}_{chunk}",
-        c_pref=config["VCF_DIR"]+"chunk_snplist/{consortia}/{trait}_{pop}.chr{chrom}_00",
-        vcff=config["VCF_DIR"]+"{pop}/{pop}.chr{chrom}.vcf.gz",
-        mapf=config["KG_MAPDIR"]+"interpolated_{geneticMap}.h5"
+        out_pref = config["VCF_DIR"]+"chunk_snplist/{consortia}/{trait}_{pop}.chr{chrom}_{chunk}",
+        c_pref = config["VCF_DIR"]+"chunk_snplist/{consortia}/{trait}_{pop}.chr{chrom}_00",
+        vcff = config["VCF_DIR"]+"{pop}/{pop}.chr{chrom}.vcf.gz",
+        mapf = config["KG_MAPDIR"]+"interpolated_{geneticMap}.h5"
     params:
-        chrom="{chrom}",
-        useLDetect="{useLDetect}"
-        evdf="{useLDshrink}"
+        chrom = "{chrom}",
+        useLDetect = "{useLDetect}",
+        evdf = "{useLDshrink}"
     output:
-        ldf=config["EVD_DIR"]+"chr{chrom}AF0SNP0N0_{consortia}-{trait}_{pop}_30000_{geneticMap}_{useLDshrink}.h5"
+        ldf = config["EVD_DIR"]+"chr{chrom}AF0SNP0N0_{consortia}-{trait}_{pop}_30000_{geneticMap}_{useLDshrink}.h5"
     script:
-        "../scripts/evd_1kg_vcf.R"
+        "../scripts/evd_1kg_vcf_pc.R"
