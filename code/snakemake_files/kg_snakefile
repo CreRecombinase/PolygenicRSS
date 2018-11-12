@@ -153,3 +153,28 @@ rule kggds2h5:
     script:
         "../scripts/gds2h5.R"
 
+rule vcf2skh5:
+    ''' This rule converts vcfs to HDF5 files using scikit-allel '''
+    input:
+        config["VCF_DIR"]+"{pop}/{pop}.chr{chrom}.vcf.gz"
+    output:
+        config["HDF5_DIR"]+"{pop}/{pop}.chr{chrom}.h5"
+    run:
+        __import__('tables')  # <-- import PyTables; __import__ so that linters don't complain
+        import h5py
+
+        # now h5py "supports" blosc
+
+        def blosc_opts(complevel=9, complib='blosc:zstd', shuffle=True):
+            shuffle = 2 if shuffle == 'bit' else 1 if shuffle else 0
+            compressors = ['blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib', 'zstd']
+            complib = ['blosc:' + c for c in compressors].index(complib)
+            return (0, 0, 0, 0, complevel, shuffle, complib)
+
+
+# for writing, do something li
+        import allel
+        outf=output[0]
+        inputf=input[0]
+        print(outf+"\n"+inputf)
+        allel.vcf_to_hdf5(inputf, outf, compression=32001, compression_opts=blosc_opts(), shuffle=True, overwrite=False, vlen=False,  alt_number=1, fills=None, region=None,  transformers=None, buffer_size=16384, chunk_length=65536, chunk_width=64, log=sys.stdout)

@@ -8,8 +8,7 @@ rule vcf_2_pop:
         pop="[A-Z]+",
         chr="[0-9]+"
     shell:
-        "bcftools view {input.vcff} -m2 -M2 -S {input.filt_f} -Oz -o {output.vcff} --threads {threads}"
-
+        "bcftools view {input.vcff} -ghet -a -m2 -M2 -S {input.filt_f} -X -Oz -o {output.vcff} --threads {threads}"
 
 rule tabix_pop:
     input:
@@ -25,14 +24,23 @@ rule snplist_vcf:
     output:
         snplistf=config["VCF_DIR"]+"{pop}/snplist/{pop}.chr{chr}.txt"
     shell:
-        "bcftools view -H -G {input.vcff} > {output.snplistf}"
+        "bcftools view -H -ghet -G -m2 -M2 {input.vcff} > {output.snplistf}"
+
+rule tsv2fst:
+    input:
+        gwasf=config["KG_DIRECTORY"]+"summary_statistics/{consortia}_{trait}_summary_statistics.tsv.gz"
+    output:
+        gwasf=config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics.fst"
+    script:
+        "../scripts/tsv2fst.R"
 
 rule merge_snplist:
     input:
-        gwasf=config["KG_DIRECTORY"]+"summary_statistics/{consortia}_{trait}_summary_statistics.tsv.gz",
-        vcff=config["VCF_DIR"]+"{pop}/snplist/{pop}.chr{chr}.txt"
+        gwasf=config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics.fst",
+        vcff=expand(config["VCF_DIR"]+"{{pop}}/snplist/{{pop}}.chr{chrom}.txt",chrom=range(1,23)),
+        mapf=config["KG_MAPDIR"]+"interpolated_{pop}.h5"
     output:
-        outputf=config["VCF_DIR"]+"snplist/{consortia}/{trait}_{pop}.chr{chr}.txt"
+        outputf=expand(config["VCF_DIR"]+"snplist/{{consortia}}/{{trait}}_{{pop}}.chr{chrom}.fst",chrom=range(1,23))
     script:
         "../scripts/merge_snplist.R"
 
@@ -48,42 +56,55 @@ rule pull_pop_list:
         "../scripts/pop_pull.R"
 
 
-rule merge_gwasf:
+
+
+
+
+rule split_inpf:
     input:
-        inputf=expand(config["VCF_DIR"]+"snplist/{{consortia}}/{{trait}}_{{pop}}.chr{chrom}.txt",chrom=range(1,23))
+        inputf=config["VCF_DIR"]+"snplist/{consortia}/{trait}_{pop}.chr{chrom}.fst",
+        ldetectf=config["LDETECT_DIR"]+"fourier_ls-chr{chrom}.bed"
     params:
-        chrom=range(1,23),
-        outf_pref=expand(config["VCF_DIR"]+"chunk_snplist/{{consortia}}/{{trait}}_{{pop}}.chr{chrom}_",chrom=range(1,23)),
-        chunk_size=30000
+        chunks=expand("{clusterid}",clusterid=range(1,tot_chunk)),
+        useLDetect="{useLDetect}",
+        consortia="{consortia}",
+        trait="{trait}",
+        pop="{pop}",
+        chrom="{chrom}"
     output:
-        outputf=config["VCF_DIR"]+"snplist/{consortia}/{trait}_{pop}.full.txt",
-        outf_tf=expand(config["VCF_DIR"]+"chunk_snplist/{{consortia}}/{{trait}}_{{pop}}.chr{chrom}_00.txt",chrom=range(1,23))
+        outf_tf=expand(config["VCF_DIR"]+"chunk_snplist/{{consortia}}/{{trait}}_{{pop}}_{{useLDetect}}.chr{{chrom}}.{clusterid}.chunked.fst",clusterid=range(1,tot_chunk))
     script:
         "../scripts/merge_split.R"
 
 
-# rule chunk_mergelist:
-#     input:
-#          inputf=config["VCF_DIR"]+"snplist/{consortia}/{trait}_{pop}.chr{chrom}.txt"
-#     params:
-#         out_pref=
-#         chunk_size=30000
-#     output:
-#         tpref=config["VCF_DIR"]+"chunk_snplist/{consortia}/fake_{trait}_{pop}.chr{chrom}.txt"
-#     shell:
-#         "split -l {params.chunk_size} -d --verbose {input.inputf} {params.out_pref}; touch {output.tpref}"
-
 rule evd_ld_kg:
     input:
-        out_pref = config["VCF_DIR"]+"chunk_snplist/{consortia}/{trait}_{pop}.chr{chrom}_{chunk}",
-        c_pref = config["VCF_DIR"]+"chunk_snplist/{consortia}/{trait}_{pop}.chr{chrom}_00",
-        vcff = config["VCF_DIR"]+"{pop}/{pop}.chr{chrom}.vcf.gz",
-        mapf = config["KG_MAPDIR"]+"interpolated_{geneticMap}.h5"
+        subsnpf = config["VCF_DIR"]+"chunk_snplist/{consortia}/{trait}_{pop}_{useLDetect}.chr{chrom}.{rid}.chunked.fst",
+        input_file = config["HDF5_DIR"]+"{pop}/{pop}.chr{chrom}.h5"
     params:
-        chrom = "{chrom}",
-        useLDetect = "{useLDetect}",
-        evdf = "{useLDshrink}"
+        useLDshrink = "{useLDshrink}",
     output:
-        ldf = config["EVD_DIR"]+"chr{chrom}AF0SNP0N0_{consortia}-{trait}_{pop}_30000_{geneticMap}_{useLDshrink}.h5"
+        evdf = config["EVD_DIR"]+"chr{chrom}AF0SNP0N0_{consortia}O{trait}_{pop}_{useLDetect}_{pop}_{useLDshrink}.{rid}.clust.h5"
     script:
-        "../scripts/evd_1kg_vcf_pc.R"
+        "../scripts/evd_1kg_h5_al.R"
+
+
+# rule evd_ld_kg:
+#     input:
+#         subsnpf = config["VCF_DIR"]+"chunk_snplist/{consortia}/{trait}_{pop}_{useLDetect}.chr{chrom}.{rid}.chunked.fst",
+#         input_file = config["VCF_DIR"]+"{pop}/{pop}.chr{chrom}.vcf.gz",
+#         input_file_idx = config["VCF_DIR"]+"{pop}/{pop}.chr{chrom}.vcf.gz.tbi",
+#     params:
+#         useLDshrink = "{useLDshrink}",
+#     output:
+#         evdf = config["EVD_DIR"]+"chr{chrom}AF0SNP0N0_{consortia}O{trait}_{pop}_{useLDetect}_{pop}_{useLDshrink}.{rid}.clust.h5"
+#     script:
+#         "../scripts/evd_1kg_vcf_pc.R"
+
+rule merge_ld:
+    input:
+        evdfl=expand(config["EVD_DIR"]+"chr{{chrom}}AF0SNP0N0_{{consortia}}O{{trait}}_{{pop}}_{{useLDetect}}_{{pop}}_{{useLDshrink}}.{rid}.clust.h5",rid=range(1,tot_chunk))
+    output:
+        evdf=config["EVD_DIR"]+"chr{chrom}AF0SNP0N0_{consortia}O{trait}_{pop}_{useLDetect}_{pop}_{useLDshrink}.h5"
+    script:
+        "../scripts/merge_evd.R"

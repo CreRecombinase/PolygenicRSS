@@ -3,15 +3,17 @@
 ## #c_pref <- "/scratch/t.cri.nknoblauch/polyg_scratch/vcf/snplist/bc/baso-p_EUR.chr_2_00.txt"
 ## subsnpf <- "/scratch/t.cri.nknoblauch/polyg_scratch/vcf/snplist/bc/rdw_EUR.chr20.fst"
 ## chunksize <- 30000
+
 library(EigenH5)
+library(hdf5r)
 library(ldshrink)
 library(dplyr)
-library(magrittr)
+library(purrr)
+library(tidyr)
 library(progress)
 library(feather)
 
 input_file <- snakemake@input[["input_file"]]
-input_tbi  <- paste0(input_file,".tbi")
 my_chrom <- snakemake@params[["chrom"]]
 
 subsnpf <- snakemake@input[["subsnpf"]]
@@ -29,13 +31,16 @@ subsnp_df <- read_feather(subsnpf)
 
 
 if(nrow(subsnp_df)>0){
-    my_vcf <- Rsamtools::TabixFile(input_file,input_tbi)
+    hf <- H5File$new(input_file,"r")
+    snprs <- hf[["variants/ID"]][]
+    snppos <- hf[["variants/POS"]][]
+    snpref <- hf[["variants/REF"]][]
 
+    hid_df <- data_frame(snp=snprs,pos=snppos) %>% mutate(data_snp_id=1:n())
+    hd <- hf[["calldata/GT"]]
 
     if(is.null(subsnp_df[["region_id"]])){
-
         stop("please assign LD blocks")
-
     }
 
 ## cutoff <- formals(LDshrink::LDshrink)[["cutoff"]]
@@ -47,9 +52,6 @@ if(nrow(subsnp_df)>0){
     write_df_h5(snp_df, output_file, "LDinfo")
 
 
-
-
-
     snp_dfl <- split(snp_df, snp_df$region_id)
 
 
@@ -59,15 +61,19 @@ if(nrow(subsnp_df)>0){
 
 for(i in 1:length(snp_dfl)){
     tdf <- snp_dfl[[i]]
-    mreg <- GenomicRanges::GRanges(seqnames=as.character(tdf$chrom[1]),
-                                   ranges=IRanges::IRanges(min(tdf$pos),max(tdf$pos)))
 
-    vcf <- VariantAnnotation::readVcf(my_vcf,"hg19",mreg)
+    vcf_idx <- inner_join(hid_df,tdf) %>% distinct(snp,pos,.keep_all=T) %>% pull(data_snp_id)
 
-    vcf_idx <- tdf$snp
-    vcf <- vcf[vcf_idx,]
-    CEU_mat <- VariantAnnotation::genotypeToSnpMatrix(vcf)# First convert to `snpStats` genotype matrix
-    dosage <- as(CEU_mat$genotypes,"numeric") #convert `snpStats` matrix to numeric type
+    stopifnot(length(vcf_idx)==nrow(tdf))
+    dosage <- hd[,,vcf_idx]
+    N <- dim(dosage)[2]
+    tp <- length(vcf_idx)
+    stopifnot(dim(dosage)[3]==tp)
+    dim(dosage) <- c(N*2,tp)
+    storage.mode(dosage) <- "numeric"
+    ## vcf <- vcf[vcf_idx,]
+    ## CEU_mat <- VariantAnnotation::genotypeToSnpMatrix(vcf)# First convert to `snpStats` genotype matrix
+    ## dosage <- as(CEU_mat$genotypes,"numeric") #convert `snpStats` matrix to numeric type
     dvar <- apply(dosage,2,var)
     if(min(dvar)==0){
         options(tibble.width = Inf)
@@ -93,7 +99,7 @@ for(i in 1:length(snp_dfl)){
     EigenH5::write_vector_h5(retl$D,output_file,paste0("EVD/", mrid, "/D"))
     EigenH5::write_matrix_h5(retl$Q,output_file,paste0("EVD/", mrid, "/Q"))
     EigenH5::write_vector_h5(retl$L2,output_file,paste0("L2/", mrid, "/L2"))
-    EigenH5::write_df_h5(tdf,output_file,"LDinfo")
+#    EigenH5::write_df_h5(tdf,output_file,"LDinfo")
 
 }
 }

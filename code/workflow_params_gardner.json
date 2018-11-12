@@ -16,6 +16,7 @@
     "HG19_DIR": "/run/media/nwknoblauch/Data/hg19/",
     "WTCC_INPUT_H5" :"/run/media/nwknoblauch/Data/wtcc_input/",
     "WTCC_H5" : "/scratch/t.cri.nknoblauch/polyg_scratch/wtcc/",
+    "LDETECT_DIR" : "/scratch/t.cri.nknoblauch/polyg_scratch/ldetect-data/EUR/",
     "KG_MAPDIR" :"/gpfs/data/xhe-lab/1KG/1000-genomes-genetic-maps/",
     "KG_VCFDIR" :"/run/media/nwknoblauch/Data/1kg/vcf/",
     "OUTPUT_DIR" :"../../output/RSSp_snakemake/",

@@ -5,6 +5,26 @@ __default__:
   ntasks: '1'
   mincpus: '1'
   mem: '25gb'
+evd_ld_kg:
+  time: '00:30:00'
+  mem: '15gb'
+merge_temp_dose:
+  time: '05:30:00'
+  mem: '3gb'
+merge_plink:
+  time: '05:30:00'
+  nodes: '1'
+  mincpus: '12'
+  mem: '18gb'
+missing_f:
+  time: '00:30:00'
+  mem: '3gb'
+split_dose_gz:
+  time: '05:30:00'
+  mem: '3gb'
+fram_ld_region:
+  time: '02:00:00'
+  mem: '15gb'
 ld_df:
   mincpus: '10'
   time: '06:30:00'
