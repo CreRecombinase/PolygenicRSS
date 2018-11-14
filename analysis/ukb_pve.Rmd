@@ -1,0 +1,21 @@
+---
+title: "UK Biobank PVE"
+author: "Nicholas Knoblauch"
+date: "2018-11-14"
+output: workflowr::wflow_html
+---
+
+## Introduction
+
+below are pve estimates from 2 uk biobank traits (`birthweight-self` and `birthweight-child`) for which I could easily obtain sample size info.  For refernce, LD score regression gives $h^2$ estimates of these traits as being `0.124` and `0.112` respectively.
+
+```{r,echo=F}
+suppressMessages(library(tidyverse))
+est_f <- dir("~/Dropbox/PolygenicRSS/output/pve/ukbb",full.names = T)
+map_df(est_f,~suppressMessages(read_delim(.x,delim="\t"))) %>%
+  select(trait_id,pve) %>%
+  distinct()
+```
+
+
+
