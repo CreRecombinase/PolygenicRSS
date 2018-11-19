@@ -34,9 +34,18 @@ vcf_cols <- readr::cols_only("chrom"="i",
                         "ref_allele"="c",
                         "alt_allele"="c")
 ## formals(try_interpolate_map) <- alist(map = , map_pos = ,target_pos,progress=TRUE)
-gwas_df <- assign_genetic_map(dplyr::rename(read_fst(gwasf),chr=chrom),mapdf,strict=F) %>%  filter(map>0) %>% dplyr::rename(chrom=chr)
+gwas_df <- assign_genetic_map(dplyr::rename(read_fst(gwasf),chr=chrom),mapdf,strict=F) %>% distinct(chr,pos,.keep_all=T) %>%  filter(map>0) %>% dplyr::rename(chrom=chr)
 
 checknwrite <- function(x){
+    cat("Head!")
+    options(tibble.width=Inf)
+    ## mutate(x,omap=order(map),odiff=lead(omap)-omap,cdiff=lead(map)-map,tid=1:n())  %>%
+    ##     mutate(leadcdiff=lead(cdiff),lagcdiff=lag(cdiff)) %>%
+    ##     filter(odiff!=1)  %>%
+    ##     head()  %>% select(snp,chrom,pos,map,contains("cdiff"),contains("id"),omap,odiff)  %>% print()
+    if(is.unsorted(x$map,strictly=T)){
+        saveRDS(x,"ws.RDS")
+    }
     stopifnot(!is.unsorted(x$map,strictly=T))
     write_fst(x,output_f[x$chrom[1]],compress=100)
 }
@@ -44,7 +53,8 @@ checknwrite <- function(x){
 
 snp_df <- map_df(vcff,read_delim,delim="\t",col_names=vcf_cn,col_types=vcf_cols)
 
-b_df <- inner_join(gwas_df,snp_df) %>% mutate(ld_snp_id=1:n())
+b_df <- inner_join(gwas_df,snp_df) %>%
+    mutate(ld_snp_id=1:n())
 
 cat("Fraction of SNPs found :",(nrow(b_df)/nrow(filter(gwas_df,chrom==snp_df$chrom[1]))),"\n")
 

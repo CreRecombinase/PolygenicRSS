@@ -10,7 +10,7 @@ include: "param_snakefile"
 #include: "fram_snakefile"
 import math
 import numpy as np
-
+import glob
 def file_len(fname):
     with open(fname) as f:
         for i, l in enumerate(f):
@@ -18,13 +18,18 @@ def file_len(fname):
     return i
 
 
+sum_stat_files=glob.glob(config["KG_DIRECTORY"]+"summary_statistics/*tsv.gz")
+
+all_pref=[x.split("/")[-1].split("_")[:2] for x in sum_stat_files]
+
+all_output=["PolygenicRSS/output/pve/{consortia}/trait_sim_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_RSSp_res_gwas_{percentEigen}_{useLDshrink}_0_F.txt.gz".format(consortia=x[0],trait=x[1],pop="EUR",useLDetect="T",useLDshrink="T",percentEigen="0.001",AF=0,SNPCT=0,N=0) for x in all_pref]
 # # chunksize=10000
 # # tot_p=996708
 # # tot_chunk=math.ceil(tot_p/chunksize)+1
 # # inf=[config["LDETECT_DIR"]+"fourier_ls-chr"+str(x)+".bed" for x in range(1,23)]
 # # ld_no=[file_len(x) for x in inf]
 # tot_chunk=np.max(ld_no)+1
-tot_chunk=50
+tot_chunk=25
 include: "kg_snakefile"
 include: "kg_ld_snakefile"
 #include: "genred_snakefile"
@@ -38,10 +43,10 @@ include: "kg_ld_snakefile"
 
 wildcard_constraints:
     clusterid="[0-9]+",
-    trait="[a-z-]+",
+    trait="[a-z0-9-]+",
     pop="EUR",
     chrom="[0-9]+",
-    consortia="[a-z]+",
+    consortia="[a-zA-Z40-]+",
     useLDshrink="T|F"
 
 #     pop="[A-Z]+",
@@ -54,5 +59,4 @@ localrules: all
 
 rule all:
     input:
-        expand(config["HDF5_DIR"]+"{pop}/{pop}.chr{chrom}.h5",pop="EUR",chrom=range(1,23)),
-        expand(config["EVD_DIR"]+"chr{chrom}AF0SNP0N0_{consortia}O{trait}_{pop}_{useLDetect}_{pop}_{useLDshrink}.h5",consortia="bc",trait=["mchc","rdw","baso-p"],pop="EUR",chrom=range(1,23),useLDetect="T",useLDshrink="T")
+        DBox.remote(all_output)

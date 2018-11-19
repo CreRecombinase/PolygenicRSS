@@ -61,11 +61,9 @@ if(nrow(subsnp_df)>0){
 
 for(i in 1:length(snp_dfl)){
     tdf <- snp_dfl[[i]]
-
     vcf_idx <- inner_join(hid_df,tdf) %>% distinct(snp,pos,.keep_all=T) %>% pull(data_snp_id)
-
     stopifnot(length(vcf_idx)==nrow(tdf))
-    dosage <- hd[,,vcf_idx]
+    dosage <- hd[,,vcf_idx,drop=F]
     N <- dim(dosage)[2]
     tp <- length(vcf_idx)
     stopifnot(dim(dosage)[3]==tp)

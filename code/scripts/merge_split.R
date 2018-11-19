@@ -29,12 +29,13 @@ if(useLDetect==F){
         chunk_genome(chunk_size=chunksize) %>%
         dplyr::rename(chrom=chr)
 }else{
-    break_df <- readr::read_delim(snakemake@input[["ldetectf"]],delim="\t",trim_ws=T) %>%
+    ldetect_f  <- snakemake@input[["ldetectf"]]
+    break_df <- readr::read_delim(ldetect_f,delim="\t",trim_ws=T) %>%
         dplyr::mutate(region_id=1:n())  %>%
         dplyr::mutate(chr=as.integer(gsub("chr","",chr)),start=as.integer(start),stop=as.integer(stop)) %>%
-        group_by(chr) %>%
-        mutate(start=dplyr::if_else(start==min(start),0L,start),stop=if_else(stop==max(stop),as.integer(max(stop)*10L),stop)) %>%
-        ungroup()
+        dplyr::group_by(chr) %>%
+        dplyr::mutate(start=dplyr::if_else(start==min(start),0L,start),stop=if_else(stop==max(stop),.Machine$integer.max,stop)) %>%
+        dplyr::ungroup()
     subsnp_df <- fst::read_fst(inputf) %>%
         dplyr::rename(chr=chrom) %>%
         ldshrink::assign_snp_block(break_df=break_df,assign_all=F) %>% filter(!is.na(region_id)) %>%

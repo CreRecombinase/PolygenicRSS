@@ -30,9 +30,23 @@ rule tsv2fst:
     input:
         gwasf=config["KG_DIRECTORY"]+"summary_statistics/{consortia}_{trait}_summary_statistics.tsv.gz"
     output:
-        gwasf=config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics.fst"
+        gwasf=temp(config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics.fst")
     script:
         "../scripts/tsv2fst.R"
+
+rule guess_sample_size:
+    input:
+        gwasf=config["KG_DIRECTORY"]+"summary_statistics/{consortia}_{trait}_summary_statistics.tsv.gz",
+        gwasfst=config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics.fst"
+    params:
+        consortia="{consortia}",
+        trait="{trait}"
+    output:
+        ogwasf=temp(config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics_sc.txt")
+    script:
+        "../scripts/guess_N.R"
+
+
 
 rule merge_snplist:
     input:
@@ -40,7 +54,7 @@ rule merge_snplist:
         vcff=expand(config["VCF_DIR"]+"{{pop}}/snplist/{{pop}}.chr{chrom}.txt",chrom=range(1,23)),
         mapf=config["KG_MAPDIR"]+"interpolated_{pop}.h5"
     output:
-        outputf=expand(config["VCF_DIR"]+"snplist/{{consortia}}/{{trait}}_{{pop}}.chr{chrom}.fst",chrom=range(1,23))
+        outputf=temp(expand(config["VCF_DIR"]+"snplist/{{consortia}}/{{trait}}_{{pop}}.chr{chrom}.fst",chrom=range(1,23)))
     script:
         "../scripts/merge_snplist.R"
 
@@ -54,11 +68,6 @@ rule pull_pop_list:
         pop="{pop}"
     script:
         "../scripts/pop_pull.R"
-
-
-
-
-
 
 rule split_inpf:
     input:
@@ -84,27 +93,50 @@ rule evd_ld_kg:
     params:
         useLDshrink = "{useLDshrink}",
     output:
-        evdf = config["EVD_DIR"]+"chr{chrom}AF0SNP0N0_{consortia}O{trait}_{pop}_{useLDetect}_{pop}_{useLDshrink}.{rid}.clust.h5"
+        evdf = temp(config["EVD_DIR"]+"chr{chrom}AF0SNP0N0_{consortia}O{trait}_{pop}_{useLDetect}_{pop}_{useLDshrink}.{rid}.clust.h5")
     script:
         "../scripts/evd_1kg_h5_al.R"
-
-
-# rule evd_ld_kg:
-#     input:
-#         subsnpf = config["VCF_DIR"]+"chunk_snplist/{consortia}/{trait}_{pop}_{useLDetect}.chr{chrom}.{rid}.chunked.fst",
-#         input_file = config["VCF_DIR"]+"{pop}/{pop}.chr{chrom}.vcf.gz",
-#         input_file_idx = config["VCF_DIR"]+"{pop}/{pop}.chr{chrom}.vcf.gz.tbi",
-#     params:
-#         useLDshrink = "{useLDshrink}",
-#     output:
-#         evdf = config["EVD_DIR"]+"chr{chrom}AF0SNP0N0_{consortia}O{trait}_{pop}_{useLDetect}_{pop}_{useLDshrink}.{rid}.clust.h5"
-#     script:
-#         "../scripts/evd_1kg_vcf_pc.R"
 
 rule merge_ld:
     input:
         evdfl=expand(config["EVD_DIR"]+"chr{{chrom}}AF0SNP0N0_{{consortia}}O{{trait}}_{{pop}}_{{useLDetect}}_{{pop}}_{{useLDshrink}}.{rid}.clust.h5",rid=range(1,tot_chunk))
     output:
-        evdf=config["EVD_DIR"]+"chr{chrom}AF0SNP0N0_{consortia}O{trait}_{pop}_{useLDetect}_{pop}_{useLDshrink}.h5"
+        evdf=temp(config["EVD_DIR"]+"chr{chrom}AF0SNP0N0_{consortia}O{trait}_{pop}_{useLDetect}_{pop}_{useLDshrink}.h5")
     script:
         "../scripts/merge_evd.R"
+
+
+rule gen_quh:
+    input:
+        tinpf=expand(config["EVD_DIR"]+"chr{{chrom}}AF0SNP0N0_{{consortia}}O{{trait}}_{{pop}}_{{useLDetect}}_{{pop}}_{{useLDshrink}}.{rid}.clust.h5",rid=range(1,tot_chunk)),
+        evdf=config["EVD_DIR"]+"chr{chrom}AF0SNP0N0_{consortia}O{trait}_{pop}_{useLDetect}_{pop}_{useLDshrink}.h5"
+    output:
+        quhf=config["KG_DIRECTORY"]+"quh/gwas_chr{chrom}AF0SNP0N0_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_{useLDshrink}_0.h5"
+    script:
+        "../scripts/gen_quh_chunk_gwas.R"
+
+
+from snakemake.remote.dropbox import RemoteProvider as DropboxRemoteProvider
+tokenf=open(".dba.txt").read().replace('\n','')
+DBox = DropboxRemoteProvider(oauth2_access_token=tokenf)
+
+
+rule rssp_est:
+    input:
+        quhf=expand(config["KG_DIRECTORY"]+"quh/gwas_chr{chrom}AF{{AF}}SNP{{SNPCT}}N{{N}}_{{consortia}}0{{trait}}_{{pop}}_{{useLDetect}}_{{pop}}_gwas_{{useLDshrink}}_0.h5",chrom=range(1,23)),
+        samp_f=config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics_sc.txt"
+    params:
+        doConfound="{useConfounding}",
+        pvv="{percentEigen}"
+    output:
+        dff=temp(config["OUTPUT_DIR"]+"{consortia}/trait_sim_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_RSSp_res_gwas_{percentEigen}_{useLDshrink}_0_{useConfounding}.txt.gz")
+    script:
+        "../scripts/simple_RSSp.R"
+
+rule dropbox_cp:
+    input:
+        dff=config["OUTPUT_DIR"]+"{consortia}/trait_sim_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_RSSp_res_gwas_{percentEigen}_{useLDshrink}_0_{useConfounding}.txt.gz"
+    output:
+        DBox.remote("PolygenicRSS/output/pve/{consortia}/trait_sim_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_RSSp_res_gwas_{percentEigen}_{useLDshrink}_0_{useConfounding}.txt.gz")
+    run:
+        shell("cp {input} {output}")

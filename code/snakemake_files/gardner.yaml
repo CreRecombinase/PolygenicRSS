@@ -6,8 +6,8 @@ __default__:
   mincpus: '1'
   mem: '25gb'
 evd_ld_kg:
-  time: '00:30:00'
-  mem: '15gb'
+  time: '01:30:00'
+  mem: '17gb'
 merge_temp_dose:
   time: '05:30:00'
   mem: '3gb'
