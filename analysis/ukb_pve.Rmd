@@ -9,12 +9,89 @@ output: workflowr::wflow_html
 
 below are pve estimates from 2 uk biobank traits (`birthweight-self` and `birthweight-child`) for which I could easily obtain sample size info.  For refernce, LD score regression gives $h^2$ estimates of these traits as being `0.124` and `0.112` respectively.
 
-```{r,echo=F}
+```{r,echo=F,message=F,warning=F}
+suppressMessages(library(plotly))
 suppressMessages(library(tidyverse))
-est_f <- dir("~/Dropbox/PolygenicRSS/output/pve/ukbb",full.names = T)
-map_df(est_f,~suppressMessages(read_delim(.x,delim="\t"))) %>%
-  select(trait_id,pve) %>%
+library(fs)
+library(forcats)
+
+est_f <- dir_ls("~/Dropbox/PolygenicRSS/output/pve/",recursive = T,type = "file")
+trait_ctf <- dir_ls("~/Desktop/gardner_scratch/summary_statistics_fst/",glob="*sc.txt")
+
+
+trait_ct <- map_df(trait_ctf,~read_tsv(.x) %>% mutate(trait=as.character(trait)))
+good_trait_ctf <- filter(trait_ct,!is.na(var_N)) %>% filter(var_N>0,max_N<490000)
+all_traits <- map_df(est_f,~suppressMessages(read_delim(.x,delim="\t"))) %>%
+  select(trait_id,pve,consortia,trait) %>% 
   distinct()
+```
+
+
+```{r,echo=F}
+semi_join(all_traits,good_trait_ctf) %>% filter(consortia!="icbp",consortia!="egg") %>% arrange(desc(pve)) %>% DT::datatable()
+```
+```{r,echo=F}
+p <- semi_join(all_traits,good_trait_ctf) %>% filter(consortia!="icbp",consortia!="egg") %>% arrange(desc(pve)) %>% filter(pve<1) %>% mutate(trait=fct_reorder(trait,pve)) %>% ggplot(aes(x=trait,y=pve))+geom_point()+coord_flip()+scale_y_log10()
+```
+```{r,echo=F}
+ggplotly(p)
+```
+
+
+
+<!-- ```{r} -->
+
+<!-- trait_ls <- function(dir="~/Dropbox/PolygenicRSS/output/pve/"){ -->
+<!--   est_f <- dir_ls(dir,recursive = T,type = "file") -->
+
+<!-- } -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+
+<!-- quh_f <- function(consortia="angst",trait="anx",quh_d= "~/Dropbox/scratch/polyg_scratch/quh/"){ -->
+<!--   fs::path_expand(glue("{quh_d}","gwas_chr{1:22}AF0SNP0N0_{consortia}0{trait}_EUR_T_EUR_gwas_T_0.h5")) -->
+<!-- } -->
+
+<!-- quhf <- quh_f() -->
+<!-- read_quh_df <- function(quhf){ -->
+<!--   map_df(quhf,read_df_h5,datapath="quh_df") -->
+
+<!-- } -->
+
+<!-- quh_df <- read_quh_df(quhf) -->
+<!-- library(fs) -->
+<!-- library(forcats) -->
+<!-- library(ggplot2) -->
+<!-- library(EigenH5) -->
+
+<!-- rssr <- RSSp:::RSSp_estimate(mutate(quh_df,fgeneid=1),p_n=nrow(quh_df)/2000L) -->
+<!-- slm <- lm(I(quh^2)~I(D^2)+offset(D)+0,data=quh_df) -->
+<!-- quh_f <- dir_ls(quh_d,recursive = F,type = "file") -->
+<!-- tquh <- read_df_h5(quh_f[1],"quh_df") -->
+<!-- ggplot(tquh,aes(x=quh^2,y=D))+geom_point() -->
+<!-- ``` -->
+
+
+```{r}
+# suppressWarnings(library(CVXR, warn.conflicts=FALSE))
+# p <- nrow(tquh)
+# varu <- Variable(1)
+# quh <- tquh$quh
+# D <- tquh$D
+# #D <- Variable(p)
+# tsum <- log(sum(D*D*varu+D))
+# tprod <- sum((quh*((D*D*varu+D)^{-1})*quh))
+# obj <- -0.5*(tsum+tprod)-0.5*p*log(2*pi);
+# objective <- Minimize(obj)
+# prob <- Problem(objective)
+# slv <- solve(prob)
+#   # const double tsum = ((dvec*dvec*varu+dvec+a).log()).sum();
+#   # const double tprod = (quh*(1/(dvec*dvec*varu+dvec+a))*quh).sum();
+#   return 
+# objective <- Minimize(sum((Y - X %*% betaHat)^2))
+
 ```
 
 
