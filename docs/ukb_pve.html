@@ -15,7 +15,7 @@
 
 <title>UK Biobank PVE</title>
 
-<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<script src="site_libs/jquery-1.12.4/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
@@ -27,6 +27,18 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/htmlwidgets-1.3/htmlwidgets.js"></script>
+<link href="site_libs/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet" />
+<script src="site_libs/datatables-binding-0.4/datatables.js"></script>
+<link href="site_libs/dt-core-1.10.16/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="site_libs/dt-core-1.10.16/css/jquery.dataTables.extra.css" rel="stylesheet" />
+<script src="site_libs/dt-core-1.10.16/js/jquery.dataTables.min.js"></script>
+<link href="site_libs/crosstalk-1.0.0/css/crosstalk.css" rel="stylesheet" />
+<script src="site_libs/crosstalk-1.0.0/js/crosstalk.min.js"></script>
+<script src="site_libs/plotly-binding-4.8.0/plotly.js"></script>
+<script src="site_libs/typedarray-0.1/typedarray.min.js"></script>
+<link href="site_libs/plotly-htmlwidgets-css-1.39.2/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="site_libs/plotly-main-1.39.2/plotly-latest.min.js"></script>
 <link href="site_libs/font-awesome-5.0.13/css/fa-svg-with-js.css" rel="stylesheet" />
 <script src="site_libs/font-awesome-5.0.13/js/fontawesome-all.min.js"></script>
 <script src="site_libs/font-awesome-5.0.13/js/fa-v4-shims.min.js"></script>
@@ -323,7 +335,7 @@ div.section {
 </div>
 
 
-<p><strong>Last updated:</strong> 2018-11-14</p>
+<p><strong>Last updated:</strong> 2018-11-20</p>
 <strong>workflowr checks:</strong> <small>(Click a bullet for more information)</small>
 <ul>
 <li>
@@ -352,7 +364,7 @@ div.section {
 </li>
 <li>
 <details>
-<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/244e5da187a1450eaff38c5952c452b84ed1b8e6" target="_blank">244e5da</a> </summary></p>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/4eb91d136415258f37952aa175d7c5e3f7f36f6d" target="_blank">4eb91d1</a> </summary></p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
 <pre><code>
 Ignored files:
@@ -423,6 +435,7 @@ Untracked files:
     Untracked:  code/Untitled1.ipynb
     Untracked:  code/ideas.org
     Untracked:  code/ltximg/
+    Untracked:  code/quhdypi/
     Untracked:  code/rssp.yml
     Untracked:  code/scikit_allel.org
     Untracked:  code/scripts/#compare_eqtl.R#
@@ -508,7 +521,6 @@ Unstaged changes:
     Modified:   analysis/simulation.Rmd
     Modified:   code/TF_LDshrink.ipynb
     Modified:   code/dask_LDshrink.ipynb
-    Modified:   code/snakemake_files/Snakefile
     Modified:   code/snakemake_files/kg_ld_snakefile
     Modified:   code/workflow_params_desktop.json
     Modified:   code/workflow_params_xps.json
@@ -547,6 +559,40 @@ Message
 Rmd
 </td>
 <td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/4eb91d136415258f37952aa175d7c5e3f7f36f6d/analysis/ukb_pve.Rmd" target="_blank">4eb91d1</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-11-20
+</td>
+<td style="text-align:left;">
+wflow_publish(“analysis/ukb_pve.Rmd”)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/2d8ee94fa9c78718bf150898d9f94515df0bfa70/docs/ukb_pve.html" target="_blank">2d8ee94</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-11-14
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/244e5da187a1450eaff38c5952c452b84ed1b8e6/analysis/ukb_pve.Rmd" target="_blank">244e5da</a>
 </td>
 <td style="text-align:left;">
@@ -567,11 +613,52 @@ wflow_publish(“ukb_pve.Rmd”)
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>below are pve estimates from 2 uk biobank traits (<code>birthweight-self</code> and <code>birthweight-child</code>) for which I could easily obtain sample size info. For refernce, LD score regression gives <span class="math inline">\(h^2\)</span> estimates of these traits as being <code>0.124</code> and <code>0.112</code> respectively.</p>
-<pre><code># A tibble: 2 x 2
-  trait_id        pve
-  &lt;chr&gt;         &lt;dbl&gt;
-1 ukbb_bw-child 0.185
-2 ukbb_bw-self  0.200</code></pre>
+<pre><code>Joining, by = c(&quot;consortia&quot;, &quot;trait&quot;)</code></pre>
+<div id="htmlwidget-b8e0c2e2742a5382bafd" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-b8e0c2e2742a5382bafd">{"x":{"filter":"none","data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19"],["giant_height","glg_hdl","glg_tg","glg_tc","glg_ldl","nolte_rmssd","jiang_vitd","nolte_sdnn","ckdgen_egfrcrea","angst_anx","hrgene_hr","zengini_oa","share_allg","nolte_pvrsahf","giant_bmi","lu_bfp","giant_whradj","giant_whrunadj","ckdgen_ckd"],[0.646568768777509,0.258918750376195,0.233420948692053,0.210267516802675,0.199555036853009,0.133835818427171,0.124994235259317,0.107801890193209,0.105329620902304,0.104245866072677,0.101282008309163,0.0988399940714416,0.0929103793656664,0.0816282071225046,0.0408901182646409,0.033908170987525,0.0296454265900488,0.0294769567665323,0.025614838509048],["giant","glg","glg","glg","glg","nolte","jiang","nolte","ckdgen","angst","hrgene","zengini","share","nolte","giant","lu","giant","giant","ckdgen"],["height","hdl","tg","tc","ldl","rmssd","vitd","sdnn","egfrcrea","anx","hr","oa","allg","pvrsahf","bmi","bfp","whradj","whrunadj","ckd"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>trait_id<\/th>\n      <th>pve<\/th>\n      <th>consortia<\/th>\n      <th>trait<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":2},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+<pre><code>Joining, by = c(&quot;consortia&quot;, &quot;trait&quot;)</code></pre>
+<div id="htmlwidget-0827bc00647663672df3" style="width:672px;height:480px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-0827bc00647663672df3">{"x":{"data":[{"x":[-0.189385276951753,-0.58683649769162,-0.631860170171123,-0.677227814156183,-0.699937305966345,-0.873427640951634,-0.903110016214347,-0.967373624183757,-0.977449478905594,-0.981941158199982,-0.994467695666569,-1.00506728931954,-1.03193576663672,-1.08815974221617,-1.38838163335355,-1.46969563550791,-1.52804229588838,-1.53051735553906,-1.59150837782591],"y":[19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1],"text":["trait: height<br />pve: 0.64656877","trait: hdl<br />pve: 0.25891875","trait: tg<br />pve: 0.23342095","trait: tc<br />pve: 0.21026752","trait: ldl<br />pve: 0.19955504","trait: rmssd<br />pve: 0.13383582","trait: vitd<br />pve: 0.12499424","trait: sdnn<br />pve: 0.10780189","trait: egfrcrea<br />pve: 0.10532962","trait: anx<br />pve: 0.10424587","trait: hr<br />pve: 0.10128201","trait: oa<br />pve: 0.09883999","trait: allg<br />pve: 0.09291038","trait: pvrsahf<br />pve: 0.08162821","trait: bmi<br />pve: 0.04089012","trait: bfp<br />pve: 0.03390817","trait: whradj<br />pve: 0.02964543","trait: whrunadj<br />pve: 0.02947696","trait: ckd<br />pve: 0.02561484"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,0,0,1)","opacity":1,"size":5.66929133858268,"symbol":"circle","line":{"width":1.88976377952756,"color":"rgba(0,0,0,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":26.2283105022831,"r":7.30593607305936,"b":40.1826484018265,"l":72.3287671232877},"plot_bgcolor":"rgba(235,235,235,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-1.66161453286962,-0.119279121908045],"tickmode":"array","ticktext":["0.03","0.10","0.30"],"tickvals":[-1.52287874528034,-1,-0.522878745280338],"categoryorder":"array","categoryarray":["0.03","0.10","0.30"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"y","title":"pve","titlefont":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.4,19.6],"tickmode":"array","ticktext":["ckd","whrunadj","whradj","bfp","bmi","pvrsahf","allg","oa","hr","anx","egfrcrea","sdnn","vitd","rmssd","ldl","tc","tg","hdl","height"],"tickvals":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],"categoryorder":"array","categoryarray":["ckd","whrunadj","whradj","bfp","bmi","pvrsahf","allg","oa","hr","anx","egfrcrea","sdnn","vitd","rmssd","ldl","tc","tg","hdl","height"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"x","title":"trait","titlefont":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.88976377952756,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716895}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":[{"name":"Collaborate","icon":{"width":1000,"ascent":500,"descent":-50,"path":"M487 375c7-10 9-23 5-36l-79-259c-3-12-11-23-22-31-11-8-22-12-35-12l-263 0c-15 0-29 5-43 15-13 10-23 23-28 37-5 13-5 25-1 37 0 0 0 3 1 7 1 5 1 8 1 11 0 2 0 4-1 6 0 3-1 5-1 6 1 2 2 4 3 6 1 2 2 4 4 6 2 3 4 5 5 7 5 7 9 16 13 26 4 10 7 19 9 26 0 2 0 5 0 9-1 4-1 6 0 8 0 2 2 5 4 8 3 3 5 5 5 7 4 6 8 15 12 26 4 11 7 19 7 26 1 1 0 4 0 9-1 4-1 7 0 8 1 2 3 5 6 8 4 4 6 6 6 7 4 5 8 13 13 24 4 11 7 20 7 28 1 1 0 4 0 7-1 3-1 6-1 7 0 2 1 4 3 6 1 1 3 4 5 6 2 3 3 5 5 6 1 2 3 5 4 9 2 3 3 7 5 10 1 3 2 6 4 10 2 4 4 7 6 9 2 3 4 5 7 7 3 2 7 3 11 3 3 0 8 0 13-1l0-1c7 2 12 2 14 2l218 0c14 0 25-5 32-16 8-10 10-23 6-37l-79-259c-7-22-13-37-20-43-7-7-19-10-37-10l-248 0c-5 0-9-2-11-5-2-3-2-7 0-12 4-13 18-20 41-20l264 0c5 0 10 2 16 5 5 3 8 6 10 11l85 282c2 5 2 10 2 17 7-3 13-7 17-13z m-304 0c-1-3-1-5 0-7 1-1 3-2 6-2l174 0c2 0 4 1 7 2 2 2 4 4 5 7l6 18c0 3 0 5-1 7-1 1-3 2-6 2l-173 0c-3 0-5-1-8-2-2-2-4-4-4-7z m-24-73c-1-3-1-5 0-7 2-2 3-2 6-2l174 0c2 0 5 0 7 2 3 2 4 4 5 7l6 18c1 2 0 5-1 6-1 2-3 3-5 3l-174 0c-3 0-5-1-7-3-3-1-4-4-5-6z"},"click":"function(gd) { \n        // is this being viewed in RStudio?\n        if (location.search == '?viewer_pane=1') {\n          alert('To learn about plotly for collaboration, visit:\\n https://cpsievert.github.io/plotly_book/plot-ly-for-collaboration.html');\n        } else {\n          window.open('https://cpsievert.github.io/plotly_book/plot-ly-for-collaboration.html', '_blank');\n        }\n      }"}],"cloud":false},"source":"A","attrs":{"4cb924097a1e":{"x":{},"y":{},"type":"scatter"}},"cur_data":"4cb924097a1e","visdat":{"4cb924097a1e":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"base_url":"https://plot.ly"},"evals":["config.modeBarButtonsToAdd.0.click"],"jsHooks":[]}</script>
+<!-- ```{r} -->
+<!-- trait_ls <- function(dir="~/Dropbox/PolygenicRSS/output/pve/"){ -->
+<!--   est_f <- dir_ls(dir,recursive = T,type = "file") -->
+<!-- } -->
+<!-- ``` -->
+<!-- ```{r} -->
+<!-- quh_f <- function(consortia="angst",trait="anx",quh_d= "~/Dropbox/scratch/polyg_scratch/quh/"){ -->
+<!--   fs::path_expand(glue("{quh_d}","gwas_chr{1:22}AF0SNP0N0_{consortia}0{trait}_EUR_T_EUR_gwas_T_0.h5")) -->
+<!-- } -->
+<!-- quhf <- quh_f() -->
+<!-- read_quh_df <- function(quhf){ -->
+<!--   map_df(quhf,read_df_h5,datapath="quh_df") -->
+<!-- } -->
+<!-- quh_df <- read_quh_df(quhf) -->
+<!-- library(fs) -->
+<!-- library(forcats) -->
+<!-- library(ggplot2) -->
+<!-- library(EigenH5) -->
+<!-- rssr <- RSSp:::RSSp_estimate(mutate(quh_df,fgeneid=1),p_n=nrow(quh_df)/2000L) -->
+<!-- slm <- lm(I(quh^2)~I(D^2)+offset(D)+0,data=quh_df) -->
+<!-- quh_f <- dir_ls(quh_d,recursive = F,type = "file") -->
+<!-- tquh <- read_df_h5(quh_f[1],"quh_df") -->
+<!-- ggplot(tquh,aes(x=quh^2,y=D))+geom_point() -->
+<!-- ``` -->
+<pre class="r"><code># suppressWarnings(library(CVXR, warn.conflicts=FALSE))
+# p &lt;- nrow(tquh)
+# varu &lt;- Variable(1)
+# quh &lt;- tquh$quh
+# D &lt;- tquh$D
+# #D &lt;- Variable(p)
+# tsum &lt;- log(sum(D*D*varu+D))
+# tprod &lt;- sum((quh*((D*D*varu+D)^{-1})*quh))
+# obj &lt;- -0.5*(tsum+tprod)-0.5*p*log(2*pi);
+# objective &lt;- Minimize(obj)
+# prob &lt;- Problem(objective)
+# slv &lt;- solve(prob)
+#   # const double tsum = ((dvec*dvec*varu+dvec+a).log()).sum();
+#   # const double tprod = (quh*(1/(dvec*dvec*varu+dvec+a))*quh).sum();
+#   return 
+# objective &lt;- Minimize(sum((Y - X %*% betaHat)^2))</code></pre>
 </div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
@@ -595,29 +682,32 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] forcats_0.3.0   stringr_1.3.1   dplyr_0.7.7     purrr_0.2.5    
-[5] readr_1.1.1     tidyr_0.8.2     tibble_1.4.2    ggplot2_3.1.0  
-[9] tidyverse_1.2.1
+ [1] bindrcpp_0.2.2  fs_1.2.6        forcats_0.3.0   stringr_1.3.1  
+ [5] dplyr_0.7.7     purrr_0.2.5     readr_1.1.1     tidyr_0.8.2    
+ [9] tibble_1.4.2    tidyverse_1.2.1 plotly_4.8.0    ggplot2_3.1.0  
 
 loaded via a namespace (and not attached):
  [1] tidyselect_0.2.5  haven_1.1.2       lattice_0.20-35  
- [4] colorspace_1.3-2  htmltools_0.3.6   yaml_2.2.0       
- [7] utf8_1.1.4        rlang_0.3.0.1     R.oo_1.22.0      
-[10] pillar_1.3.0      glue_1.3.0        withr_2.1.2      
-[13] R.utils_2.7.0     modelr_0.1.2      readxl_1.1.0     
-[16] bindrcpp_0.2.2    bindr_0.1.1       plyr_1.8.4       
+ [4] colorspace_1.3-2  htmltools_0.3.6   viridisLite_0.3.0
+ [7] yaml_2.2.0        rlang_0.3.0.1     later_0.7.5      
+[10] R.oo_1.22.0       pillar_1.3.0      glue_1.3.0       
+[13] withr_2.1.2       R.utils_2.7.0     modelr_0.1.2     
+[16] readxl_1.1.0      bindr_0.1.1       plyr_1.8.4       
 [19] munsell_0.5.0     gtable_0.2.0      workflowr_1.1.1  
 [22] cellranger_1.1.0  rvest_0.3.2       R.methodsS3_1.7.1
-[25] evaluate_0.12     knitr_1.20        fansi_0.4.0      
-[28] broom_0.5.0       Rcpp_0.12.19      scales_1.0.0     
-[31] backports_1.1.2   jsonlite_1.5      hms_0.4.2        
-[34] digest_0.6.18     stringi_1.2.4     grid_3.5.1       
-[37] rprojroot_1.3-2   cli_1.0.1         tools_3.5.1      
-[40] magrittr_1.5      lazyeval_0.2.1    crayon_1.3.4     
-[43] whisker_0.3-2     pkgconfig_2.0.2   xml2_1.2.0       
-[46] lubridate_1.7.4   assertthat_0.2.0  rmarkdown_1.10   
-[49] httr_1.3.1        rstudioapi_0.8    R6_2.3.0         
-[52] nlme_3.1-137      git2r_0.23.0      compiler_3.5.1   </code></pre>
+[25] htmlwidgets_1.3   evaluate_0.12     knitr_1.20       
+[28] httpuv_1.4.5      crosstalk_1.0.0   broom_0.5.0      
+[31] Rcpp_0.12.19      xtable_1.8-3      promises_1.0.1   
+[34] DT_0.4            scales_1.0.0      backports_1.1.2  
+[37] jsonlite_1.5      mime_0.6          hms_0.4.2        
+[40] digest_0.6.18     stringi_1.2.4     shiny_1.2.0      
+[43] grid_3.5.1        rprojroot_1.3-2   cli_1.0.1        
+[46] tools_3.5.1       magrittr_1.5      lazyeval_0.2.1   
+[49] crayon_1.3.4      whisker_0.3-2     pkgconfig_2.0.2  
+[52] xml2_1.2.0        data.table_1.11.8 lubridate_1.7.4  
+[55] rstudioapi_0.8    assertthat_0.2.0  rmarkdown_1.10   
+[58] httr_1.3.1        R6_2.3.0          nlme_3.1-137     
+[61] git2r_0.23.0      compiler_3.5.1   </code></pre>
 </div>
 
 <hr>
