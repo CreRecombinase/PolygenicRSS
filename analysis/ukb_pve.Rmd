@@ -33,21 +33,21 @@ all_traits <- inner_join(ukb_hdf,ukb_ldsc) %>% inner_join(ukb_rssp) %>% distinct
 
 
 
-```{r,echo=F}
+```{r,echo=F,message=F,warning=F}
 max_pve <- max(c(all_traits$pve_ind,all_traits$pve_ldsc,all_traits$pve_rssp))
 new_names <- c("pve_ldsc"="LDSC","pve_rssp"="RSSp")
 rename(all_traits,sample_size=N_rssp) %>% select(-starts_with("N_")) %>% gather(key = "method",value="pve_sumstat",-trait,-pve_ind,-int_ldsc,-sample_size) %>% mutate(method=new_names[method]) %>%  ggplot(aes(x=pve_ind,y=pve_sumstat,col=method))+geom_point()+geom_abline(slope=1,intercept=0)+scale_x_continuous("Individual-Level-Data PVE (mmhe)",limits=c(0,max_pve))+scale_y_continuous("Summary statistic PVE",limits=c(0,max_pve))+geom_smooth(method="lm",formula = y~x+0)+ggtitle("RSSp vs LDSC on UK biobank traits")
 ```
 
 If we treat the individual-level estimates as "truth", `RSSp` has lower "error" on average.
-```{r,echo=F}
+```{r,echo=F,message=F,warning=F}
 select(all_traits,-starts_with("N_")) %>%
   gather(key = "method",value="pve_sumstat",-trait,-pve_ind,-int_ldsc) %>%mutate(method=new_names[method]) %>% 
   ggplot(aes(x=method,y=abs(pve_sumstat-pve_ind),col=method))+geom_boxplot()+ggtitle("RSSp PVE estimates are closer to individual-level-data based estimates")
 ```
 
 One of the first thoughts I had was that perhaps LDSC's intercept term is contributing to the underestimation of heritability. 
-```{r}
+```{r,echo=F,message=F,warning=F}
 rename(all_traits,sample_size=N_rssp) %>% select(-starts_with("N_")) %>%
   gather(key = "method",value="pve_sumstat",-trait,-pve_ind,-sample_size,-int_ldsc)%>%mutate(method=new_names[method]) %>% mutate(pve_level=cut_number(pve_ind,3)) %>% 
   ggplot(aes(x=int_ldsc,y=pve_sumstat-pve_ind,col=method))+geom_point()+ggtitle("LD score regression Intercept ")+geom_smooth(method="lm")+xlab("LDSC's Intercept term isn't helping LDSC")
@@ -57,7 +57,7 @@ rename(all_traits,sample_size=N_rssp) %>% select(-starts_with("N_")) %>%
 It appears that `RSSp` is fairly consistently (but moderately) outperforming LDSC across sample size, and PVE level.
 
 
-```{r}
+```{r,echo=F,message=F,warning=F}
 rename(all_traits,sample_size=N_rssp) %>% select(-starts_with("N_")) %>%
   gather(key = "method",value="pve_sumstat",-trait,-pve_ind,-sample_size,-int_ldsc)%>%mutate(method=new_names[method]) %>% mutate(pve_level=cut_number(pve_ind,3)) %>% 
   ggplot(aes(x=log10(sample_size),y=abs(pve_sumstat-pve_ind)/pve_ind,col=method))+geom_point()+ggtitle("Relative Error as a function of sample size","Stratified by Individual level PVE")+geom_smooth(method="lm")+xlab("sample size (log10)")+facet_wrap(~pve_level,labeller = label_both)+ylab("Relative RMSE")
