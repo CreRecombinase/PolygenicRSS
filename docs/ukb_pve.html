@@ -352,7 +352,7 @@ div.section {
 </li>
 <li>
 <details>
-<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/959358a7450ed8b6d551c2f5179be3410095fb90" target="_blank">959358a</a> </summary></p>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/e3ed2f6e1c4d413e2d7870cfc68b6d7ce5d08e14" target="_blank">e3ed2f6</a> </summary></p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
 <pre><code>
 Ignored files:
@@ -545,6 +545,23 @@ Message
 <tbody>
 <tr>
 <td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/9523f80b5a5a30969acf33b7df4e4ae938721191/docs/ukb_pve.html" target="_blank">9523f80</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-12-05
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
 Rmd
 </td>
 <td style="text-align:left;">
@@ -638,7 +655,69 @@ wflow_publish(“ukb_pve.Rmd”)
 <p>Below are pve estimates from 69 uk biobank traits for which I could easily obtain: 1) GWAS summary statistics (from BoltLMM) 2) LD score regression heritability estimates 3) Individual-level-data based heritability estimates (from mmhe, described <a href="https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1006711#sec004">here</a>)</p>
 <p>I ran <code>RSSp</code> for each of these 69 traits (using Xiang’s new method for calculating pve). First we see the summary based heritability estimates (y axis) versus individual level estimate (x-axis).</p>
 <p><img src="figure/ukb_pve.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<details>
+<summary><em>Expand here to see past versions of unnamed-chunk-2-1.png:</em></summary>
+<table style = "border-collapse:separate; border-spacing:5px;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Version
+</th>
+<th style="text-align:left;">
+Author
+</th>
+<th style="text-align:left;">
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/9523f80b5a5a30969acf33b7df4e4ae938721191/docs/figure/ukb_pve.Rmd/unnamed-chunk-2-1.png" target="_blank">9523f80</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-12-05
+</td>
+</tr>
+</tbody>
+</table>
+</details>
 <p>If we treat the individual-level estimates as “truth”, <code>RSSp</code> has lower “error” on average. <img src="figure/ukb_pve.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<details>
+<summary><em>Expand here to see past versions of unnamed-chunk-3-1.png:</em></summary>
+<table style = "border-collapse:separate; border-spacing:5px;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Version
+</th>
+<th style="text-align:left;">
+Author
+</th>
+<th style="text-align:left;">
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/9523f80b5a5a30969acf33b7df4e4ae938721191/docs/figure/ukb_pve.Rmd/unnamed-chunk-3-1.png" target="_blank">9523f80</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-12-05
+</td>
+</tr>
+</tbody>
+</table>
+</details>
 <!-- ```{r} -->
 <!-- bad_trait <- filter(all_traits,abs(pve_ind-pve_rssp)/pve_ind==max(abs(pve_ind-pve_rssp)/pve_ind)) %>% pull(trait) -->
 <!-- good_trait <- filter(all_traits,abs(pve_ind-pve_rssp)/pve_ind==min(abs(pve_ind-pve_rssp)/pve_ind)) %>% pull(trait) -->
