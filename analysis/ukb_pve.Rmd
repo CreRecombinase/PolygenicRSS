@@ -46,11 +46,23 @@ select(all_traits,-starts_with("N_")) %>%
   ggplot(aes(x=method,y=abs(pve_sumstat-pve_ind),col=method))+geom_boxplot()+ggtitle("RSSp PVE estimates are closer to individual-level-data based estimates")
 ```
 
+One of the first thoughts I had was that perhaps LDSC's intercept term is contributing to the underestimation of heritability. 
+```{r}
+rename(all_traits,sample_size=N_rssp) %>% select(-starts_with("N_")) %>%
+  gather(key = "method",value="pve_sumstat",-trait,-pve_ind,-sample_size,-int_ldsc)%>%mutate(method=new_names[method]) %>% mutate(pve_level=cut_number(pve_ind,3)) %>% 
+  ggplot(aes(x=int_ldsc,y=pve_sumstat-pve_ind,col=method))+geom_point()+ggtitle("LD score regression Intercept ")+geom_smooth(method="lm")+xlab("LDSC's Intercept term isn't helping LDSC")
+```
 
-<!-- ```{r} -->
-<!-- bad_trait <- filter(all_traits,abs(pve_ind-pve_rssp)/pve_ind==max(abs(pve_ind-pve_rssp)/pve_ind)) %>% pull(trait) -->
-<!-- good_trait <- filter(all_traits,abs(pve_ind-pve_rssp)/pve_ind==min(abs(pve_ind-pve_rssp)/pve_ind)) %>% pull(trait) -->
-<!-- ``` -->
+
+It appears that `RSSp` is fairly consistently (but moderately) outperforming LDSC across sample size, and PVE level.
+
+
+```{r}
+rename(all_traits,sample_size=N_rssp) %>% select(-starts_with("N_")) %>%
+  gather(key = "method",value="pve_sumstat",-trait,-pve_ind,-sample_size,-int_ldsc)%>%mutate(method=new_names[method]) %>% mutate(pve_level=cut_number(pve_ind,3)) %>% 
+  ggplot(aes(x=log10(sample_size),y=abs(pve_sumstat-pve_ind)/pve_ind,col=method))+geom_point()+ggtitle("Relative Error as a function of sample size","Stratified by Individual level PVE")+geom_smooth(method="lm")+xlab("sample size (log10)")+facet_wrap(~pve_level,labeller = label_both)+ylab("Relative RMSE")
+```
+
 
 
 
