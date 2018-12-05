@@ -7,7 +7,12 @@ output: workflowr::wflow_html
 
 ## Introduction
 
-below are pve estimates from 2 uk biobank traits (`birthweight-self` and `birthweight-child`) for which I could easily obtain sample size info.  For refernce, LD score regression gives $h^2$ estimates of these traits as being `0.124` and `0.112` respectively.
+Below are pve estimates from 69 uk biobank traits for which I could easily obtain:
+1) GWAS summary statistics (from BoltLMM) 
+2) LD score regression heritability estimates 
+3) Individual-level-data based heritability estimates (from mmhe, described [here](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1006711#sec004)) 
+
+I ran `RSSp` for each of these 69 traits (using Xiang's new method for calculating pve).  First we see the summary based heritability estimates (y axis) versus individual level estimate (x-axis). 
 
 ```{r,echo=F,message=F,warning=F}
 suppressMessages(library(plotly))
@@ -15,27 +20,63 @@ suppressMessages(library(tidyverse))
 library(fs)
 library(forcats)
 
-est_f <- dir_ls("~/Dropbox/PolygenicRSS/output/pve/",recursive = T,type = "file")
-trait_ctf <- dir_ls("~/Desktop/gardner_scratch/summary_statistics_fst/",glob="*sc.txt")
-
-
-trait_ct <- map_df(trait_ctf,~read_tsv(.x) %>% mutate(trait=as.character(trait)))
-good_trait_ctf <- filter(trait_ct,!is.na(var_N)) %>% filter(var_N>0,max_N<490000)
-all_traits <- map_df(est_f,~suppressMessages(read_delim(.x,delim="\t"))) %>%
-  select(trait_id,pve,consortia,trait) %>% 
-  distinct()
+est_f <- dir_ls("~/Dropbox/PolygenicRSS/output/pve/ukb/",recursive = T,type = "file")
+#trait_ctf <- dir_ls("~/Desktop/gardner_scratch/summary_statistics_fst/",glob="*sc.txt")
+ukb_hdf <- readxl::read_xlsx("~/Downloads/journal.pgen.1006711.s002.xlsx") %>% select(trait=`Field ID`,pve_ind=h2,N_ind=N)
+ukb_ldsc <- read_tsv("~/Downloads/ukbb_all_h2univar_results.txt.gz") %>% select(trait=phenotype,pve_ldsc=h2_observed,N_ldsc=N,int_ldsc=intercept)
+#trait_ct <- map_df(trait_ctf,~read_tsv(.x) %>% mutate(trait=as.character(trait)))
+#good_trait_ctf <- filter(trait_ct,!is.na(var_N)) %>% filter(var_N>0,max_N<490000)
+ukb_rssp <- map_df(est_f,~suppressMessages(read_delim(.x,delim="\t"))) %>% select(trait,pve_rssp=pve,N_rssp=median_N) %>% mutate(trait=as.character(trait))
+all_traits <- inner_join(ukb_hdf,ukb_ldsc) %>% inner_join(ukb_rssp) %>% distinct(trait,.keep_all=T)
 ```
+
+
 
 
 ```{r,echo=F}
-semi_join(all_traits,good_trait_ctf) %>% filter(consortia!="icbp",consortia!="egg") %>% arrange(desc(pve)) %>% DT::datatable()
+max_pve <- max(c(all_traits$pve_ind,all_traits$pve_ldsc,all_traits$pve_rssp))
+new_names <- c("pve_ldsc"="LDSC","pve_rssp"="RSSp")
+rename(all_traits,sample_size=N_rssp) %>% select(-starts_with("N_")) %>% gather(key = "method",value="pve_sumstat",-trait,-pve_ind,-int_ldsc,-sample_size) %>% mutate(method=new_names[method]) %>%  ggplot(aes(x=pve_ind,y=pve_sumstat,col=method))+geom_point()+geom_abline(slope=1,intercept=0)+scale_x_continuous("Individual-Level-Data PVE (mmhe)",limits=c(0,max_pve))+scale_y_continuous("Summary statistic PVE",limits=c(0,max_pve))+geom_smooth(method="lm",formula = y~x+0)+ggtitle("RSSp vs LDSC on UK biobank traits")
 ```
+
+If we treat the individual-level estimates as "truth", `RSSp` has lower "error" on average.
 ```{r,echo=F}
-p <- semi_join(all_traits,good_trait_ctf) %>% filter(consortia!="icbp",consortia!="egg") %>% arrange(desc(pve)) %>% filter(pve<1) %>% mutate(trait=fct_reorder(trait,pve)) %>% ggplot(aes(x=trait,y=pve))+geom_point()+coord_flip()+scale_y_log10()
+select(all_traits,-starts_with("N_")) %>%
+  gather(key = "method",value="pve_sumstat",-trait,-pve_ind,-int_ldsc) %>%mutate(method=new_names[method]) %>% 
+  ggplot(aes(x=method,y=abs(pve_sumstat-pve_ind),col=method))+geom_boxplot()+ggtitle("RSSp PVE estimates are closer to individual-level-data based estimates")
 ```
-```{r,echo=F}
-ggplotly(p)
-```
+
+
+<!-- ```{r} -->
+<!-- bad_trait <- filter(all_traits,abs(pve_ind-pve_rssp)/pve_ind==max(abs(pve_ind-pve_rssp)/pve_ind)) %>% pull(trait) -->
+<!-- good_trait <- filter(all_traits,abs(pve_ind-pve_rssp)/pve_ind==min(abs(pve_ind-pve_rssp)/pve_ind)) %>% pull(trait) -->
+<!-- ``` -->
+
+
+
+
+<!-- ```{r} -->
+<!-- good_quhf <- fs::dir_ls("~/Desktop/gardner_scratch/quh/",glob = glue::glue("*AF0SNP0N0_ukb0{good_trait}_EUR_T_EUR_gwas_T_0.h5")) -->
+<!-- good_quh_df <- map_df(good_quhf,~EigenH5::read_df_h5(.x,"quh_df")) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- bad_quhf <- fs::dir_ls("~/Desktop/gardner_scratch/quh/",glob = glue::glue("*AF0SNP0N0_ukb0{bad_trait}_EUR_T_EUR_gwas_T_0.h5")) -->
+<!-- bad_quh_df <- map_df(bad_quhf,~EigenH5::read_df_h5(.x,"quh_df")) -->
+<!-- ``` -->
+
+
+
+<!-- ```{r} -->
+
+<!-- library(RSSp) -->
+<!-- good_quh_df <- filter(quh_df,!is.na(quh)) -->
+<!-- rss_res <- RSSp:::RSSp_estimate(quh = good_quh_df$quh,D = good_quh_df$D,p_n = nrow(quh_df)/51453) -->
+
+<!-- sum_quh_df <- group_by(quh_df,ntile(D^2,1000)) %>% summarise(md2=mean(D^2),mean_quh=mean(quh),mquhsq=mean(quh^2-D)) -->
+
+<!-- ggplot(sum_quh_df,aes(x=md2,y=mquhsq))+geom_point() -->
+<!-- ``` -->
 
 
 
@@ -72,27 +113,4 @@ ggplotly(p)
 <!-- tquh <- read_df_h5(quh_f[1],"quh_df") -->
 <!-- ggplot(tquh,aes(x=quh^2,y=D))+geom_point() -->
 <!-- ``` -->
-
-
-```{r}
-# suppressWarnings(library(CVXR, warn.conflicts=FALSE))
-# p <- nrow(tquh)
-# varu <- Variable(1)
-# quh <- tquh$quh
-# D <- tquh$D
-# #D <- Variable(p)
-# tsum <- log(sum(D*D*varu+D))
-# tprod <- sum((quh*((D*D*varu+D)^{-1})*quh))
-# obj <- -0.5*(tsum+tprod)-0.5*p*log(2*pi);
-# objective <- Minimize(obj)
-# prob <- Problem(objective)
-# slv <- solve(prob)
-#   # const double tsum = ((dvec*dvec*varu+dvec+a).log()).sum();
-#   # const double tprod = (quh*(1/(dvec*dvec*varu+dvec+a))*quh).sum();
-#   return 
-# objective <- Minimize(sum((Y - X %*% betaHat)^2))
-
-```
-
-
 
