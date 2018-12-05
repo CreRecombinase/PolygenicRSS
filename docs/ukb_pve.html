@@ -352,7 +352,7 @@ div.section {
 </li>
 <li>
 <details>
-<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/e3ed2f6e1c4d413e2d7870cfc68b6d7ce5d08e14" target="_blank">e3ed2f6</a> </summary></p>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/4d0e880299db48975f089b3d8f6a8cc6b41d5045" target="_blank">4d0e880</a> </summary></p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
 <pre><code>
 Ignored files:
@@ -545,6 +545,40 @@ Message
 <tbody>
 <tr>
 <td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/4d0e880299db48975f089b3d8f6a8cc6b41d5045/analysis/ukb_pve.Rmd" target="_blank">4d0e880</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-12-05
+</td>
+<td style="text-align:left;">
+wflow_publish(“analysis/ukb_pve.Rmd”)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/650ec417af2f00cc02b2d3ae929ab4fd12b8f886/docs/ukb_pve.html" target="_blank">650ec41</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-12-05
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
 html
 </td>
 <td style="text-align:left;">
@@ -718,10 +752,17 @@ CreRecombinase
 </tbody>
 </table>
 </details>
-<!-- ```{r} -->
-<!-- bad_trait <- filter(all_traits,abs(pve_ind-pve_rssp)/pve_ind==max(abs(pve_ind-pve_rssp)/pve_ind)) %>% pull(trait) -->
-<!-- good_trait <- filter(all_traits,abs(pve_ind-pve_rssp)/pve_ind==min(abs(pve_ind-pve_rssp)/pve_ind)) %>% pull(trait) -->
-<!-- ``` -->
+<p>One of the first thoughts I had was that perhaps LDSC’s intercept term is contributing to the underestimation of heritability.</p>
+<pre class="r"><code>rename(all_traits,sample_size=N_rssp) %&gt;% select(-starts_with(&quot;N_&quot;)) %&gt;%
+  gather(key = &quot;method&quot;,value=&quot;pve_sumstat&quot;,-trait,-pve_ind,-sample_size,-int_ldsc)%&gt;%mutate(method=new_names[method]) %&gt;% mutate(pve_level=cut_number(pve_ind,3)) %&gt;% 
+  ggplot(aes(x=int_ldsc,y=pve_sumstat-pve_ind,col=method))+geom_point()+ggtitle(&quot;LD score regression Intercept &quot;)+geom_smooth(method=&quot;lm&quot;)+xlab(&quot;LDSC&#39;s Intercept term isn&#39;t helping LDSC&quot;)</code></pre>
+<p><img src="figure/ukb_pve.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>It appears that <code>RSSp</code> is fairly consistently (but moderately) outperforming LDSC across sample size, and PVE level.</p>
+<pre class="r"><code>rename(all_traits,sample_size=N_rssp) %&gt;% select(-starts_with(&quot;N_&quot;)) %&gt;%
+  gather(key = &quot;method&quot;,value=&quot;pve_sumstat&quot;,-trait,-pve_ind,-sample_size,-int_ldsc)%&gt;%mutate(method=new_names[method]) %&gt;% mutate(pve_level=cut_number(pve_ind,3)) %&gt;% 
+  ggplot(aes(x=log10(sample_size),y=abs(pve_sumstat-pve_ind)/pve_ind,col=method))+geom_point()+ggtitle(&quot;Relative Error as a function of sample size&quot;,&quot;Stratified by Individual level PVE&quot;)+geom_smooth(method=&quot;lm&quot;)+xlab(&quot;sample size (log10)&quot;)+facet_wrap(~pve_level,labeller = label_both)+ylab(&quot;Relative RMSE&quot;)</code></pre>
+<pre><code>Warning: Removed 2 rows containing non-finite values (stat_smooth).</code></pre>
+<p><img src="figure/ukb_pve.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
 <!-- ```{r} -->
 <!-- good_quhf <- fs::dir_ls("~/Desktop/gardner_scratch/quh/",glob = glue::glue("*AF0SNP0N0_ukb0{good_trait}_EUR_T_EUR_gwas_T_0.h5")) -->
 <!-- good_quh_df <- map_df(good_quhf,~EigenH5::read_df_h5(.x,"quh_df")) -->
