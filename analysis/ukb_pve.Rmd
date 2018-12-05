@@ -50,7 +50,7 @@ One of the first thoughts I had was that perhaps LDSC's intercept term is contri
 ```{r,echo=F,message=F,warning=F}
 rename(all_traits,sample_size=N_rssp) %>% select(-starts_with("N_")) %>%
   gather(key = "method",value="pve_sumstat",-trait,-pve_ind,-sample_size,-int_ldsc)%>%mutate(method=new_names[method]) %>% mutate(pve_level=cut_number(pve_ind,3)) %>% 
-  ggplot(aes(x=int_ldsc,y=pve_sumstat-pve_ind,col=method))+geom_point()+ggtitle("LD score regression Intercept ")+geom_smooth(method="lm")+xlab("LDSC's Intercept term isn't helping LDSC")
+  ggplot(aes(x=int_ldsc,y=pve_sumstat-pve_ind,col=method))+geom_point()+xlab("LD score regression Intercept ")+geom_smooth(method="lm")+ggtitle("LDSC's Intercept term isn't helping LDSC")
 ```
 
 
