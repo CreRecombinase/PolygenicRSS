@@ -27,7 +27,7 @@ output: workflowr::wflow_html
 * [Out of Sample LD](OutOfSampleLD.html)
 * [Visualizing RSSp vs LDSc](ConfoundingAdj.html)
 * [Heritability results from Framingham Data](Exp_Heritability.html)
-
+* [LDSC vs RSSp vs individual-level-data on UK biobank GWAS](ukb_pve.html)
 
 
 
