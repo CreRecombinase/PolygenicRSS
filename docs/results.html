@@ -319,7 +319,7 @@ div.section {
 </div>
 
 
-<p><strong>Last updated:</strong> 2018-09-25</p>
+<p><strong>Last updated:</strong> 2018-12-05</p>
 <strong>workflowr checks:</strong> <small>(Click a bullet for more information)</small>
 <ul>
 <li>
@@ -330,7 +330,7 @@ div.section {
 </li>
 <li>
 <details>
-<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/a029d367f74f652ba30f12f92104c9ac763f4dbc" target="_blank">a029d36</a> </summary></p>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/e3ed2f6e1c4d413e2d7870cfc68b6d7ce5d08e14" target="_blank">e3ed2f6</a> </summary></p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
 <pre><code>
 Ignored files:
@@ -349,6 +349,7 @@ Ignored files:
 
 Untracked files:
     Untracked:  _workflowr.yml
+    Untracked:  analysis/#Exp_Heritability.Rmd#
     Untracked:  analysis/#RSSp_WTCC_noConfounding.Rmd#
     Untracked:  analysis/AFvsp.Rmd
     Untracked:  analysis/ChunkingEffect.Rmd
@@ -360,6 +361,7 @@ Untracked files:
     Untracked:  analysis/Heritability.Rmd
     Untracked:  analysis/LDshrink_effect.Rmd
     Untracked:  analysis/MeetingSummary1.Rmd
+    Untracked:  analysis/Normalization.Rmd
     Untracked:  analysis/RSSR_PolygenicData.Rmd
     Untracked:  analysis/RSSp.stan
     Untracked:  analysis/RSSp2.stan
@@ -389,6 +391,7 @@ Untracked files:
     Untracked:  analysis/quh_mod.RDS
     Untracked:  analysis/scz_data.org
     Untracked:  analysis/shrinkage_effect.Rmd
+    Untracked:  code/#scikit_allel.org#
     Untracked:  code/.ipynb_checkpoints/
     Untracked:  code/RSSp_abstract.org
     Untracked:  code/RSSp_abstract_notes.org
@@ -399,7 +402,9 @@ Untracked files:
     Untracked:  code/Untitled1.ipynb
     Untracked:  code/ideas.org
     Untracked:  code/ltximg/
+    Untracked:  code/quhdypi/
     Untracked:  code/rssp.yml
+    Untracked:  code/scikit_allel.org
     Untracked:  code/scripts/#compare_eqtl.R#
     Untracked:  code/scripts/RSSp_ldsc_results.Rmd
     Untracked:  code/scripts/bin/
@@ -407,7 +412,10 @@ Untracked files:
     Untracked:  code/scripts/matlab2h5.py
     Untracked:  code/scripts/vcf-liftover.sh
     Untracked:  code/scripts/vcf2allel.py
+    Untracked:  code/skl_vf.ipynb
     Untracked:  code/snakemake_files/#LD_snakefile#
+    Untracked:  code/snakemake_files/#kg_snakefile#
+    Untracked:  code/snakemake_files/EUR.samples
     Untracked:  code/snakemake_files/environment_rssp.yml
     Untracked:  code/snakemake_files/eqtl_check.RDS
     Untracked:  code/snakemake_files/kg_snakefile~
@@ -418,11 +426,14 @@ Untracked files:
     Untracked:  code/snakemake_files/temp_target_19.RDS
     Untracked:  code/snakemake_files/vert.txt
     Untracked:  code/snakemake_files/vgcore.30188
+    Untracked:  code/t_scripts/
+    Untracked:  code/test_py.py
     Untracked:  code/workflow_params.json~
     Untracked:  data/NCBI34_to_GRCh38.chain.gz
     Untracked:  data/SNP_ws.RData
     Untracked:  data/Snakemake_inputs/
     Untracked:  data/all_df.RDS
+    Untracked:  data/ntr_results.RData
     Untracked:  data/temp_ws.RData
     Untracked:  docs/#RSSp_WTCC_noConfounding.Rmd#
     Untracked:  docs/RSSp.stan
@@ -444,15 +455,18 @@ Untracked files:
     Untracked:  dosage.scan.RData
     Untracked:  dosage.snp.RData
     Untracked:  output/RSSp_snakemake/
+    Untracked:  output/pve/
 
 Unstaged changes:
     Modified:   .gitignore
     Modified:   PolygenicRSS.Rproj
     Modified:   analysis/DownsamplingResults2.Rmd
+    Modified:   analysis/Exp_Heritability.Rmd
     Modified:   analysis/IndependenceCheck.Rmd
     Modified:   analysis/Meeting_Notes.Rmd
     Modified:   analysis/New_WholeGenome.Rmd
     Modified:   analysis/OutOfSampleLD.Rmd
+    Modified:   analysis/OutOfSampleLD_smallPVE.Rmd
     Modified:   analysis/PolygenicEstimation.Rmd
     Modified:   analysis/RSSP_standard_error.Rmd
     Modified:   analysis/RSSp_Chunksize_Investigation.Rmd
@@ -474,7 +488,9 @@ Unstaged changes:
     Modified:   analysis/simulation.Rmd
     Modified:   code/TF_LDshrink.ipynb
     Modified:   code/dask_LDshrink.ipynb
-    Modified:   code/snakemake_files/param_snakefile
+    Modified:   code/snakemake_files/kg_ld_snakefile
+    Modified:   code/workflow_params_desktop.json
+    Modified:   code/workflow_params_xps.json
 
 </code></pre>
 Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
@@ -505,6 +521,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/e3ed2f6e1c4d413e2d7870cfc68b6d7ce5d08e14/analysis/results.Rmd" target="_blank">e3ed2f6</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-12-05
+</td>
+<td style="text-align:left;">
+wflow_publish(c(“analysis/results.Rmd”, “analysis/ukb_pve.Rmd”))
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/3e8d63586b52a479c3443dde63d687cccda85820/docs/results.html" target="_blank">3e8d635</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-09-25
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
 <tr>
 <td style="text-align:left;">
 Rmd
@@ -1214,6 +1264,7 @@ wflow_publish(files = c(“index.Rmd”, “simulation.Rmd”, “PolygenicEstim
 <li><a href="OutOfSampleLD.html">Out of Sample LD</a></li>
 <li><a href="ConfoundingAdj.html">Visualizing RSSp vs LDSc</a></li>
 <li><a href="Exp_Heritability.html">Heritability results from Framingham Data</a></li>
+<li><a href="ukb_pve.html">LDSC vs RSSp vs individual-level-data on UK biobank GWAS</a></li>
 </ul>
 
 <hr>

@@ -7,15 +7,122 @@ output: workflowr::wflow_html
 
 ## Introduction
 
-below are pve estimates from 2 uk biobank traits (`birthweight-self` and `birthweight-child`) for which I could easily obtain sample size info.  For refernce, LD score regression gives $h^2$ estimates of these traits as being `0.124` and `0.112` respectively.
+Below are pve estimates from 69 uk biobank traits for which I could easily obtain:
+1) GWAS summary statistics (from BoltLMM) 
+2) LD score regression heritability estimates 
+3) Individual-level-data based heritability estimates (from mmhe, described [here](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1006711#sec004)) 
 
-```{r,echo=F}
+I ran `RSSp` for each of these 69 traits (using Xiang's new method for calculating pve).  First we see the summary based heritability estimates (y axis) versus individual level estimate (x-axis). 
+
+```{r,echo=F,message=F,warning=F}
+suppressMessages(library(plotly))
 suppressMessages(library(tidyverse))
-est_f <- dir("~/Dropbox/PolygenicRSS/output/pve/ukbb",full.names = T)
-map_df(est_f,~suppressMessages(read_delim(.x,delim="\t"))) %>%
-  select(trait_id,pve) %>%
-  distinct()
+library(fs)
+library(forcats)
+
+est_f <- dir_ls("~/Dropbox/PolygenicRSS/output/pve/ukb/",recursive = T,type = "file")
+#trait_ctf <- dir_ls("~/Desktop/gardner_scratch/summary_statistics_fst/",glob="*sc.txt")
+ukb_hdf <- readxl::read_xlsx("~/Downloads/journal.pgen.1006711.s002.xlsx") %>% select(trait=`Field ID`,pve_ind=h2,N_ind=N)
+ukb_ldsc <- read_tsv("~/Downloads/ukbb_all_h2univar_results.txt.gz") %>% select(trait=phenotype,pve_ldsc=h2_observed,N_ldsc=N,int_ldsc=intercept)
+#trait_ct <- map_df(trait_ctf,~read_tsv(.x) %>% mutate(trait=as.character(trait)))
+#good_trait_ctf <- filter(trait_ct,!is.na(var_N)) %>% filter(var_N>0,max_N<490000)
+ukb_rssp <- map_df(est_f,~suppressMessages(read_delim(.x,delim="\t"))) %>% select(trait,pve_rssp=pve,N_rssp=median_N) %>% mutate(trait=as.character(trait))
+all_traits <- inner_join(ukb_hdf,ukb_ldsc) %>% inner_join(ukb_rssp) %>% distinct(trait,.keep_all=T)
 ```
 
 
+
+
+```{r,echo=F,message=F,warning=F}
+max_pve <- max(c(all_traits$pve_ind,all_traits$pve_ldsc,all_traits$pve_rssp))
+new_names <- c("pve_ldsc"="LDSC","pve_rssp"="RSSp")
+rename(all_traits,sample_size=N_rssp) %>% select(-starts_with("N_")) %>% gather(key = "method",value="pve_sumstat",-trait,-pve_ind,-int_ldsc,-sample_size) %>% mutate(method=new_names[method]) %>%  ggplot(aes(x=pve_ind,y=pve_sumstat,col=method))+geom_point()+geom_abline(slope=1,intercept=0)+scale_x_continuous("Individual-Level-Data PVE (mmhe)",limits=c(0,max_pve))+scale_y_continuous("Summary statistic PVE",limits=c(0,max_pve))+geom_smooth(method="lm",formula = y~x+0)+ggtitle("RSSp vs LDSC on UK biobank traits")
+```
+
+If we treat the individual-level estimates as "truth", `RSSp` has lower "error" on average.
+```{r,echo=F,message=F,warning=F}
+select(all_traits,-starts_with("N_")) %>%
+  gather(key = "method",value="pve_sumstat",-trait,-pve_ind,-int_ldsc) %>%mutate(method=new_names[method]) %>% 
+  ggplot(aes(x=method,y=abs(pve_sumstat-pve_ind),col=method))+geom_boxplot()+ggtitle("RSSp PVE estimates are closer to individual-level-data based estimates")
+```
+
+One of the first thoughts I had was that perhaps LDSC's intercept term is contributing to the underestimation of heritability. 
+```{r,echo=F,message=F,warning=F}
+rename(all_traits,sample_size=N_rssp) %>% select(-starts_with("N_")) %>%
+  gather(key = "method",value="pve_sumstat",-trait,-pve_ind,-sample_size,-int_ldsc)%>%mutate(method=new_names[method]) %>% mutate(pve_level=cut_number(pve_ind,3)) %>% 
+  ggplot(aes(x=int_ldsc,y=pve_sumstat-pve_ind,col=method))+geom_point()+xlab("LD score regression Intercept ")+geom_smooth(method="lm")+ggtitle("LDSC's Intercept term isn't helping LDSC")
+```
+
+
+It appears that `RSSp` is fairly consistently (but moderately) outperforming LDSC across sample size, and PVE level.
+
+
+```{r,echo=F,message=F,warning=F}
+rename(all_traits,sample_size=N_rssp) %>% select(-starts_with("N_")) %>%
+  gather(key = "method",value="pve_sumstat",-trait,-pve_ind,-sample_size,-int_ldsc)%>%mutate(method=new_names[method]) %>% mutate(pve_level=cut_number(pve_ind,3)) %>% 
+  ggplot(aes(x=log10(sample_size),y=abs(pve_sumstat-pve_ind)/pve_ind,col=method))+geom_point()+ggtitle("Relative Error as a function of sample size","Stratified by Individual level PVE")+geom_smooth(method="lm")+xlab("sample size (log10)")+facet_wrap(~pve_level,labeller = label_both)+ylab("Relative RMSE")
+```
+
+
+
+
+
+<!-- ```{r} -->
+<!-- good_quhf <- fs::dir_ls("~/Desktop/gardner_scratch/quh/",glob = glue::glue("*AF0SNP0N0_ukb0{good_trait}_EUR_T_EUR_gwas_T_0.h5")) -->
+<!-- good_quh_df <- map_df(good_quhf,~EigenH5::read_df_h5(.x,"quh_df")) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- bad_quhf <- fs::dir_ls("~/Desktop/gardner_scratch/quh/",glob = glue::glue("*AF0SNP0N0_ukb0{bad_trait}_EUR_T_EUR_gwas_T_0.h5")) -->
+<!-- bad_quh_df <- map_df(bad_quhf,~EigenH5::read_df_h5(.x,"quh_df")) -->
+<!-- ``` -->
+
+
+
+<!-- ```{r} -->
+
+<!-- library(RSSp) -->
+<!-- good_quh_df <- filter(quh_df,!is.na(quh)) -->
+<!-- rss_res <- RSSp:::RSSp_estimate(quh = good_quh_df$quh,D = good_quh_df$D,p_n = nrow(quh_df)/51453) -->
+
+<!-- sum_quh_df <- group_by(quh_df,ntile(D^2,1000)) %>% summarise(md2=mean(D^2),mean_quh=mean(quh),mquhsq=mean(quh^2-D)) -->
+
+<!-- ggplot(sum_quh_df,aes(x=md2,y=mquhsq))+geom_point() -->
+<!-- ``` -->
+
+
+
+<!-- ```{r} -->
+
+<!-- trait_ls <- function(dir="~/Dropbox/PolygenicRSS/output/pve/"){ -->
+<!--   est_f <- dir_ls(dir,recursive = T,type = "file") -->
+
+<!-- } -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+
+<!-- quh_f <- function(consortia="angst",trait="anx",quh_d= "~/Dropbox/scratch/polyg_scratch/quh/"){ -->
+<!--   fs::path_expand(glue("{quh_d}","gwas_chr{1:22}AF0SNP0N0_{consortia}0{trait}_EUR_T_EUR_gwas_T_0.h5")) -->
+<!-- } -->
+
+<!-- quhf <- quh_f() -->
+<!-- read_quh_df <- function(quhf){ -->
+<!--   map_df(quhf,read_df_h5,datapath="quh_df") -->
+
+<!-- } -->
+
+<!-- quh_df <- read_quh_df(quhf) -->
+<!-- library(fs) -->
+<!-- library(forcats) -->
+<!-- library(ggplot2) -->
+<!-- library(EigenH5) -->
+
+<!-- rssr <- RSSp:::RSSp_estimate(mutate(quh_df,fgeneid=1),p_n=nrow(quh_df)/2000L) -->
+<!-- slm <- lm(I(quh^2)~I(D^2)+offset(D)+0,data=quh_df) -->
+<!-- quh_f <- dir_ls(quh_d,recursive = F,type = "file") -->
+<!-- tquh <- read_df_h5(quh_f[1],"quh_df") -->
+<!-- ggplot(tquh,aes(x=quh^2,y=D))+geom_point() -->
+<!-- ``` -->
 
