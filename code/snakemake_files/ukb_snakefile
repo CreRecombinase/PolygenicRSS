@@ -1,0 +1,126 @@
+rule dl_traitf:
+    input:
+        input_f="UKBB_mf.csv"
+    params:
+        trait="{trait_id}"
+    output:
+        fstf=config["KG_DIRECTORY"]+"summary_statistics_ukb/{trait_id}_summary_statistics.fst"
+    script:
+        "../scripts/ukb_dl.R"
+
+rule dl_ukb_loci:
+    input:
+        input_f="UKBB_mf.csv"
+    params:
+        trait="100001"
+    output:
+        fstf=config["KG_DIRECTORY"]+"loci_ukb/ukb_loci.fst"
+    script:
+        "../scripts/ukb_dl.R"
+
+rule merge_snplist:
+    input:
+        gwasf=config["KG_DIRECTORY"]+"loci_ukb/ukb_loci.fst",
+        vcff=expand(config["VCF_DIR"]+"{{pop}}/snplist/{{pop}}.chr{chrom}.txt",chrom=range(1,23)),
+        mapf=config["KG_MAPDIR"]+"interpolated_{pop}.h5"
+    output:
+        outputf=expand(config["VCF_DIR"]+"loci_ukb/ukb_{{pop}}.chr{chrom}.fst",chrom=range(1,23))
+    script:
+        "../scripts/merge_snplist.R"
+
+rule ukb_split_inpf:
+    input:
+        inputf=config["VCF_DIR"]+"loci_ukb/ukb_{pop}.chr{chrom}.fst",
+        ldetectf=config["LDETECT_DIR"]+"fourier_ls-chr{chrom}.bed"
+    params:
+        chunks=expand("{clusterid}",clusterid=range(1,tot_chunk)),
+        useLDetect="{useLDetect}",
+        consortia="{consortia}",
+        pop="{pop}",
+        chrom="{chrom}"
+    output:
+        outf_tf=expand(config["VCF_DIR"]+"chunk_snplist/{{consortia}}/{{pop}}_{{useLDetect}}.chr{{chrom}}.{clusterid}.chunked.feather",clusterid=range(1,tot_chunk))
+    script:
+        "../scripts/merge_split.R"
+
+# rule ukb_split_merge:
+#     input:
+#         outf_tf=expand(config["VCF_DIR"]+"chunk_snplist/{{consortia}}/{{pop}}_{{useLDetect}}.chr{chrom}.{clusterid}.chunked.feather",clusterid=range(1,tot_chunk),chrom=range(1,23))
+#     output:
+#         id_f=config["KG_DIRECTORY"]+"chunk_snplist_master/{consortia}/{pop}_{useLDetect}.feather"
+#     script:
+#         "../scripts/split_merge.R"
+
+rule guess_sample_size:
+    input:
+        gwasfst=config["KG_DIRECTORY"]+"summary_statistics_{consortia}/{trait}_summary_statistics.fst"
+    params:
+        consortia="{consortia}",
+        trait="{trait}"
+    output:
+        ogwasf=config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics_sc.txt"
+    script:
+        "../scripts/guess_N.R"
+
+rule ukb_evd_ld_kg:
+    input:
+        subsnpf = config["VCF_DIR"]+"chunk_snplist/{consortia}/{pop}_{useLDetect}.chr{chrom}.{rid}.chunked.feather",
+        input_file = config["HDF5_DIR"]+"{pop}/{pop}.chr{chrom}.h5"
+    params:
+        useLDshrink = "{useLDshrink}",
+    output:
+        evdf = config["EVD_DIR"]+"{consortia}/chr{chrom}AF0SNP0N0_{consortia}_{pop}_{useLDetect}_{pop}_{useLDshrink}.{rid}.clust.h5"
+    script:
+        "../scripts/evd_1kg_h5_al.R"
+
+
+rule ukb_merge_ld:
+    input:
+        evdfl=expand(config["EVD_DIR"]+"{{consortia}}/chr{{chrom}}AF0SNP0N0_{{consortia}}_{{pop}}_{{useLDetect}}_{{pop}}_{{useLDshrink}}.{rid}.clust.h5",rid=range(1,tot_chunk))
+    output:
+        evdf=config["EVD_DIR"]+"{consortia}/chr{chrom}AF0SNP0N0_{consortia}_{pop}_{useLDetect}_{pop}_{useLDshrink}.h5"
+    script:
+        "../scripts/merge_evd.R"
+
+rule ukb_merge_quh:
+    input:
+        traitf=expand(config["KG_DIRECTORY"]+"summary_statistics_ukb/{trait}_summary_statistics.fst",trait=all_ids),
+        evdf=config["EVD_DIR"]+"{consortia}/chr{chrom}AF0SNP0N0_{consortia}_{pop}_{useLDetect}_{pop}_{useLDshrink}.h5"
+    params:
+        trait=expand("{trait}",trait=all_ids)
+    output:
+        quhf=config["KG_DIRECTORY"]+"quh/{consortia}/gwas_chr{chrom}AF0SNP0N0_{consortia}_{pop}_{useLDetect}_{pop}_gwas_{useLDshrink}_0.h5"
+    script:
+        "../scripts/gen_quh_chunk_gwas.R"
+
+# rule ukb_gen_quh:
+#     input:
+#         evdf=config["EVD_DIR"]+"{consortia}/chr{chrom}AF0SNP0N0_{consortia}_{pop}_{useLDetect}_{pop}_{useLDshrink}.h5",
+#         traitf=config["KG_DIRECTORY"]+"summary_statistics_ukb/{trait}_summary_statistics.fst"
+#     params:
+#     output:
+#         quhf=config["KG_DIRECTORY"]+"quh/gwas_chr{chrom}AF0SNP0N0_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_{useLDshrink}_0.h5"
+#     script:
+#         "../scripts/gen_quh_chunk_gwas.R"
+
+
+rule ukb_rssp_est:
+    input:
+        quhf=expand(config["KG_DIRECTORY"]+"quh/{{consortia}}/gwas_chr{chrom}AF{{AF}}SNP{{SNPCT}}N{{N}}_{{consortia}}_{{pop}}_{{useLDetect}}_{{pop}}_gwas_{{useLDshrink}}_0.h5",chrom=range(1,23)),
+        samp_f=config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics_sc.txt"
+    params:
+        doConfound="{useConfounding}",
+        pvv="{percentEigen}",
+        trait="{trait}"
+    output:
+        dff=temp(config["OUTPUT_DIR"]+"{consortia}/trait_sim_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_RSSp_res_gwas_{percentEigen}_{useLDshrink}_0_{useConfounding}.RDS")
+    script:
+        "../scripts/confound_RSSp.R"
+
+rule ukb_dropbox_cp:
+    input:
+        dff=config["OUTPUT_DIR"]+"{consortia}/trait_sim_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_RSSp_res_gwas_{percentEigen}_{useLDshrink}_0_{useConfounding}.RDS"
+    output:
+        DBox.remote("PolygenicRSS/output/pve/{consortia}/trait_sim_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_RSSp_res_gwas_{percentEigen}_{useLDshrink}_0_{useConfounding}.RDS")
+    run:
+        shell("cp {input} {output}")

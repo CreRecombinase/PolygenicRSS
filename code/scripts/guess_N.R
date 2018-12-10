@@ -26,7 +26,8 @@ if(is.null(gwas_df[["sample_size"]])){
 
 }
 
-if(all(is.na(gwas_df[["sample_size"]]))){
+guess_samp <- all(is.na(gwas_df[["sample_size"]])) || (any(gwas_df[["sample_size"]]<0))
+if(guess_samp){
 
     optimise_f <- function(N,z,p_value){
         return(sum(abs(2*pt(abs(z),df=N,lower.tail=F)-p_value)))
@@ -43,7 +44,8 @@ if(all(is.na(gwas_df[["sample_size"]]))){
 summ_df <- gwas_df %>%  summarise(
                             max_N=max(sample_size,na.rm=T),
                             median_N=median(sample_size,na.rm=T),
-                            mean_N=mean(sample_size,na.rm=T)
+                            mean_N=mean(sample_size,na.rm=T),
+                            var_N=var(sample_size,na.rm=T)
                         ) %>%
     mutate(tNA=NA) %>%
     inner_join(param_df) %>%

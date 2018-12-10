@@ -29,9 +29,16 @@ ld_df:
   mincpus: '10'
   time: '06:30:00'
   mem: '6G'
+dl_traitf:
+  time : '00:20:00'
+  mem : '6gb'
 fram_chr_h5:
   time : '06:00:00'
   mem: '32gb'
+rule ukb_evd_ld_kg:
+  time : '01:30:00'
+  mem: '22gb'
+  mincpus: '4'
 fram_ld:
   time : '05:00:00'
   mem : '45gb'
@@ -44,7 +51,12 @@ fram_quh:
   time : '04:00:00'
   mem  : '16gb'
   mincpus: 6
-
+guess_sample_size:
+  time : '00:05:00'
+  mem  : '3gb'
+ukb_rssp_est:
+  time : '00:30:00'
+  mem  : '16gb'
 kggds2h5:
   mincpus: '6'
   time: '03:30:00'

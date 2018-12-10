@@ -26,37 +26,47 @@ rule snplist_vcf:
     shell:
         "bcftools view -H -ghet -G -m2 -M2 {input.vcff} > {output.snplistf}"
 
-rule tsv2fst:
-    input:
-        gwasf=config["KG_DIRECTORY"]+"summary_statistics/{consortia}_{trait}_summary_statistics.tsv.gz"
-    output:
-        gwasf=temp(config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics.fst")
-    script:
-        "../scripts/tsv2fst.R"
+# rule tsv2fst:
+#     input:
+#         gwasf=config["KG_DIRECTORY"]+"summary_statistics/{consortia}_{trait}_summary_statistics.tsv.gz"
+#     output:
+#         gwasf=config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics.fst"
+#     script:
+#         "../scripts/tsv2fst.R"
 
-rule guess_sample_size:
-    input:
-        gwasf=config["KG_DIRECTORY"]+"summary_statistics/{consortia}_{trait}_summary_statistics.tsv.gz",
-        gwasfst=config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics.fst"
-    params:
-        consortia="{consortia}",
-        trait="{trait}"
-    output:
-        ogwasf=temp(config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics_sc.txt")
-    script:
-        "../scripts/guess_N.R"
+# rule fst2ldsc:
+#     input:
+#         gwasf=config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics.fst"
+#     output:
+#         ldscf=config["KG_DIRECTORY"]+"summary_statistics_ldsc/{consortia}/{trait}/{consortia}_{trait}_summary_statistics.txt"
+
+#     script:
+#         "../scripts/tsv2ldsc.R"
 
 
+# rule guess_sample_size:
+#     input:
+#         gwasf=config["KG_DIRECTORY"]+"summary_statistics/{consortia}_{trait}_summary_statistics.tsv.gz",
+#         gwasfst=config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics.fst"
+#     params:
+#         consortia="{consortia}",
+#         trait="{trait}"
+#     output:
+#         ogwasf=config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics_sc.txt"
+#     script:
+#         "../scripts/guess_N.R"
 
-rule merge_snplist:
-    input:
-        gwasf=config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics.fst",
-        vcff=expand(config["VCF_DIR"]+"{{pop}}/snplist/{{pop}}.chr{chrom}.txt",chrom=range(1,23)),
-        mapf=config["KG_MAPDIR"]+"interpolated_{pop}.h5"
-    output:
-        outputf=temp(expand(config["VCF_DIR"]+"snplist/{{consortia}}/{{trait}}_{{pop}}.chr{chrom}.fst",chrom=range(1,23)))
-    script:
-        "../scripts/merge_snplist.R"
+
+
+# rule merge_snplist:
+#     input:
+#         gwasf=config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics.fst",
+#         vcff=expand(config["VCF_DIR"]+"{{pop}}/snplist/{{pop}}.chr{chrom}.txt",chrom=range(1,23)),
+#         mapf=config["KG_MAPDIR"]+"interpolated_{pop}.h5"
+#     output:
+#         outputf=temp(expand(config["VCF_DIR"]+"snplist/{{consortia}}/{{trait}}_{{pop}}.chr{chrom}.fst",chrom=range(1,23)))
+#     script:
+#         "../scripts/merge_snplist.R"
 
 
 rule pull_pop_list:
@@ -86,22 +96,13 @@ rule split_inpf:
         "../scripts/merge_split.R"
 
 
-rule evd_ld_kg:
-    input:
-        subsnpf = config["VCF_DIR"]+"chunk_snplist/{consortia}/{trait}_{pop}_{useLDetect}.chr{chrom}.{rid}.chunked.fst",
-        input_file = config["HDF5_DIR"]+"{pop}/{pop}.chr{chrom}.h5"
-    params:
-        useLDshrink = "{useLDshrink}",
-    output:
-        evdf = temp(config["EVD_DIR"]+"chr{chrom}AF0SNP0N0_{consortia}O{trait}_{pop}_{useLDetect}_{pop}_{useLDshrink}.{rid}.clust.h5")
-    script:
-        "../scripts/evd_1kg_h5_al.R"
+
 
 rule merge_ld:
     input:
         evdfl=expand(config["EVD_DIR"]+"chr{{chrom}}AF0SNP0N0_{{consortia}}O{{trait}}_{{pop}}_{{useLDetect}}_{{pop}}_{{useLDshrink}}.{rid}.clust.h5",rid=range(1,tot_chunk))
     output:
-        evdf=temp(config["EVD_DIR"]+"chr{chrom}AF0SNP0N0_{consortia}O{trait}_{pop}_{useLDetect}_{pop}_{useLDshrink}.h5")
+        evdf=config["EVD_DIR"]+"chr{chrom}AF0SNP0N0_{consortia}O{trait}_{pop}_{useLDetect}_{pop}_{useLDshrink}.h5"
     script:
         "../scripts/merge_evd.R"
 
@@ -116,9 +117,20 @@ rule gen_quh:
         "../scripts/gen_quh_chunk_gwas.R"
 
 
-from snakemake.remote.dropbox import RemoteProvider as DropboxRemoteProvider
-tokenf=open(".dba.txt").read().replace('\n','')
-DBox = DropboxRemoteProvider(oauth2_access_token=tokenf)
+
+
+
+# rule quh_merge:
+#     input:
+#         quhf=expand(config["KG_DIRECTORY"]+"quh/gwas_chr{chrom}AF{{AF}}SNP{{SNPCT}}N{{N}}_{{consortia}}0{{trait}}_{{pop}}_{{useLDetect}}_{{pop}}_gwas_{{useLDshrink}}_0.h5",chrom=range(1,23))
+#     params:
+#         pvv="{percentEigen}"
+#     output:
+#         config["KG_DIRECTORY"]+"quh_joint/gwas_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_{useLDshrink}_{percentEigen}_0.h5"
+#     script:
+#         "../scripts/quh_merge.R"
+
+
 
 
 rule rssp_est:

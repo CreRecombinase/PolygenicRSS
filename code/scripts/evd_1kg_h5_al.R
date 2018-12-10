@@ -72,16 +72,15 @@ for(i in 1:length(snp_dfl)){
     ## vcf <- vcf[vcf_idx,]
     ## CEU_mat <- VariantAnnotation::genotypeToSnpMatrix(vcf)# First convert to `snpStats` genotype matrix
     ## dosage <- as(CEU_mat$genotypes,"numeric") #convert `snpStats` matrix to numeric type
-    dvar <- apply(dosage,2,var)
-    if(min(dvar)==0){
-        options(tibble.width = Inf)
-        print(dplyr::filter(tdf,dvar==0))
-        xt <- table(dosage[,dvar==0])
-        cat(xt,names(xt),"!!\n")
-        stop("non-variant sites")
-    }
-    stopifnot(all(!is.na(c(dosage))),
-              all(dvar>0))
+    ## dvar <- apply(dosage,2,var)
+    ## if(min(dvar)==0){
+    ##     options(tibble.width = Inf)
+    ##     print(dplyr::filter(tdf,dvar==0))
+    ##     xt <- table(dosage[,dvar==0])
+    ##     cat(xt,names(xt),"!!\n")
+    ##     stop("non-variant sites")
+    ## }
+    stopifnot(all(!is.na(c(dosage))))
 
     mrid <- unique(tdf$region_id)
     stopifnot(length(mrid)==1)

@@ -14,7 +14,7 @@ library(tidyverse)
 quh_dff <- snakemake@input[["quhf"]]
 samp_dff <- snakemake@input[["samp_f"]]
 outf <- snakemake@output[["dff"]]
-doConfound <- snakemake@params[["doConfound"]] %||% "F"
+doConfound <- as.integer(snakemake@params[["doConfound"]] %||% "1")
 pvv <- snakemake@params[["pvv_min"]] %||% 0
 trait <- snakemake@params[["trait"]] %||% NA_character  %>% as.character()
 
@@ -27,7 +27,7 @@ pvv <- as.numeric(pvv)
 stopifnot(!is.na(pvv),
           !is.na(as.numeric(pvv)),
           length(pvv)==1)
-doConfound <- doConfound =="T"
+## doConfound <- doConfound =="T"
 
 
 stopifnot(all(file.exists(quh_dff)))
@@ -87,14 +87,15 @@ trait_id <- unique(wc_df$trait_id)
 stopifnot(length(trait_id)==1)
 
 
-rssp_res <- RSSp:::RSSp_estimate(quh=quh_df$quh,
+rssp_res <- RSSp_estimate(quh=quh_df$quh,
                           D=quh_df$D,
-                          p_n=p_n,
+                          sample_size=n,
                           trait_id=trait_id,
+                          nterms=doConfound,
                           pve_bounds=c(.Machine$double.eps, 6 - .Machine$double.eps),
-                          eigenvalue_cutoff=0) %>% select(-one_of(c("log_params","useGradient","bias","optim","method")),-contains("confound")) %>% inner_join(wc_df) #%>% mutate(new_pve=estimate_pve(dvec=quh_df$D,quh=quh_df$quh,cvec=
+                          eigenvalue_cutoff=0) %>% select(-one_of(c("log_params","useGradient","optim","method"))) %>% inner_join(wc_df) #%>% mutate(new_pve=estimate_pve(dvec=quh_df$D,quh=quh_df$quh,cvec=
 
-write_delim(rssp_res,outf,delim="\t")
+saveRDS(rssp_res,outf)
 
 
 

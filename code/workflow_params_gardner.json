@@ -1,5 +1,6 @@
 {
     "KG_DIRECTORY": "/scratch/t.cri.nknoblauch/polyg_scratch/",
+
     "FRAM_VCF_DIR":"/gpfs/data/xhe-lab/Fram/imputed/",
     "FRAM_DIR": "/gpfs/data/xhe-lab/ncbi_2/dbGaP-17426/files/",
     "LDSC_LD": "/scratch/t.cri.nknoblauch/polyg_scratch/ldsc_ld/",
