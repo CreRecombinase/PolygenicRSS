@@ -93,7 +93,9 @@ rssp_res <- RSSp_estimate(quh=quh_df$quh,
                           trait_id=trait_id,
                           nterms=doConfound,
                           pve_bounds=c(.Machine$double.eps, 6 - .Machine$double.eps),
-                          eigenvalue_cutoff=0) %>% select(-one_of(c("log_params","useGradient","optim","method"))) %>% inner_join(wc_df) #%>% mutate(new_pve=estimate_pve(dvec=quh_df$D,quh=quh_df$quh,cvec=
+                          eigenvalue_cutoff=0)
+rssp_res[["data"]] <- NULL
+rssp_res[["info"]] <- wc_df #%>% mutate(new_pve=estimate_pve(dvec=quh_df$D,quh=quh_df$quh,cvec=
 
 saveRDS(rssp_res,outf)
 

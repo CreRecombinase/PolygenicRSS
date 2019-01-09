@@ -113,14 +113,14 @@ rule ukb_rssp_est:
         pvv="{percentEigen}",
         trait="{trait}"
     output:
-        dff=temp(config["OUTPUT_DIR"]+"{consortia}/trait_sim_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_RSSp_res_gwas_{percentEigen}_{useLDshrink}_0_{useConfounding}.RDS")
+        dff=temp(config["KG_DIRECTORY"]+"{consortia}/trait_sim_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_RSSp_res_gwas_{percentEigen}_{useLDshrink}_0_{useConfounding}.RDS")
     script:
         "../scripts/confound_RSSp.R"
 
 rule ukb_dropbox_cp:
     input:
-        dff=config["OUTPUT_DIR"]+"{consortia}/trait_sim_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_RSSp_res_gwas_{percentEigen}_{useLDshrink}_0_{useConfounding}.RDS"
+        dff=config["KG_DIRECTORY"]+"{consortia}/trait_sim_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_RSSp_res_gwas_{percentEigen}_{useLDshrink}_0_{useConfounding}.RDS"
     output:
         DBox.remote("PolygenicRSS/output/pve/{consortia}/trait_sim_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_RSSp_res_gwas_{percentEigen}_{useLDshrink}_0_{useConfounding}.RDS")
-    run:
-        shell("cp {input} {output}")
+    shell:
+        "cp {input} {output}"

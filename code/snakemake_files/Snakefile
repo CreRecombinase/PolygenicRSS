@@ -41,7 +41,7 @@ def file_len(fname):
 
 # # all_output=["PolygenicRSS/output/pve/{consortia}/trait_sim_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_RSSp_res_gwas_{percentEigen}_{useLDshrink}_0_F.txt.gz".format(consortia=x[0],trait=x[1],pop="EUR",useLDetect="T",useLDshrink="T",percentEigen="0.001",AF=0,SNPCT=0,N=0) for x in all_pref]
 
-all_output=expand("PolygenicRSS/output/pve/{consortia}/trait_sim_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_RSSp_res_gwas_{percentEigen}_{useLDshrink}_0_{mterms}.RDS",
+all_output=DBox.remote(expand("PolygenicRSS/output/pve/{consortia}/trait_sim_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_RSSp_res_gwas_{percentEigen}_{useLDshrink}_0_{mterms}.RDS",
                   consortia="ukb",
                   trait=all_ids,
                   mterms = range(1,5),
@@ -51,7 +51,7 @@ all_output=expand("PolygenicRSS/output/pve/{consortia}/trait_sim_chr1-22AF{AF}SN
                   percentEigen="0.001",
                   AF=0,
                   SNPCT=0,
-                  N=0)
+                  N=0))
 
 
 # all_sc=[config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics_sc.txt".format(consortia=x[0],trait=x[1]) for x in all_pref]
