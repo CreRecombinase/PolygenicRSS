@@ -1,5 +1,3 @@
-                                        #Rprof(filename=snakemake@output[["proff"]],append=F)
-
 library(SeqSupport)
 library(EigenH5)
 library(tidyverse)
@@ -23,7 +21,6 @@ D_df <- map_df(ld_grp,~data_frame(region_id=as.integer(.x),D=read_vector_h5(evdf
 
 
 D <- zapsmall(D_df$D)
-#gw_snpi <- read_vec(evdf,"LDinfo/snp_id")
 p <- length(D)
 
 quh <- do.call("cbind",purrr::map(tparam_df$tsigu,~rnorm(n = p,mean = 0,sd = sqrt(.x^2*D^2+D))))

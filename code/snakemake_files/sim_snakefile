@@ -6,7 +6,6 @@ rule subsnp_chr:
         ldetectf=config["LDETECT_BREAK_FILE"],
         gdsf_b=config["HDF5_DIR"]+"ALL_{panel_dataset}_geno.h5"
     params:
-        chrom="{chrom}",
         AF="{AF}",
         SNPCT="{SNPCT}",
         N="{N}"
@@ -17,6 +16,7 @@ rule subsnp_chr:
         gwaso=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_gwas.RDS"
     script:
         "../scripts/subset_snp_chr.R"
+
 
 rule sim_pheno_RSSp:
     ''' This rule works very similarly to sim_pheno_w_Beta_RSSp, but doesn't require beta,
@@ -39,3 +39,7 @@ rule sim_pheno_RSSp:
         fh5=1
     script:
         "../scripts/gen_ty_block_RSSp.R"
+
+# rule sim_pheno_RSSp:
+#             input:
+#             h5f=config["KG_DIRECTORY"]+"RSSp_sim_direct_pheno/AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{scenario}_trait.h5"

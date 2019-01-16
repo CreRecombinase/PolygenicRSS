@@ -88,9 +88,6 @@ rule subsetgds:
     script:
         "../scripts/seqgds2seq_gds.R"
 
-
-
-
 rule chkggds2h5:
     ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are possibly rearranged)'''
     input:
@@ -123,8 +120,6 @@ rule chunksize_breakpoint:
         bdf=config["INPUT_DIR"]+"ldetect_{chunksize}.txt.gz"
     script:
         "../scripts/break_df.R"
-
-
 
 rule ld_chunk_df_h5:
     input:

@@ -43,13 +43,8 @@ rule ukb_split_inpf:
     script:
         "../scripts/merge_split.R"
 
-# rule ukb_split_merge:
-#     input:
-#         outf_tf=expand(config["VCF_DIR"]+"chunk_snplist/{{consortia}}/{{pop}}_{{useLDetect}}.chr{chrom}.{clusterid}.chunked.feather",clusterid=range(1,tot_chunk),chrom=range(1,23))
-#     output:
-#         id_f=config["KG_DIRECTORY"]+"chunk_snplist_master/{consortia}/{pop}_{useLDetect}.feather"
-#     script:
-#         "../scripts/split_merge.R"
+
+
 
 rule guess_sample_size:
     input:
