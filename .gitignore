@@ -5,6 +5,8 @@
 .Rapp.history
 .DS_Store
 code/snakemake_files/snakejob.*
+code/snakemake_files/.snakemake/*
+code/snakemake_files/*RDS
 code/snakemake_files/.dba.txt
 analysis/figure
 analysis/*html
