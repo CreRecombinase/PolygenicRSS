@@ -1,0 +1,8 @@
+#snakefile for aligning two genotype datasets
+
+rule gds_intersect:
+    input:
+        gds_a=config["GDS_DIR"]+"{pop_a}/{pop_a}.chr{chr}.gds",
+        gds_b=config["GDS_DIR"]+"{pop_b}/{pop_b}.chr{chr}.gds",
+    params:
+        MAF:

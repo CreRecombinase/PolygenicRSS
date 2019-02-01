@@ -20,8 +20,3 @@ rule import_dgn:
     script:
         "../scripts/gds2h5.R"
 
-# rule import_dgn_cis_exp:
-#     input:
-#         dgn_expf=config["DGN_EXP_DIR"]+"cis_data.txt",
-#     output:
-#         dgn_hf=config["HDF5_DIR"]+"../pheno/DGN_EXP_cis.h5"

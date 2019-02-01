@@ -12,7 +12,7 @@
     "SNPGDS_DIR": "/scratch/t.cri.nknoblauch/polyg_scratch/snpgds/",
     "COVAR_DIR": "/scratch/t.cri.nknoblauch/polyg_scratch/covardata/",
     "SNPGDS_DIR": "/scratch/t.cri.nknoblauch/polyg_scratch/snpgds/",
-    "PLINK_DIR": "/scratch/t.cri.nknoblauch/polyg_scratch/plink/",
+    "PLINK_DIR": "/scratch/t.cri.nknoblauch/polyg_scratch/bed/",
     "HDF5_DIR":     "/scratch/t.cri.nknoblauch/polyg_scratch/h5/",
     "HG19_DIR": "/run/media/nwknoblauch/Data/hg19/",
     "WTCC_INPUT_H5" :"/run/media/nwknoblauch/Data/wtcc_input/",

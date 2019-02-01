@@ -1,4 +1,118 @@
-shell.executable("/bin/bash")
+#shell.executable("/bin/bash")
+
+
+rule which_ld_prune:
+    conda:
+        "envs/rssp.yml"
+    input:
+        famf=config["PLINK_DIR"]+"{dataset}/{dataset}.chr{chrom}.fam",
+        bimf=config["PLINK_DIR"]+"{dataset}/{dataset}.chr{chrom}.bim",
+        bedf=config["PLINK_DIR"]+"{dataset}/{dataset}.chr{chrom}.bed"
+    params:
+        in_pref=config["PLINK_DIR"]+"{dataset}.chr{chrom}",
+        out_pref=config["PLINK_DIR"]+"ldp_out/{dataset}.{chrom}"
+    output:
+        inf=temp(config["KG_DIRECTORY"]+"ldp_out/{dataset}.{chrom}.prune.in"),
+        outf=temp(config["KG_DIRECTORY"]+"ldp_out/{dataset}.{chrom}.prune.out")
+    shell:
+        "plink --bfile {params.in_pref} --indep-pairwise 50 5 0.2 --out {params.out_pref} --threads {threads}"
+
+rule ld_prune:
+    conda:
+        "envs/rssp.yml"
+    input:
+        famf=rules.which_ld_prune.input.famf,
+        bimf=rules.which_ld_prune.input.bimf,
+        bedf=rules.which_ld_prune.input.bedf,
+        inf=rules.which_ld_prune.output.inf
+    params:
+        in_pref=rules.which_ld_prune.params.in_pref,
+        out_pref=config["PLINK_DIR"]+"ldi_bed/{dataset}/{dataset}.chr{chrom}"
+    output:
+        famf=temp(config["PLINK_DIR"]+"ldi_bed/{dataset}/{dataset}.chr{chrom}.fam"),
+        bimf=temp(config["PLINK_DIR"]+"ldi_bed/{dataset}/{dataset}.chr{chrom}.bim"),
+        bedf=temp(config["PLINK_DIR"]+"ldi_bed/{dataset}/{dataset}.chr{chrom}.bed"),
+    shell:
+        "plink --bfile {params.in_pref} --extract {input.inf} --make-bed --out {params.out_pref} --threads {threads}"
+
+
+rule gen_grm:
+    input:
+        famf=rules.ld_prune.output.famf,
+        bimf=rules.ld_prune.output.bimf,
+        bedf=rules.ld_prune.output.bedf
+    params:
+        in_pref=rules.ld_prune.params.in_pref,
+        out_pref=config["KG_DIRECTORY"]+"split_grm/{dataset}/{dataset}.chr{chrom}",
+        chrom = "{chrom}"
+    output:
+        grm_bin=temp(config["KG_DIRECTORY"]+"split_grm/{dataset}/{dataset}.chr{chrom}.grm.bin"),
+        grm_id=temp(config["KG_DIRECTORY"]+"split_grm/{dataset}/{dataset}.chr{chrom}.grm.id"),
+        grm_Nf=temp(config["KG_DIRECTORY"]+"split_grm/{dataset}/{dataset}.chr{chrom}.grm.N.bin")
+    threads: 8
+    shell:
+        "gcta64 --bfile {params.in_pref} --chr {params.chrom} --maf 0.01 --make-grm --out {params.out_pref} --thread-num {threads}"
+
+
+
+rule grmf:
+    params:
+        in_pref=expand(config["KG_DIRECTORY"]+"split_grm/{{dataset}}/{{dataset}}.chr{chrom}",chrom=range(1,23))
+    output:
+        outputf=temp("../params/merge_grm_{dataset}.txt")
+    run:
+        with open(output[0],"w") as out:
+            for f in params.in_pref:
+                out.write(f+"\n")
+
+rule merge_grm:
+    input:
+        grm_bin=expand(config["KG_DIRECTORY"]+"split_grm/{{dataset}}/{{dataset}}.chr{chrom}.grm.bin",chrom=range(1,23)),
+        grm_id=expand(config["KG_DIRECTORY"]+"split_grm/{{dataset}}/{{dataset}}.chr{chrom}.grm.id",chrom=range(1,23)),
+        grm_Nf=expand(config["KG_DIRECTORY"]+"split_grm/{{dataset}}/{{dataset}}.chr{chrom}.grm.N.bin",chrom=range(1,23)),
+        mf=rules.grmf.output.outputf
+    params:
+        out_pref=config["KG_DIRECTORY"]+"grm/{dataset}/{dataset}"
+    output:
+        grmf=temp(config["KG_DIRECTORY"]+"grm/{dataset}/{dataset}.grm.bin"),
+        grm_id=temp(config["KG_DIRECTORY"]+"grm/{dataset}/{dataset}.grm.id"),
+        grm_Nf=temp(config["KG_DIRECTORY"]+"grm/{dataset}/{dataset}.grm.N.bin")
+    shell:
+        "gcta64 --mgrm-bin {input.mf} --make-grm --out {params.out_pref}"
+
+rule cut_grm:
+    input:
+        grmf=config["KG_DIRECTORY"]+"grm/{dataset}/{dataset}.grm.bin",
+        grm_id=config["KG_DIRECTORY"]+"grm/{dataset}/{dataset}.grm.id",
+        grm_Nf=config["KG_DIRECTORY"]+"grm/{dataset}/{dataset}.grm.N.bin"
+    params:
+        in_pref=config["KG_DIRECTORY"]+"grm/{dataset}/{dataset}",
+        cut="0.1",
+        cut_pref=config["KG_DIRECTORY"]+"grm_cut/{dataset}/{dataset}_0.1"
+    output:
+        grmf=temp(config["KG_DIRECTORY"]+"grm_cut/{dataset}/{dataset}_0.1.grm.bin"),
+        grm_id=temp(config["KG_DIRECTORY"]+"grm_cut/{dataset}/{dataset}_0.1.grm.id"),
+        grm_Nf=temp(config["KG_DIRECTORY"]+"grm_cut/{dataset}/{dataset}_0.1.grm.N.bin")
+    shell:
+        "gcta64 --mgrm-bin {params.in_pref} --make-grm --grm-cutoff {params.cut} --out {params.cut_pref}"
+
+rule merge_plink_cut_vcf:
+    conda:
+        "envs/rssp.yml"
+    input:
+        famf=config["PLINK_DIR"]+"{dataset}/{dataset}.chr{chrom}.fam",
+        bimf=config["PLINK_DIR"]+"{dataset}/{dataset}.chr{chrom}.bim",
+        bedf=config["PLINK_DIR"]+"{dataset}/{dataset}.chr{chrom}.bed",
+        grm_id=config["KG_DIRECTORY"]+"grm_cut/{dataset}/{dataset}_0.1.grm.id"
+    params:
+        in_pref=config["PLINK_DIR"]+"{dataset}/{dataset}.chr{chrom}",
+        out_pref=config["PLINK_DIR"]+"{dataset}/grmi/{dataset}.chr{chrom}"
+    output:
+        famf=config["PLINK_DIR"]+"{dataset}/grmi/{dataset}.chr{chrom}.fam",
+        bimf=config["PLINK_DIR"]+"{dataset}/grmi/{dataset}.chr{chrom}.bim",
+        bedf=config["PLINK_DIR"]+"{dataset}/grmi/{dataset}.chr{chrom}.bed"
+    shell:
+        "plink --bfile {params.in_pref} --keep {input.grm_id} --make-bed --out {params.out_pref}"
 
 
 rule gen_pheno_gcta:

@@ -23,6 +23,29 @@ rule dl_vcf:
         "wget http://hgdownload.cse.ucsc.edu/gbdb/hg19/1000Genomes/phase3/ALL.chr{params.chrom}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz -O {output.vcf}"
 
 
+rule vcf_2_pop:
+    input:
+        vcff=config["VCF_DIR"]+"ALL.chr{chr}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
+        filt_f="{pop}.samples"
+    output:
+        vcff=config["VCF_DIR"]+"{pop}/{pop}.chr{chr}.vcf.gz"
+    wildcard_constraints:
+        pop="[A-Z]+",
+        chr="[0-9]+"
+    shell:
+        "bcftools view {input.vcff} -ghet -a -m2 -M2 -S {input.filt_f} -X -Oz -o {output.vcff} --threads {threads}"
+
+rule pull_pop_list:
+    input:
+        panel_file=config["INPUT_DIR"]+"integrated_call_samples_v3.20130502.ALL.panel"
+    output:
+        pop_list="{pop}.samples"
+    params:
+        pop="{pop}"
+    script:
+        "../scripts/pop_pull.R"
+
+
 
 rule subsnp_gds:
     ''' Subset SNPs according to which chromosomes you want in the simulation, and what Allele Frequency
@@ -45,33 +68,6 @@ rule subsnp_gds:
         "../scripts/subset_snp_chr_gds.R"
 
 
-rule kg2gds:
-    ''' This rule converts a vcf file to SNPrelate format'''
-    input:
-        vcff=expand(config["VCF_DIR"]+"{{pop}}.chr{chr}.vcf.gz",chr=range(1,23))
-    output:
-        temp_gds=config["GDS_DIR"]+"ALL_{pop}_geno.gds"
-    wildcard_constraints:
-        pop="[A-Z]+"
-    threads:
-        9
-    script:
-        "../scripts/vcf2seq_gds.R"
-
-        
-rule chkg2gds:
-    ''' This rule converts a vcf file to SNPrelate format'''
-    input:
-        vcff=config["VCF_DIR"]+"{pop}.chr{chr}.vcf.gz",
-    output:
-        temp_gds=config["GDS_DIR"]+"chr{chr}_{pop}_geno.gds"
-    wildcard_constraints:
-        pop="[A-Z]+"
-    threads:
-        9
-    script:
-        "../scripts/vcf2seq_gds.R"
-
 
 rule subsetgds:
     ''' This rule subsets a gds file based on AF'''
@@ -87,15 +83,6 @@ rule subsetgds:
         9
     script:
         "../scripts/seqgds2seq_gds.R"
-
-rule chkggds2h5:
-    ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are possibly rearranged)'''
-    input:
-        input_gds=config["GDS_DIR"]+"AF{AF}chr{chr}_{pop}_geno.gds"
-    output:
-        outf=config["HDF5_DIR"]+"AF{AF}chr{chr}_{pop}_geno.h5"
-    script:
-        "../scripts/gds2h5.R"
 
 
 rule make_kg_subset_h5:
@@ -148,28 +135,3 @@ rule kggds2h5:
     script:
         "../scripts/gds2h5.R"
 
-rule vcf2skh5:
-    ''' This rule converts vcfs to HDF5 files using scikit-allel '''
-    input:
-        config["VCF_DIR"]+"{pop}/{pop}.chr{chrom}.vcf.gz"
-    output:
-        config["HDF5_DIR"]+"{pop}/{pop}.chr{chrom}.h5"
-    run:
-        __import__('tables')  # <-- import PyTables; __import__ so that linters don't complain
-        import h5py
-
-        # now h5py "supports" blosc
-
-        def blosc_opts(complevel=9, complib='blosc:zstd', shuffle=True):
-            shuffle = 2 if shuffle == 'bit' else 1 if shuffle else 0
-            compressors = ['blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib', 'zstd']
-            complib = ['blosc:' + c for c in compressors].index(complib)
-            return (0, 0, 0, 0, complevel, shuffle, complib)
-
-
-# for writing, do something li
-        import allel
-        outf=output[0]
-        inputf=input[0]
-        print(outf+"\n"+inputf)
-        allel.vcf_to_hdf5(inputf, outf, compression=32001, compression_opts=blosc_opts(), shuffle=True, overwrite=False, vlen=False,  alt_number=1, fills=None, region=None,  transformers=None, buffer_size=16384, chunk_length=65536, chunk_width=64, log=sys.stdout)

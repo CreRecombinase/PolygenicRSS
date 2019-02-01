@@ -39,7 +39,3 @@ rule sim_pheno_RSSp:
         fh5=1
     script:
         "../scripts/gen_ty_block_RSSp.R"
-
-# rule sim_pheno_RSSp:
-#             input:
-#             h5f=config["KG_DIRECTORY"]+"RSSp_sim_direct_pheno/AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{scenario}_trait.h5"

@@ -10,22 +10,6 @@ rule vcf_2_pop:
     shell:
         "bcftools view {input.vcff} -ghet -a -m2 -M2 -S {input.filt_f} -X -Oz -o {output.vcff} --threads {threads}"
 
-rule tabix_pop:
-    input:
-        vcff=config["VCF_DIR"]+"{pop}/{pop}.chr{chr}.vcf.gz"
-    output:
-        config["VCF_DIR"]+"{pop}/{pop}.chr{chr}.vcf.gz.tbi"
-    shell:
-         "tabix {input}"
-
-rule snplist_vcf:
-    input:
-        vcff=config["VCF_DIR"]+"{pop}/{pop}.chr{chr}.vcf.gz"
-    output:
-        snplistf=config["VCF_DIR"]+"{pop}/snplist/{pop}.chr{chr}.txt"
-    shell:
-        "bcftools view -H -ghet -G -m2 -M2 {input.vcff} > {output.snplistf}"
-
 rule pull_pop_list:
     input:
         panel_file=config["INPUT_DIR"]+"integrated_call_samples_v3.20130502.ALL.panel"

@@ -3,6 +3,7 @@
 
 library(tidyverse)
 library(EigenH5)
+library(SeqSupport)
 
 
 sample_idf <- snakemake@input[["sampleidf"]]

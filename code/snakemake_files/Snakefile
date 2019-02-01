@@ -1,6 +1,6 @@
 bigdata = False
 include: "param_snakefile"
-
+include: "grm_snakefile"
 #include: "kg_ld_snakefile"
 
 import pandas as pd
@@ -12,18 +12,13 @@ DBox = DropboxRemoteProvider(oauth2_access_token=tokenf)
 
 
 #all_traits=[x for x in list(pd.read_csv("UKBB_mf.csv")["Phenotype Code"]) if x is not np.nan]
-with open('ukb_id.txt') as fp:
+with open('../params/ukb_id.txt') as fp:
     all_ids = [x.strip() for x in fp]
 all_ids=list(set(all_ids))
-#all_traits=[x for x in all_traits if x.split("_")[-1] == "irnt"]
-#include: "wtcc_snakefile"
-#include: "combined_snakefile"
-#include: "matlab_snakefile"
-#include: "crossover_snakefile"
-#include: "impute_snakefile"
-#include: "manip_snakefile"
-#include: "ntr_snakefile"
-#include: "fram_snakefile"
+
+include: "fram_snakefile"
+include: "converters_snakefile"
+
 import math
 import numpy as np
 
@@ -34,12 +29,6 @@ def file_len(fname):
             pass
     return i
 
-
-# sum_stat_files=glob.glob(config["KG_DIRECTORY"]+"summary_statistics/*tsv.gz")
-
-# all_pref=[x.split("/")[-1].split("_")[:2] for x in sum_stat_files]
-
-# # all_output=["PolygenicRSS/output/pve/{consortia}/trait_sim_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_RSSp_res_gwas_{percentEigen}_{useLDshrink}_0_F.txt.gz".format(consortia=x[0],trait=x[1],pop="EUR",useLDetect="T",useLDshrink="T",percentEigen="0.001",AF=0,SNPCT=0,N=0) for x in all_pref]
 
 all_output=DBox.remote(expand("PolygenicRSS/output/pve/{consortia}/trait_sim_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_RSSp_res_gwas_{percentEigen}_{useLDshrink}_0_{mterms}.RDS",
                   consortia="ukb",
@@ -54,43 +43,21 @@ all_output=DBox.remote(expand("PolygenicRSS/output/pve/{consortia}/trait_sim_chr
                   N=0))
 
 
-# all_sc=[config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics_sc.txt".format(consortia=x[0],trait=x[1]) for x in all_pref]
-# all_ldscf=[config["KG_DIRECTORY"]+"summary_statistics_ldsc/{consortia}/{trait}/{consortia}_{trait}_summary_statistics.txt".format(consortia=x[0],trait=x[1]) for x in all_pref]
-# # chunksize=10000
-# # tot_p=996708
-# # tot_chunk=math.ceil(tot_p/chunksize)+1
-# # inf=[config["LDETECT_DIR"]+"fourier_ls-chr"+str(x)+".bed" for x in range(1,23)]
-# # ld_no=[file_len(x) for x in inf]
-# tot_chunk=np.max(ld_no)+1
 tot_chunk=25
 include: "kg_snakefile"
-#include: "kg_ld_snakefile"
-include: "ukb_snakefile"
-#include: "genred_snakefile"
-#include: "sim_snakefile"
-#include: "trait_snakefile"
-#include: "LD_snakefile"
-#include: "direct_snakefile"
-#include: "ldsc_snakefile"
-#include: "rssp_snakefile"
-#include: "grm_snakefile"
+
 
 wildcard_constraints:
     clusterid="[0-9]+",
     trait="[a-z0-9-]+",
-    pop="EUR",
     chrom="[0-9]+",
     consortia="ukb",
     useLDshrink="T|F"
 
-#     pop="[A-Z]+",
-#     N="0",
-#     SNPCT="0"
-    
 
 
-localrules: all,ukb_dropbox_cp
+localrules: all,ukb_dropbox_cp,grmf,gen_merge_f
 
 rule all:
     input:
-        all_output
+         expand("/scratch/t.cri.nknoblauch/polyg_scratch/h5/{pop}/grmi/{pop}.chr{chrom}.h5",chrom=range(1,23),pop=["FRAM"])

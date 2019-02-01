@@ -1,0 +1,95 @@
+# Convert between various file formats (and canonical storage directories)
+
+
+
+rule tabix_pop:
+    input:
+        vcff=config["VCF_DIR"]+"{pop}/{pop}.chr{chr}.vcf.gz"
+    output:
+        config["VCF_DIR"]+"{pop}/{pop}.chr{chr}.vcf.gz.tbi"
+    shell:
+         "tabix {input}"
+
+rule snplist_vcf:
+    input:
+        vcff=config["VCF_DIR"]+"{pop}/{pop}.chr{chr}.vcf.gz"
+    output:
+        snplistf=config["VCF_DIR"]+"{pop}/snplist/{pop}.chr{chr}.txt"
+    shell:
+        "bcftools view -H -ghet -G -m2 -M2 {input.vcff} > {output.snplistf}"
+
+
+
+
+rule vcf2seqgds:
+    input:
+        vcf=config["VCF_DIR"]+"{pop}/{pop}.chr{chrom}.vcf.gz",
+    params:
+        geno_compression="LZ4_RA"
+    output:
+        gds=config["GDS_DIR"]+"{pop}/{pop}.chr{chrom}.gds"
+    script:
+        "../scripts/vcf2seq_gds.R"
+
+
+
+rule plink2seqgds:
+    input:
+        famf=config["PLINK_DIR"]+"{pop}/{pop}.chr{chrom}.fam",
+        bimf=config["PLINK_DIR"]+"{pop}/{pop}.chr{chrom}.bim",
+        bedf=config["PLINK_DIR"]+"{pop}/{pop}.chr{chrom}.bed"
+    params:
+        geno_compression="LZ4_RA",
+        anno_compression="LZ4_RA"
+    output:
+        gds=config["GDS_DIR"]+"{pop}/{pop}.chr{chrom}.gds"
+    script:
+        "../scripts/plink2gds.R"
+
+
+rule gds2h5:
+    ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are possibly rearranged)'''
+    input:
+        input_gds=config["GDS_DIR"]+"{pop}/{pop}.chr{chr}.gds"
+    output:
+        outf=config["HDF5_DIR"]+"{pop}/{pop}.chr{chr}.h5"
+    script:
+        "../scripts/gds2h5.R"
+
+
+
+
+rule ivcf2seqgds:
+    input:
+        vcf=config["VCF_DIR"]+"{pop}/grmi/{pop}.chr{chrom}.vcf.gz",
+    params:
+        geno_compression="LZ4_RA"
+    output:
+        gds=config["GDS_DIR"]+"{pop}/grmi/{pop}.chr{chrom}.gds"
+    script:
+        "../scripts/vcf2seq_gds.R"
+
+
+
+rule iplink2seqgds:
+    input:
+        famf=config["PLINK_DIR"]+"{pop}/grmi/{pop}.chr{chrom}.fam",
+        bimf=config["PLINK_DIR"]+"{pop}/grmi/{pop}.chr{chrom}.bim",
+        bedf=config["PLINK_DIR"]+"{pop}/grmi/{pop}.chr{chrom}.bed"
+    params:
+        geno_compression="LZ4_RA",
+        anno_compression="LZ4_RA"
+    output:
+        gds=config["GDS_DIR"]+"{pop}/grmi/{pop}.chr{chrom}.gds"
+    script:
+        "../scripts/plink2gds.R"
+
+
+rule igds2h5:
+    ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are possibly rearranged)'''
+    input:
+        input_gds=config["GDS_DIR"]+"{pop}/grmi/{pop}.chr{chr}.gds"
+    output:
+        outf=config["HDF5_DIR"]+"{pop}/grmi/{pop}.chr{chr}.h5"
+    script:
+        "../scripts/gds2h5.R"
