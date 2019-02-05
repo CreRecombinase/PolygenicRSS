@@ -3,7 +3,7 @@ library(tidyverse)
 ldetect <- snakemake@params[["use_ldetect"]]
 use_ldetect <- ldetect=="T"
 
-inf <- system.file("fourier_ls-all.bed.gz",package="LDshrink")
+inf  <- snakemake@input[["inf"]]
 if(!file.exists(inf)){
     inf <- "./fourier_ls-all.bed"
 }

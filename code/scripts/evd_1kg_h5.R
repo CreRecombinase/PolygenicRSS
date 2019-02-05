@@ -2,20 +2,16 @@
 
 #library(profvis)
 library(EigenH5)
-library(LDshrink)
+library(ldshrink)
 library(tidyverse)
 # library(future)
 library(progress)
 # plan(sequential)
-# mb <-profvis({
 
-
-                                        # load("ssSNP.RData")
-## save.image("evd.RData")
-## stop()
-
+#stop()
+#load("evd.RData")
 #file.remove("evd.RData")
-cutoff <- 1e-3
+
 input_file <- snakemake@input[["input_file"]]
 mapf <- snakemake@input[["mapf"]]
 
@@ -33,10 +29,10 @@ if(useChunking){
     chunking <- as.integer(chunking)
 }
 
-cutoff <- formals(LDshrink::LDshrink)[["cutoff"]]
-m <- formals(LDshrink::LDshrink)[["m"]]
-Ne <- formals(LDshrink::LDshrink)[["Ne"]]
-## }
+## cutoff <- formals(ldshrink::ldshrink)[["cutoff"]]
+## m <- formals(ldshrink::ldshrink)[["m"]]
+## Ne <- formals(ldshrink::ldshrink)[["Ne"]]
+
 
 stopifnot( !is.null(input_file), !is.null(output_file),!is.null(mapf),!is.null(bdf))
 
@@ -50,10 +46,10 @@ head(break_df)
 stopifnot(is.integer(break_df$chr))
 
 if(!is.null(subsnpf)){
-    if(tools::file_ext(subsnpf)=="h5"){
+    if(fs::path_ext(subsnpf)=="h5"){
         snp_df <- read_df_h5(subsnpf,"SNPinfo")
     }else{
-        snp_df <- read_delim(subsnpf,delim="\t")
+        snp_df <- read_tsv(subsnpf)
     }
 }else{
     snp_df <- read_df_h5(input_file,"SNPinfo")
@@ -69,17 +65,12 @@ if(!useChunking){
     snp_df <- chunk_genome(snp_df,chunk_size = chunking)
 }
 
-#anti_join(snp_df,distinct(snp_df,chr,pos,.keep_all=T) %>% select(snp_id))
-
-
-
-
 stopifnot(nrow(snp_df)==op)
 p <- nrow(snp_df)
-stopifnot(sorted_snp_df(snp_df))
-map_df <- read_df_h5(mapf,"SNPinfo")
+## stopifnot(sorted_snp_df(snp_df))
+map_df <- read_df_h5(mapf,"SNPinfo") %>% distinct(chrom,map,.keep_all=T)
 cat("Assigning Map\n")
-snp_df <- assign_map(snp_df,map_df)
+snp_df <- assign_genetic_map(snp_df,map_df)
 cat("Removing Map\n")
 rm(map_df)
 stopifnot(!is.unsorted(snp_df$chr))
@@ -135,9 +126,7 @@ pb <- progress::progress_bar$new(total = num_b)
 
 for(i in 1:num_b){
   tdf <- snp_dfl[[i]]
-  # }
-  # retl <- snp_dfl %>% purrr::map(function(tdf,m,Ne,cutoff,useLDshrink,SNPfirst,ind_l){
-  #   return(future::future({
+
   if(SNPfirst){
     dosage <- EigenH5::read_matrix_h5(input_file,"dosage",subset_rows=tdf$ld_snp_id,subset_cols=ind_v,doTranspose=T)
   }else{
@@ -145,21 +134,18 @@ for(i in 1:num_b){
   }
   mrid <- unique(tdf$region_id)
   stopifnot(length(mrid)==1)
-  retl <- LDshrink_evd(dosage,
-                       tdf$map,
-                       m,
-                       Ne,
-                       cutoff,
-                       useLDshrink=useLDshrink,
-                       na.rm=T)
+  retl <- ldshrink_evd(reference_panel = dosage,
+                       map = tdf$map,
+                       useldshrink = useLDshrink,
+                       na.rm = F)
   stopifnot(length(retl$D)==length(tdf$pos))
   EigenH5::write_vector_h5(retl$D,output_file,paste0("EVD/", mrid, "/D"))
   EigenH5::write_matrix_h5(retl$Q,output_file,paste0("EVD/", mrid, "/Q"))
-  EigenH5::write_vector_h5(retl$L2,output_file,paste0("L2/", mrid, "/L2"))
+#  EigenH5::write_vector_h5(retl$L2,output_file,paste0("L2/", mrid, "/L2"))
   pb$tick()
 }
-#   },packages=c("EigenH5","LDshrink")))
-# },m=m,Ne=Ne,cutoff=cutoff,useLDshrink=useLDshrink,SNPfirst=SNPfirst,ind_l=ind_v)
+#   },packages=c("EigenH5","ldshrink")))
+# },m=m,Ne=Ne,cutoff=cutoff,useldshrink=useldshrink,SNPfirst=SNPfirst,ind_l=ind_v)
 
 
 # mmret <- SeqSupport::waitr(retl)
