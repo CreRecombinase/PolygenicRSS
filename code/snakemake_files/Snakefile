@@ -1,7 +1,8 @@
 bigdata = False
 include: "param_snakefile"
 include: "grm_snakefile"
-#include: "kg_ld_snakefile"
+include: "intersect_snakefile"
+include: "LD_snakefile"
 
 import pandas as pd
 import numpy as np
@@ -60,4 +61,5 @@ localrules: all,ukb_dropbox_cp,grmf,gen_merge_f
 
 rule all:
     input:
-         expand("/scratch/t.cri.nknoblauch/polyg_scratch/h5/{pop}/grmi/{pop}.chr{chrom}.h5",chrom=range(1,23),pop=["FRAM"])
+         expand(config["EVD_DIR"]+"{pop_a}/int/{pop_b}/chr{chrom}_T_EUR_T.h5",chrom=range(1,23),pop_a=["FRAM"],pop_b="EUR"),
+         expand(config["EVD_DIR"]+"{pop_a}/{pop_b}/chr{chrom}_T_EUR_T.h5",chrom=range(1,23),pop_a=["EUR"],pop_b="FRAM"),

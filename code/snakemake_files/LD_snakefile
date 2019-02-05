@@ -15,6 +15,39 @@ rule ld_chunk_1kg:
         "../scripts/evd_1kg_h5.R"
 
 
+rule ild_chunk_1kg:
+    input:
+        input_file=config["HDF5_DIR"]+"{pop_a}/grmi/{pop_a}.chr{chr}.h5",
+        subsnpf=config["GDS_DIR"]+"{pop_a}/int/{pop_b}.chr{chr}.txt.gz",
+        bdf=config["INPUT_DIR"]+"ldetect_{useLDetect}.txt.gz",
+        mapf=config["KG_MAPDIR"]+"interpolated_{geneticMap}.h5"
+    params:
+        useLDshrink="{useLDshrink}",
+        useLDetect="{useLDetect}"
+    output:
+        evdf=config["EVD_DIR"]+"{pop_a}/int/{pop_b}/chr{chr}_{useLDetect}_{geneticMap}_{useLDshrink}.h5"
+    threads: 1
+    script:
+        "../scripts/evd_1kg_h5.R"
+
+
+rule rld_chunk_1kg:
+    input:
+        input_file=config["HDF5_DIR"]+"{pop_a}/{pop_a}.chr{chr}.h5",
+        subsnpf=config["GDS_DIR"]+"{pop_a}/int/{pop_b}.chr{chr}.txt.gz",
+        bdf=config["INPUT_DIR"]+"ldetect_{useLDetect}.txt.gz",
+        mapf=config["KG_MAPDIR"]+"interpolated_{geneticMap}.h5"
+    params:
+        useLDshrink="{useLDshrink}",
+        useLDetect="{useLDetect}"
+    output:
+        evdf=config["EVD_DIR"]+"{pop_a}/{pop_b}/chr{chr}_{useLDetect}_{geneticMap}_{useLDshrink}.h5"
+    threads: 1
+    script:
+        "../scripts/evd_1kg_h5.R"
+
+
+
 rule ld_df:
     input:
         input_file=config["GDS_DIR"]+"ALL_{panel_dataset}_geno.gds",
@@ -85,11 +118,9 @@ rule ld_chunkdf:
     script:
         "../scripts/LDchunk.R"
 
-
-
 rule chunksize_breakpoint:
     input:
-        ldetectf=config["INPUT_DIR"]+"ldetect_F.txt.gz"
+        inf="../params/fourier_ls-all.bed"
     params:
         use_ldetect="{chunksize}"
     output:

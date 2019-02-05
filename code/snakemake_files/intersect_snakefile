@@ -2,7 +2,13 @@
 
 rule gds_intersect:
     input:
-        gds_a=config["GDS_DIR"]+"{pop_a}/{pop_a}.chr{chr}.gds",
+        gds_a=config["GDS_DIR"]+"{pop_a}/grmi/{pop_a}.chr{chr}.gds",
         gds_b=config["GDS_DIR"]+"{pop_b}/{pop_b}.chr{chr}.gds",
     params:
-        MAF:
+        MAF=0.01,
+        min_snps=10000
+    output:
+        gdslist_a=config["GDS_DIR"]+"{pop_a}/int/{pop_b}.chr{chr}.txt.gz",
+        gdslist_b=config["GDS_DIR"]+"{pop_b}/int/{pop_a}.chr{chr}.txt.gz"
+    script:
+        "../scripts/intersect_gds.R"

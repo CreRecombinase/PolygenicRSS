@@ -21,15 +21,15 @@ rule snplist_vcf:
 
 
 
-rule vcf2seqgds:
-    input:
-        vcf=config["VCF_DIR"]+"{pop}/{pop}.chr{chrom}.vcf.gz",
-    params:
-        geno_compression="LZ4_RA"
-    output:
-        gds=config["GDS_DIR"]+"{pop}/{pop}.chr{chrom}.gds"
-    script:
-        "../scripts/vcf2seq_gds.R"
+# rule vcf2seqgds:
+#     input:
+#         vcf=config["VCF_DIR"]+"{pop}/{pop}.chr{chrom}.vcf.gz",
+#     params:
+#         geno_compression="LZ4_RA"
+#     output:
+#         gds=config["GDS_DIR"]+"{pop}/{pop}.chr{chrom}.gds"
+#     script:
+#         "../scripts/vcf2seq_gds.R"
 
 
 

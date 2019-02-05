@@ -100,13 +100,6 @@ rule make_kg_subset_h5:
         "../scripts/subset_ld.R"
 
 
-rule chunksize_breakpoint:
-    params:
-        use_ldetect="{chunksize}"
-    output:
-        bdf=config["INPUT_DIR"]+"ldetect_{chunksize}.txt.gz"
-    script:
-        "../scripts/break_df.R"
 
 rule ld_chunk_df_h5:
     input:

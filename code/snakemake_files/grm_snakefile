@@ -9,8 +9,8 @@ rule which_ld_prune:
         bimf=config["PLINK_DIR"]+"{dataset}/{dataset}.chr{chrom}.bim",
         bedf=config["PLINK_DIR"]+"{dataset}/{dataset}.chr{chrom}.bed"
     params:
-        in_pref=config["PLINK_DIR"]+"{dataset}.chr{chrom}",
-        out_pref=config["PLINK_DIR"]+"ldp_out/{dataset}.{chrom}"
+        in_pref=config["PLINK_DIR"]+"{dataset}/{dataset}.chr{chrom}",
+        out_pref=config["KG_DIRECTORY"]+"ldp_out/{dataset}.{chrom}"
     output:
         inf=temp(config["KG_DIRECTORY"]+"ldp_out/{dataset}.{chrom}.prune.in"),
         outf=temp(config["KG_DIRECTORY"]+"ldp_out/{dataset}.{chrom}.prune.out")
@@ -63,7 +63,7 @@ rule grmf:
     run:
         with open(output[0],"w") as out:
             for f in params.in_pref:
-                out.write(f+"\n")
+                out.write(f.format(dataset=wildcards.dataset)+"\n")
 
 rule merge_grm:
     input:
@@ -94,7 +94,7 @@ rule cut_grm:
         grm_id=temp(config["KG_DIRECTORY"]+"grm_cut/{dataset}/{dataset}_0.1.grm.id"),
         grm_Nf=temp(config["KG_DIRECTORY"]+"grm_cut/{dataset}/{dataset}_0.1.grm.N.bin")
     shell:
-        "gcta64 --mgrm-bin {params.in_pref} --make-grm --grm-cutoff {params.cut} --out {params.cut_pref}"
+        "gcta64 --grm-bin {params.in_pref} --make-grm --grm-cutoff {params.cut} --out {params.cut_pref}"
 
 rule merge_plink_cut_vcf:
     conda:

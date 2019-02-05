@@ -85,4 +85,10 @@ plink2seqgds:
 vcf2seqgds:
   time: '01:00:00'
   mem: '20gb'
+ild_chunk_1kg:
+  time: '05:00:00'
+  mem: '16gb'
+rld_chunk_1kg:
+  time: '05:00:00'
+  mem: '16gb'
 
