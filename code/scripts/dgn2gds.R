@@ -34,12 +34,12 @@ makeSeq <- function(inf,readonly=TRUE){
 tgds <- makeSeq(DGN_geno_gds)
 si_df <- read_SNPinfo_gds(tgds) %>% mutate(chr=as.integer(chr))
 si_df <- mutate(si_df,t_snp_id=1:n())
-sample_info <- tibble::data_frame(sample_id=seqGetData(tgds,"sample.id"))
+sample_info <- tibble::tibble(sample_id=seqGetData(tgds,"sample.id"))
 
 #
 #
 # dgn_gds <- gdsfmt::openfn.gds(DGN_geno_gds,readonly = F)
-# dgn_leg <- data_frame(rsid=read.gdsn(index.gdsn(dgn_gds,"snp.id")),
+# dgn_leg <- tibble(rsid=read.gdsn(index.gdsn(dgn_gds,"snp.id")),
 #                       chrom=as.integer(read.gdsn(index.gdsn(dgn_gds,"snp.chromosome"))),
 #                       pos=as.integer(read.gdsn(index.gdsn(dgn_gds,"snp.position"))),
 #                       allele=as.character(read.gdsn(index.gdsn(dgn_gds,"snp.allele"))))%>% mutate(ind=1:n())

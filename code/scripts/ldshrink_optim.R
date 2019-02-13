@@ -74,7 +74,7 @@ cv_ld <- function(sdf,split_l,m,Ne,cutoff){
     parami <- runif(3)
     o_res <- optimise(f = ld_opt,interval = c(1,1000000),trainH=trainH,testS=testS,map=sdf$map)
     gpar <- exp(o_res$par)
-    return(data_frame(Spectral_LDshrink=-o_res$value,
+    return(tibble(Spectral_LDshrink=-o_res$value,
                       m=gpar[1],
                       Ne=gpar[2],
                       cutoff=gpar[3],

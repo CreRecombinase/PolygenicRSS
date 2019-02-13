@@ -54,7 +54,7 @@ cat("Writing simulation/data info\n")
 write_df_h5(snp_df,"SNPinfo",uhf)
 write_df_h5(tparam_df,"SimulationInfo",uhf)
 pl <- snakemake@wildcards
-pl <- as_data_frame(pl[names(pl)!=""])
+pl <- as_tibble(pl[names(pl)!=""])
 write_df_h5(pl,groupname = "Wildcards",filename=uhf)
 
 cat("Mapping traits\n")

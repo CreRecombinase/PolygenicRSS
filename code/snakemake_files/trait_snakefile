@@ -1,26 +1,25 @@
-rule calc_covar:
-    input:
-        snpgdsf=config["SNPGDS_DIR"]+"ALL_{dataset}_geno.gds",
-        subsnpf=rules.sim_pheno_RSSp.input.subsnpf,
-        subgwasf=rules.sim_pheno_RSSp.input.subgwasf,
-    output:
-        covarf=config["COVAR_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{scenario}_20.h5"
-    threads: 11
-    script:
-        "../scripts/calc_pca_gds.R"
+# rule calc_covar:
+#     input:
+#         snpgdsf=config["SNPGDS_DIR"]+"ALL_{dataset}_geno.gds",
+#         subsnpf=rules.sim_pheno_RSSp.input.subsnpf,
+#         subgwasf=rules.sim_pheno_RSSp.input.subgwasf,
+#     output:
+#         covarf=config["COVAR_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{scenario}_20.h5"
+#     threads: 11
+#     script:
+#         "../scripts/calc_pca_gds.R"
 
 
 rule map_uh_RSSp:
     input:
-        h5f=rules.sim_pheno_RSSp.input.gdsf,
-        covarf=rules.calc_covar.output.covarf,
-        ymatf=rules.sim_pheno_RSSp.output.h5f,
-        subsnpf=rules.sim_pheno_RSSp.input.subsnpf,
-        subgwasf=rules.sim_pheno_RSSp.input.subgwasf
+        h5f=config["HDF5_DIR"]+"{pop_a}/grmi/{pop_b}.chr{chrom}.h5",
+        ymatf=config["KG_DIRECTORY"]+"pheno/{{pop_a}}_{{pop_b}}_{{scenario}}_{chri}_trait.h5".format(chri=chrom_int),
+        subsnpf=rules.gds_intersect.output.gdslist_a
     params:
-        ncovar="{ncovar}"
+        ncovar=0,
+        y_grp="SimulationInfo"
     output:
-        uhf=config["KG_DIRECTORY"]+"gwas_uh/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{scenario}_{ncovar}_sim.h5"
+        uhf=config["KG_DIRECTORY"]+"gwas_uh/chr{chrom}_{pop_a}_{pop_b}_{scenario}_0_sim.h5"
     threads: 1
     script:
         "../scripts/map_uh_covar.R"

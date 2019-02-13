@@ -14,7 +14,7 @@ subldf <- snakemake@input[["subldf"]]
 bdf <- snakemake@input[["bdf"]]
 output_file <- snakemake@output[["output_f"]]
 useLDetect <-(snakemake@params[["useLDetect"]] %||% "T")=="T"
-chr_df <- data_frame(chr = as.integer(snakemake@params[["chrom"]] %||% 1:22))
+chr_df <- tibble(chr = as.integer(snakemake@params[["chrom"]] %||% 1:22))
 chunk_tot <- as.integer(snakemake@params[["chunk_tot"]] %||% 1)
 chunk_ind <- as.integer(snakemake@params[["chunk_a"]] %||% chunk_tot)
 
@@ -41,7 +41,7 @@ if(!is.null(subsnpf)){
 }else{
     snp_df <- read_df_h5(input_file,"SNPinfo")
     all_alleles  <- outer(c("A","C","T","G"),c("A","C","T","G"),function(x,y)paste(x,y,sep=","))
-    all_alleles <- data_frame(allele=c(all_alleles[upper.tri(all_alleles)],all_alleles[lower.tri(all_alleles)]))
+    all_alleles <- tibble(allele=c(all_alleles[upper.tri(all_alleles)],all_alleles[lower.tri(all_alleles)]))
     snp_df <- semi_join(snp_df,all_alleles)
 }
 snp_df <- semi_join(snp_df,break_df) %>% group_by(chr) %>% distinct(pos,.keep_all=T)
@@ -55,7 +55,7 @@ if(!useLDetect){
         stopifnot(all(tmat[upper.tri(tmat, diag=T)]>0))
         trow <- row(tmat)[tmat==chunk_ind]
         tcol <- col(tmat)[tmat==chunk_ind]
-        retdf <- data_frame(row=trow, col=tcol, chunk_tot=mat_size, chunk_ind=chunk_ind)
+        retdf <- tibble(row=trow, col=tcol, chunk_tot=mat_size, chunk_ind=chunk_ind)
         stopifnot(nrow(retdf)==1)
         return(retdf)
     }

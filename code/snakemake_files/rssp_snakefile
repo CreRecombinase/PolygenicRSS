@@ -1,46 +1,20 @@
-
 rule gen_quh:
     input:
-        evdf=config["EVD_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{useLDshrink}.h5",
-        uhf=config["KG_DIRECTORY"]+"gwas_uh/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{scenario}_{ncovar}_sim.h5"
+        evdf=config["EVD_DIR"]+"{pop_a}/{pop_b}/chr{chrom}_{useLDetect}_{geneticMap}_{useLDshrink}.h5",
+        uhf=config["KG_DIRECTORY"]+"gwas_uh/chr{chrom}_{pop_a}_{pop_b}_{scenario}_{ncovar}_sim.h5"
     output:
-        quhf=config["KG_DIRECTORY"]+"quh/gwas_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}_{ncovar}.h5"
-    resources:
-        fh5=1
+        quhf=config["KG_DIRECTORY"]+"quh/gwas_chr{chrom}_{pop_a}_{pop_b}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}_{ncovar}.h5"
     script:
         "../scripts/gen_quh_chunk_h5.R"
 
-rule quantile_quh:
+rule rssp_est:
     input:
-        quhf=config["KG_DIRECTORY"]+"quh/{simulation}_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}.h5"
-    output:
-        quantf=config["KG_DIRECTORY"]+"quh_quantile/{simulation}_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}.h5"
-    script:
-        "../scripts/quantile_quh.R"
-
-
-
-        
-
-rule RSSp_est:
-    input:
-        rdsf=config["KG_DIRECTORY"]+"quh/{simulation}_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}_{ncovar}.h5"
-    output:
-        dff=config["OUTPUT_DIR"]+"sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{ncovar}_{useConfounding}.txt.gz"
+        quhf=expand(config["KG_DIRECTORY"]+"quh/gwas_chr{chrom}_{{pop_a}}_{{pop_b}}_{{useLDetect}}_{{geneticMap}}_{{scenario}}_{{useLDshrink}}_{{ncovar}}.h5",chrom=genome_chr),
+        samp_f=config["KG_DIRECTORY"]+"pheno/{{pop_a}}_{{pop_b}}_{{scenario}}_{chri}_trait.h5".format(chri=chrom_int)
     params:
-        doConfound="{useConfounding}",
+        nterms="{nterms}",
         pvv="{percentEigen}"
-    script:
-        "../scripts/RSSp_est.R"
-
-rule post_mean_beta:
-    input:
-        estf=rules.RSSp_est.output.dff,
-        quhf=rules.gen_quh.output.quhf,
-        evdf=rules.ld_chunk_1kg.output.evdf,
-        est_betaf=rules.map_uh_RSSp.output.uhf
     output:
-        est_spvef=config["KG_DIRECTORY"]+"spve_est/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{useConfounding}.h5"#,
-#        true_spvef=config["KG_DIRECTORY"]+"spve_true/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_RSSp_res_{scenario}_{percentEigen}_{useLDshrink}_{useConfounding}.h5"
+        dff=config["OUTPUT_DIR"]+"{{pop_a}}_{{pop_b}}_{chri}_{{useLDetect}}_{{geneticMap}}_{{scenario}}_{{useLDshrink}}_{{ncovar}}_gwas_RSSp_res_gwas_{{percentEigen}}_{{nterms}}.RDS".format(chri=chrom_int)
     script:
-        "../scripts/spve_est.R"
+        "../scripts/simple_RSSp.R"

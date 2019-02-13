@@ -13,7 +13,7 @@ quh_m  <- read_matrix_h5(inf,"/","quh")
 D  <- read_vector_h5(inf,"/","D")
 
 pl <- snakemake@wildcards
-pl <- as_data_frame(pl[names(pl)!=""])
+pl <- as_tibble(pl[names(pl)!=""])
 write_df_h5(pl,groupname = "Wildcards",filename=outf)
 tt_sd <- sqrt(rep(tparam_df$tsigu^2,length(D))*D^2+D)
 quantile_m <- matrix(NA,nrow(quh_m),ncol(quh_m))

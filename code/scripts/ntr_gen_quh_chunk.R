@@ -80,7 +80,7 @@ pl <- snakemake@wildcards
 if(is.null(pl[["simulation"]])){
   pl[["simulation"]] <-"gwas"
 }
-pl <- as_data_frame(pl[names(pl)!=""])
+pl <- as_tibble(pl[names(pl)!=""])
 write_df_h5(pl, filename = quhf, datapath = "Wildcards")
 
 

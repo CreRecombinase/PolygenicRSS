@@ -1,6 +1,7 @@
+# save.image("sim.RData")
+# stop()
 
-
-library(LDshrink)
+library(ldshrink)
 library(tidyverse)
 library(SeqSupport)
 library(EigenH5)
@@ -11,8 +12,8 @@ covarf <- snakemake@input[["covarf"]]
 uhf <- snakemake@output[["uhf"]]
 subsnpf <- snakemake@input[["subsnpf"]]
 subgwasf <- snakemake@input[["subgwasf"]]
-ncovar <- as.integer(snakemake@params[["ncovar"]])
-y_grp  <- snakemake@params[["y_grp"]]
+ncovar <- as.integer(snakemake@params[["ncovar"]] %||% 0)
+y_grp  <- snakemake@params[["y_grp"]] %||% "TraitInfo"
 
 snp_chunksize <- snakemake@params[["chunksize_snp"]]
 if(is.null(snp_chunksize)){
@@ -102,7 +103,7 @@ cat("Done!")
 ## write_df_h5(snp_df,uhf,"SNPinfo")
 ## write_df_h5(tparam_df,uhf,y_grp)
 ## pl <- snakemake@wildcards
-## pl <- as_data_frame(pl[names(pl)!=""])
+## pl <- as_tibble(pl[names(pl)!=""])
 ## write_df_h5(pl,uhf, "Wildcards")
 
 ## cat("Mapping traits\n")

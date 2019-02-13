@@ -65,7 +65,7 @@ cv_ld <- function(sdf,split_l,m,Ne,cutoff){
     dF <- norm(dM,"F")
     dE <- max(abs(dM))
     dS <- norm(dM,"2")
-    return(data_frame(Frob_LDshrink=dF,
+    return(tibble(Frob_LDshrink=dF,
                       maxDist_LDshrink=dE,
                       Spectral_LDshrink=dS,
                       Frob_cor=baseF,

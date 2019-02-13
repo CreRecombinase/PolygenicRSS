@@ -99,7 +99,7 @@ snp_df <- dplyr::mutate(snp_df, snp_id=as.integer(snp_id), ld_snp_id = as.intege
 
 write_df_h5(snp_df, output_file, "LDinfo")
 pl <- snakemake@wildcards
-pl <- as_data_frame(pl[names(pl)!=""])
+pl <- as_tibble(pl[names(pl)!=""])
 
 write_df_h5(pl, filename = output_file, datapath = "Wildcards")
 
@@ -119,7 +119,7 @@ for(i in names(snp_dfl)){
     params <- VariantAnnotation::ScanVcfParam(samples=ld_ind,which=unlist(tldetect_1))
     vcf <- VariantAnnotation::readVcf(my_vcf,"hg19",param=params)
     ## vcf_df <- SummarizedExperiment::rowRanges(vcf) %>% as.data.frame(row.names=NULL) %>%
-    ##     as_data_frame() %>%
+    ##     as_tibble() %>%
     ##     mutate(chr=as.integer(as.character(seqnames)),
     ##            pos=start,
     ##            snp=rownames(vcf),vcf_id=1:n()) %>%

@@ -87,7 +87,7 @@ map(concat_df, ~concat_fn(input_f, outf, .x))
 map(keep_df, ~concat_fn(input_f, outf, .x, keep=T))
 
 
-## dosage_df <- data_frame(filename=dosagef,chrom=chrom) %>%
+## dosage_df <- tibble(filename=dosagef,chrom=chrom) %>%
 ##     arrange(chrom)
 
 ## num_files <- length(dosagef)

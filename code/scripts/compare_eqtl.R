@@ -36,8 +36,8 @@ eqtl_df <- read_df_h5(eqtl_h5,"eQTLinfo",subset=sub_sub_chr)  %>% inner_join(snp
 
 unique_exp <- sort(unique(eqtl_df$uh_exp_id))
 unique_snp <- sort(unique(eqtl_df$uh_snp_id))
-uh_df <- read_matrix_h5(uhf,"uh",subset_rows=unique_snp,subset_cols=unique_exp) %>% set_colnames(as.character(unique_exp))  %>% as_data_frame()  %>% mutate(uh_snp_id=unique_snp)  %>% gather("uh_exp_id","uh",-uh_snp_id) %>% mutate(uh_exp_id=as.integer(uh_exp_id))
+uh_df <- read_matrix_h5(uhf,"uh",subset_rows=unique_snp,subset_cols=unique_exp) %>% set_colnames(as.character(unique_exp))  %>% as_tibble()  %>% mutate(uh_snp_id=unique_snp)  %>% gather("uh_exp_id","uh",-uh_snp_id) %>% mutate(uh_exp_id=as.integer(uh_exp_id))
 uhm <- read_matrix_h5(uhf,"uh",subset_rows=unique_snp,subset_cols=unique_exp)
 sem  <- read_matrix_h5(uhf,"se",subset_rows=unique_snp,subset_cols=unique_exp)
 bhm  <- uhm*sem
-uh_df <- uhm*sem %>% set_colnames(as.character(unique_exp))  %>% as_data_frame()  %>% mutate(uh_snp_id=unique_snp)  %>% gather("uh_exp_id","bh",-uh_snp_id) %>% mutate(uh_exp_id=as.integer(uh_exp_id))
+uh_df <- uhm*sem %>% set_colnames(as.character(unique_exp))  %>% as_tibble()  %>% mutate(uh_snp_id=unique_snp)  %>% gather("uh_exp_id","bh",-uh_snp_id) %>% mutate(uh_exp_id=as.integer(uh_exp_id))

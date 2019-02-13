@@ -23,7 +23,7 @@ newfile_l <- map(outf_snpgds,createfn.gds)
 
 make_snpdf <- function(xf,gn){
   col_names <- c("labels","major","minor","chr","pos")
-  map_dfc(col_names,~set_names(data_frame(c(read_matrix_h5(xf,groupname = "/",dataname = .x))),.x)) %>%
+  map_dfc(col_names,~set_names(tibble(c(read_matrix_h5(xf,groupname = "/",dataname = .x))),.x)) %>%
     mutate(labels=abs(as.integer(labels)),
            chr=as.integer(chr),
            pos=as.integer(pos),

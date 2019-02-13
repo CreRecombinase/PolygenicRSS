@@ -26,5 +26,5 @@ si_df <- read_SNPinfo_gds(tgds,alleles=T,MAF=T,region_id=F,map = F,info=T,more=l
 cat("Beginning HDF5 Conversion\n")
 SeqSupport::gds2hdf5(tgds,outf,si_df)
 pl <- snakemake@wildcards
-pl <- as_data_frame(pl[names(pl)!=""])
+pl <- as_tibble(pl[names(pl)!=""])
 write_df_h5(pl,outf, "Wildcards")

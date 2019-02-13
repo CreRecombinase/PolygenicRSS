@@ -3,22 +3,27 @@ include: "param_snakefile"
 include: "grm_snakefile"
 include: "intersect_snakefile"
 include: "LD_snakefile"
-
+include: "kg_snakefile"
+include: "rssp_snakefile"
+include: "sim_snakefile"
+include: "trait_snakefile"
 import pandas as pd
 import numpy as np
 
 from snakemake.remote.dropbox import RemoteProvider as DropboxRemoteProvider
-tokenf=open(".dba.txt").read().replace('\n','')
-DBox = DropboxRemoteProvider(oauth2_access_token=tokenf)
+#tokenf=open(".dba.txt").read().replace('\n','')
+#DBox = DropboxRemoteProvider(oauth2_access_token=tokenf)
 
 
 #all_traits=[x for x in list(pd.read_csv("UKBB_mf.csv")["Phenotype Code"]) if x is not np.nan]
-with open('../params/ukb_id.txt') as fp:
-    all_ids = [x.strip() for x in fp]
-all_ids=list(set(all_ids))
+# with open('../params/ukb_id.txt') as fp:
+#     all_ids = [x.strip() for x in fp]
+# all_ids=list(set(all_ids))
 
 include: "fram_snakefile"
 include: "converters_snakefile"
+include: "kg_snakefile"
+
 
 import math
 import numpy as np
@@ -31,28 +36,27 @@ def file_len(fname):
     return i
 
 
-all_output=DBox.remote(expand("PolygenicRSS/output/pve/{consortia}/trait_sim_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_RSSp_res_gwas_{percentEigen}_{useLDshrink}_0_{mterms}.RDS",
-                  consortia="ukb",
-                  trait=all_ids,
-                  mterms = range(1,5),
-                  pop="EUR",
-                  useLDetect="T",
-                  useLDshrink="T",
-                  percentEigen="0.001",
-                  AF=0,
-                  SNPCT=0,
-                  N=0))
+# all_output=DBox.remote(expand("PolygenicRSS/output/pve/{consortia}/trait_sim_chr1-22AF{AF}SNP{SNPCT}N{N}_{consortia}0{trait}_{pop}_{useLDetect}_{pop}_gwas_RSSp_res_gwas_{percentEigen}_{useLDshrink}_0_{mterms}.RDS",
+#                   consortia="ukb",
+#                   trait=all_ids,
+#                   mterms = range(1,5),
+#                   pop="EUR",
+#                   useLDetect="T",
+#                   useLDshrink="T",
+#                   percentEigen="0.001",
+#                   AF=0,
+#                   SNPCT=0,
+#                   N=0))
 
 
 tot_chunk=25
-include: "kg_snakefile"
+
 
 
 wildcard_constraints:
     clusterid="[0-9]+",
     trait="[a-z0-9-]+",
     chrom="[0-9]+",
-    consortia="ukb",
     useLDshrink="T|F"
 
 
@@ -61,5 +65,7 @@ localrules: all,ukb_dropbox_cp,grmf,gen_merge_f
 
 rule all:
     input:
-         expand(config["EVD_DIR"]+"{pop_a}/int/{pop_b}/chr{chrom}_T_EUR_T.h5",chrom=range(1,23),pop_a=["FRAM"],pop_b="EUR"),
-         expand(config["EVD_DIR"]+"{pop_a}/{pop_b}/chr{chrom}_T_EUR_T.h5",chrom=range(1,23),pop_a=["EUR"],pop_b="FRAM"),
+        expand(config["OUTPUT_DIR"]+"{pop_a}_{pop_b}_{chri}_{useLDetect}_{geneticMap}_{scenario}_{useLDshrink}_{ncovar}_gwas_RSSp_res_gwas_{percentEigen}_{nterms}.RDS",
+               pop_a="EUR",
+               pop_b="EUR",
+               chri=chrom_int,useLDetect="T",geneticMap="EUR",scenario=SCEN,useLDshrink="T",ncovar="0",percentEigen=0.001,nterms=[1,2])

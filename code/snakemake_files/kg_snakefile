@@ -47,57 +47,57 @@ rule pull_pop_list:
 
 
 
-rule subsnp_gds:
-    ''' Subset SNPs according to which chromosomes you want in the simulation, and what Allele Frequency
- cutoff you want to use (uses gds format)'''
-    input:
-        gdsf_a=config["GDS_DIR"]+"ALL_{dataset}_geno.gds",
-        ldetectf=config["LDETECT_BREAK_FILE"],
-        gdsf_b=config["GDS_DIR"]+"ALL_{panel_dataset}_geno.gds"
-    params:
-        chrom="{chrom}",
-        AF="{AF}",
-        SNPCT="{SNPCT}",
-        N="{N}"
-    output:
-        outf_a=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_trait.txt.gz",
-        outf_b=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_LD.txt.gz",
-        ldo=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_LD.RDS",
-        gwaso=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_gwas.RDS"
-    script:
-        "../scripts/subset_snp_chr_gds.R"
+# rule subsnp_gds:
+#     ''' Subset SNPs according to which chromosomes you want in the simulation, and what Allele Frequency
+#  cutoff you want to use (uses gds format)'''
+#     input:
+#         gdsf_a=config["GDS_DIR"]+"ALL_{dataset}_geno.gds",
+#         ldetectf=config["LDETECT_BREAK_FILE"],
+#         gdsf_b=config["GDS_DIR"]+"ALL_{panel_dataset}_geno.gds"
+#     params:
+#         chrom="{chrom}",
+#         AF="{AF}",
+#         SNPCT="{SNPCT}",
+#         N="{N}"
+#     output:
+#         outf_a=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_trait.txt.gz",
+#         outf_b=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_LD.txt.gz",
+#         ldo=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_LD.RDS",
+#         gwaso=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_gwas.RDS"
+#     script:
+#         "../scripts/subset_snp_chr_gds.R"
 
 
 
-rule subsetgds:
-    ''' This rule subsets a gds file based on AF'''
-    input:
-        gdsf=config["GDS_DIR"]+"chr{chr}_{pop}_geno.gds",
-    output:
-        temp_gds=config["GDS_DIR"]+"AF{AF}chr{chr}_{pop}_geno.gds"
-    params:
-        AF="{AF}"
-    wildcard_constraints:
-        pop="[A-Z]+"
-    threads:
-        9
-    script:
-        "../scripts/seqgds2seq_gds.R"
+# rule subsetgds:
+#     ''' This rule subsets a gds file based on AF'''
+#     input:
+#         gdsf=config["GDS_DIR"]+"chr{chr}_{pop}_geno.gds",
+#     output:
+#         temp_gds=config["GDS_DIR"]+"AF{AF}chr{chr}_{pop}_geno.gds"
+#     params:
+#         AF="{AF}"
+#     wildcard_constraints:
+#         pop="[A-Z]+"
+#     threads:
+#         9
+#     script:
+#         "../scripts/seqgds2seq_gds.R"
 
 
-rule make_kg_subset_h5:
-    input:
-        input_file=config["HDF5_DIR"]+"AF{AF}chr{chrom}_{pop}_geno.h5",
-        bdf=config["INPUT_DIR"]+"ldetect_{useLDetect}.txt.gz",
-        mapf=config["KG_MAPDIR"]+"interpolated_{geneticMap}.h5"
-    params:
-        useLDetect="{useLDetect}",
-        chrom="{chrom}",
-        chunk_tot="{chunktot}"
-    output:
-        output_f=config["INPUT_DIR"]+"AF{AF}chr{chrom}_{pop}_{geneticMap}_{useLDetect}_{chunktot}.h5"
-    script:
-        "../scripts/subset_ld.R"
+# rule make_kg_subset_h5:
+#     input:
+#         input_file=config["HDF5_DIR"]+"AF{AF}chr{chrom}_{pop}_geno.h5",
+#         bdf=config["INPUT_DIR"]+"ldetect_{useLDetect}.txt.gz",
+#         mapf=config["KG_MAPDIR"]+"interpolated_{geneticMap}.h5"
+#     params:
+#         useLDetect="{useLDetect}",
+#         chrom="{chrom}",
+#         chunk_tot="{chunktot}"
+#     output:
+#         output_f=config["INPUT_DIR"]+"AF{AF}chr{chrom}_{pop}_{geneticMap}_{useLDetect}_{chunktot}.h5"
+#     script:
+#         "../scripts/subset_ld.R"
 
 
 

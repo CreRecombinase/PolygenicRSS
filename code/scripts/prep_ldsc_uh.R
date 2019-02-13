@@ -26,7 +26,7 @@ nfgeneid <- tparam_df$fgeneid
 #groupl <- as.integer(get_objs_h5(rss_rdsf))
 #groupl <- sort(groupl[!is.na(groupl)])
 
-uh_df <- as_data_frame(read_matrix_h5(rss_rdsf,"uh")) %>%
+uh_df <- as_tibble(read_matrix_h5(rss_rdsf,"uh")) %>%
   magrittr::set_colnames(as.character(tparam_df$fgeneid)) %>%
   mutate(snp_id=1:n()) %>%
   gather("fgeneid","uh",-snp_id)

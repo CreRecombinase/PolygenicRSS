@@ -1,41 +1,45 @@
-rule subsnp_chr:
-    ''' Subset SNPs according to which chromosomes you want in the simulation, and what Allele Frequency
- cutoff you want to use '''
+rule isnpct:
+    ''' This rule counts the number of rows in a particular.txt.gz file '''
     input:
-        gdsf_a=config["HDF5_DIR"]+"ALL_{dataset}_geno.h5",
-        ldetectf=config["LDETECT_BREAK_FILE"],
-        gdsf_b=config["HDF5_DIR"]+"ALL_{panel_dataset}_geno.h5"
-    params:
-        AF="{AF}",
-        SNPCT="{SNPCT}",
-        N="{N}"
+        subsnpf=config["GDS_DIR"]+"{{pop_a}}/{maf}_i/{{pop_b}}.chr{{chrom}}.txt.gz".format(maf=MAF_CUTOFF)
     output:
-        outf_a=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_trait.txt.gz",
-        outf_b=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_LD.txt.gz",
-        ldo=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_LD.RDS",
-        gwaso=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_gwas.RDS"
-    script:
-        "../scripts/subset_snp_chr.R"
+        outf=temp("../params/snp_ct_{maf}_{{chrom}}_{{pop_a}}_int_{{pop_b}}.txt.gz".format(maf=MAF_CUTOFF))
+    shell:
+        "zcat {input.subsnpf} | wc -l > {output.outf}"
 
 
-rule sim_pheno_RSSp:
+rule sim_pheno_ty_RSSp:
     ''' This rule works very similarly to sim_pheno_w_Beta_RSSp, but doesn't require beta,
     and instead generates it on the fly.  This is the rule used in LD score regression/RSSp
     comparisons
         '''
     input:
-        gdsf=config["HDF5_DIR"]+"ALL_{dataset}_geno.h5",
-        subsnpf=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_trait.txt.gz",
-        subgwasf=config["INPUT_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_gwas.RDS"
+        gdsf=config["HDF5_DIR"]+"{pop_a}/grmi/{pop_b}.chr{chrom}.h5",
+        evdf=config["EVD_DIR"]+"{{pop_a}}/int/{{pop_b}}/chr{{chrom}}_{useLDetect}_{{pop_b}}_{useLDshrink}.h5".format(useLDetect="T",
+                                                                                                                        geneticMap="EUR",
+                                                                                                                        useLDshrink="T"),
+        subsnpf=rules.gds_intersect.output.gdslist_a,
+        snpctf=expand("../params/snp_ct_{maf}_{chrom}_{{pop_a}}_int_{{pop_b}}.txt.gz",chrom=genome_chr,maf=MAF_CUTOFF)
     params:
-        fgeneid=expand("{fgeneid}",fgeneid=FGENEID),
-        pve=PVE,
-        bias=BIAS,
-        nreps=NREPS
+        fgeneid=expand("{fgeneid}",fgeneid=FGENEID[SCEN]),
+        pve=PVE[SCEN],
+        bias=BIAS[SCEN],
+        nreps=NREPS[SCEN],
+        chrom="{chrom}"
     output:
-        h5f=config["KG_DIRECTORY"]+"pheno/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{scenario}_trait.h5",
-        beta_hf=config["KG_DIRECTORY"]+"beta/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{scenario}_beta.h5"
-    resources:
-        fh5=1
+        h5f=temp(config["KG_DIRECTORY"]+"tpheno/chr{chrom}_{pop_a}_{pop_b}_{scenario}_trait.h5"),
+        beta_hf=config["KG_DIRECTORY"]+"beta/chr{chrom}_{pop_a}_{pop_b}_{scenario}_beta.h5"
     script:
         "../scripts/gen_ty_block_RSSp.R"
+
+
+
+
+rule sum_pheno_ty_RSSp:
+    ''' This rule generates the final phenotype from all of the chromosomes'''
+    input:
+        input_f=expand(config["KG_DIRECTORY"]+"tpheno/chr{chrom}_{{pop_a}}_{{pop_b}}_{{scenario}}_trait.h5",chrom=genome_chr),
+    output:
+        h5f=config["KG_DIRECTORY"]+"pheno/{{pop_a}}_{{pop_b}}_{{scenario}}_{chri}_trait.h5".format(chri=chrom_int)
+    script:
+        "../scripts/sum_ty.R"

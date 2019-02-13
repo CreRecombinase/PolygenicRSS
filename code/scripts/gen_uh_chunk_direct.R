@@ -23,11 +23,11 @@ pl <- snakemake@wildcards
 if(is.null(pl[["simulation"]])){
   pl[["simulation"]] <-"direct"
 }
-pl <- as_data_frame(pl[names(pl)!=""])
+pl <- as_tibble(pl[names(pl)!=""])
 write_df_h5(pl,groupname = "Wildcards",filename=uhf)
 
 ld_grp <-ls_h5(evdf,"EVD")
-D_df <- map_df(ld_grp,~data_frame(region_id=as.integer(.x),D=read_vector_h5(evdf,paste0("EVD/",.x),"D"))) %>%
+D_df <- map_df(ld_grp,~tibble(region_id=as.integer(.x),D=read_vector_h5(evdf,paste0("EVD/",.x),"D"))) %>%
     arrange(as.integer(region_id))
 
 

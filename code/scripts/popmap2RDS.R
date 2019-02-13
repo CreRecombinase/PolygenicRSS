@@ -23,7 +23,7 @@ untar(destination, exdir=destination_dir)
 
 
 
-map_file_df <- data_frame(filename=dir(file.path(destination_dir, pop), full.names=T)) %>%
+map_file_df <- tibble(filename=dir(file.path(destination_dir, pop), full.names=T)) %>%
     mutate(chrom=as.integer(gsub(paste0(pop, "-([0-9]+)-final.txt.gz"), "\\1", basename(filename))))
 
 

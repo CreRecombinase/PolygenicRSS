@@ -21,10 +21,10 @@ rule dl_ukb_loci:
 rule merge_snplist:
     input:
         gwasf=config["KG_DIRECTORY"]+"loci_ukb/ukb_loci.fst",
-        vcff=expand(config["VCF_DIR"]+"{{pop}}/snplist/{{pop}}.chr{chrom}.txt",chrom=range(1,23)),
+        vcff=expand(config["VCF_DIR"]+"{{pop}}/snplist/{{pop}}.chr{chrom}.txt",chrom=genome_chr),
         mapf=config["KG_MAPDIR"]+"interpolated_{pop}.h5"
     output:
-        outputf=expand(config["VCF_DIR"]+"loci_ukb/ukb_{{pop}}.chr{chrom}.fst",chrom=range(1,23))
+        outputf=expand(config["VCF_DIR"]+"loci_ukb/ukb_{{pop}}.chr{chrom}.fst",chrom=genome_chr)
     script:
         "../scripts/merge_snplist.R"
 
@@ -101,7 +101,7 @@ rule ukb_merge_quh:
 
 rule ukb_rssp_est:
     input:
-        quhf=expand(config["KG_DIRECTORY"]+"quh/{{consortia}}/gwas_chr{chrom}AF{{AF}}SNP{{SNPCT}}N{{N}}_{{consortia}}_{{pop}}_{{useLDetect}}_{{pop}}_gwas_{{useLDshrink}}_0.h5",chrom=range(1,23)),
+        quhf=expand(config["KG_DIRECTORY"]+"quh/{{consortia}}/gwas_chr{chrom}AF{{AF}}SNP{{SNPCT}}N{{N}}_{{consortia}}_{{pop}}_{{useLDetect}}_{{pop}}_gwas_{{useLDshrink}}_0.h5",chrom=genome_chr),
         samp_f=config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics_sc.txt"
     params:
         doConfound="{useConfounding}",

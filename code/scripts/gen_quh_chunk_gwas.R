@@ -65,5 +65,5 @@ stopifnot(all(!is.na(rssp_l$quh)),all(Dvec>0),
           NROW(rssp_l$quh)==length(rssp_l$region_id))
 
 pl <- snakemake@wildcards
-pl <- as_data_frame(pl[names(pl)!=""])
+pl <- as_tibble(pl[names(pl)!=""])
 write_df_h5(pl, filename = output, datapath = "Wildcards")

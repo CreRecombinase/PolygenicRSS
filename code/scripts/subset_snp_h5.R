@@ -56,13 +56,13 @@ inds_b  <- read_vector_h5(inf_b,"SampleInfo/sample_id")
 
 if(N>0){
     sN <- min(c(length(inds_a),length(inds_b)))
-    subset_ind_a <- data_frame(sample_id=1:N)
+    subset_ind_a <- tibble(sample_id=1:N)
     write_df_h5(subset_ind_a,trait_indf,"SampleInfo")
     write_df_h5(subset_ind_a,ld_indf,"SampleInfo")
 }else{
     subset_ind_a <- integer()
-    subset_df_a <- data_frame(sample_id=1:length(inds_a))
-    subset_df_b <- data_frame(sample_id=1:length(inds_b))
+    subset_df_a <- tibble(sample_id=1:length(inds_a))
+    subset_df_b <- tibble(sample_id=1:length(inds_b))
     write_df_h5(subset_df_a,trait_indf,"SampleInfo")
     write_df_h5(subset_df_b,ld_indf,"SampleInfo")
 }
@@ -84,7 +84,7 @@ subset_snp_df <- function(inf,chromosome,AF_cutoff=0,subset_ind){
     }
     stopifnot(all(!is.na(tchromosome)))
     all_alleles  <- outer(c("A","C","T","G"),c("A","C","T","G"),function(x,y)paste(x,y,sep=","))
-    all_alleles <- data_frame(allele=c(all_alleles[upper.tri(all_alleles)], all_alleles[lower.tri(all_alleles)]))
+    all_alleles <- tibble(allele=c(all_alleles[upper.tri(all_alleles)], all_alleles[lower.tri(all_alleles)]))
 
     subsnp_df <- read_df_h5(inf, "SNPinfo") %>%
         filter(chr%in%tchromosome)  %>%

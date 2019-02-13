@@ -19,6 +19,19 @@ rule snplist_vcf:
         "bcftools view -H -ghet -G -m2 -M2 {input.vcff} > {output.snplistf}"
 
 
+rule vcf2plink:
+    input:
+        vcff=config["VCF_DIR"]+"{pop}/{pop}.chr{chr}.vcf.gz"
+    params:
+        out_pref=config["PLINK_DIR"]+"{pop}/{pop}.chr{chr}"
+    output:
+        famf=config["PLINK_DIR"]+"{pop}/{pop}.chr{chr}.fam",
+        bimf=config["PLINK_DIR"]+"{pop}/{pop}.chr{chr}.bim",
+        bedf=config["PLINK_DIR"]+"{pop}/{pop}.chr{chr}.bed"
+    shell:
+        "plink --vcf {input.vcff} --make-bed --out {params.out_pref}"
+
+
 
 
 # rule vcf2seqgds:

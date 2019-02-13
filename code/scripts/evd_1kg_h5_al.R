@@ -23,7 +23,7 @@ output_file <- snakemake@output[["evdf"]]
 useLDshrink <- snakemake@params[["useLDshrink"]]=="T"
 
 pl <- snakemake@wildcards
-pl <- as_data_frame(pl[names(pl)!=""])
+pl <- as_tibble(pl[names(pl)!=""])
 write_df_h5(pl, filename = output_file, datapath = "Wildcards")
 
 
@@ -36,7 +36,7 @@ if(nrow(subsnp_df)>0){
     snppos <- hf[["variants/POS"]][]
     snpref <- hf[["variants/REF"]][]
 
-    hid_df <- data_frame(snp=snprs,pos=snppos) %>% mutate(data_snp_id=1:n())
+    hid_df <- tibble(snp=snprs,pos=snppos) %>% mutate(data_snp_id=1:n())
     hd <- hf[["calldata/GT"]]
 
     if(is.null(subsnp_df[["region_id"]])){

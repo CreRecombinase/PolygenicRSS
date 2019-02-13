@@ -33,7 +33,7 @@ mr <- group_by(snp_df,region_id) %>% do({
   tdosage <- evd_rnorm_i(Q = Q,s = sqrt(D),vm = vm)
   offset <- min(.$ld_snp_id)-1
   write_matrix_h5(out_h5f,"/","dosage",tdosage,offsets = c(offset,0))
-  data_frame(off=.$ld_snp_id[1])
+  tibble(off=.$ld_snp_id[1])
 })
 
 th5 <- read_matrix_h5()

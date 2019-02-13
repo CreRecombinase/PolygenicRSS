@@ -31,7 +31,7 @@ rule split_ch:
     input:
         config["INPUT_DIR"]+"ntr_snps.txt"
     output:
-        expand(config["INPUT_DIR"]+"{ch}_hapmap_snps.txt",ch=range(1,23))
+        expand(config["INPUT_DIR"]+"{ch}_hapmap_snps.txt",ch=genome_chr)
     shell:
         """awk  '{{print>$1"_hapmap_snps.txt"}}' {input} """
 
@@ -81,9 +81,9 @@ rule vcf_snps:
 rule found_matched_snps:
     input:
         ntrf=config["INPUT_DIR"]+"ntr_snps.txt",
-        vcff=expand(config["KG_DIRECTORY"]+"vcf_snplist/EUR/{chrom}.txt",chrom=range(1,23))
+        vcff=expand(config["KG_DIRECTORY"]+"vcf_snplist/EUR/{chrom}.txt",chrom=genome_chr)
     output:
-        match_df=expand("{chrom}_matched_kg.txt.gz",chrom=range(1,23))
+        match_df=expand("{chrom}_matched_kg.txt.gz",chrom=genome_chr)
     script:
         "../scripts/ntr_snpmerge.R"
 
@@ -105,7 +105,7 @@ rule ld_vcf:
 
 rule ntr_uh:
     input:
-        snp_inf=expand("{chrom}_matched_kg.txt.gz",chrom=range(1,23))
+        snp_inf=expand("{chrom}_matched_kg.txt.gz",chrom=genome_chr)
     output:
         outf="/scratch/t.cri.nknoblauch/polyg_scratch/gwas_uh/chr1-22AF0SNP0N0_ntr_EUR_data_0_sim.h5"
     script:
@@ -123,9 +123,9 @@ rule gen_quh_ntr:
 
 rule concat_quh:
     input:
-        input_f=expand(config["KG_DIRECTORY"]+"quh/chr{chrom}AF0SNP0N0_ntr_EUR_{{useLDetect}}_ntr_data_{{useLDshrink}}_0.h5",chrom=range(1,23))
+        input_f=expand(config["KG_DIRECTORY"]+"quh/chr{chrom}AF0SNP0N0_ntr_EUR_{{useLDetect}}_ntr_data_{{useLDshrink}}_0.h5",chrom=genome_chr)
     params:
-        idx=expand("{chrom}",chrom=range(1,23)),
+        idx=expand("{chrom}",chrom=genome_chr),
         concat_mat="quh",
         concat_v="D",
         keep_df="EXPinfo",

@@ -29,7 +29,7 @@ doConfound <- doConfound =="T"
 stopifnot(file.exists(rdsf),
           !is.null(rdsf))
 pl <- snakemake@wildcards
-pl <- as_data_frame(pl[names(pl)!=""]) %>% mutate(ttca=NA)
+pl <- as_tibble(pl[names(pl)!=""]) %>% mutate(ttca=NA)
 g <- dim_h5(rdsf,paste0(y_grp,"/",ls_h5(rdsf,y_grp)[1]))
 trait_start <- snakemake@params[["trait"]] %||% 1 %>% as.integer()
 num_traits <- snakemake@params[["numtraits"]] %||% g %>% as.integer()
@@ -76,7 +76,7 @@ exec_fn <-  function(quhl,tpdfl,D,region_id){
     tbias  <- tpdfl[["tbias"]] %||% NA_real_
     tpve  <- tpdfl[["tpve"]] %||% NA_real_
     tsigu <- tpdfl[["tsigu"]] %||% NA_real_
-    data_frame(fgeneid=tpdfl$fgeneid,
+    tibble(fgeneid=tpdfl$fgeneid,
                region_id=region_id,
                quh=quhl,
                D=D,
@@ -85,7 +85,7 @@ exec_fn <-  function(quhl,tpdfl,D,region_id){
                tpve=tpve,
                tsigu=tsigu) %>%filter_normD(normD=pvv) %>%
     RSSp_estimate(pve_bounds=c(.Machine$double.eps, 4 - .Machine$double.eps), doConfound=doConfound, eigenvalue_cutoff=0) %>%
-        inner_join(as_data_frame(tpdfl),by="fgeneid")
+        inner_join(as_tibble(tpdfl),by="fgeneid")
 }
 
 

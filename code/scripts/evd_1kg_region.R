@@ -64,7 +64,7 @@ if(!is.null(subldf)){
 
 
 pl <- snakemake@wildcards
-pl <- as_data_frame(pl[names(pl)!=""])
+pl <- as_tibble(pl[names(pl)!=""])
 write_df_h5(pl, filename = output_file, datapath = "Wildcards")
 
 

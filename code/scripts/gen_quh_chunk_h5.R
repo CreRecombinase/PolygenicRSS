@@ -1,17 +1,15 @@
+# save.image("sim.RData")
+# stop()
+
 library(tidyverse)
 library(RSSp)
-library(LDshrink)
+library(ldshrink)
 library(EigenH5)
 
 evdf <- snakemake@input[["evdf"]]
 quhf <- snakemake@output[["quhf"]]
 uhf <- snakemake@input[["uhf"]]
-traitf  <- snakemake@input[["traitf"]]
-y_grp <- snakemake@params[["y_grp"]]
-
-if(is.null(y_grp)){
-    y_grp  <- "SimulationInfo"
-}
+y_grp <- snakemake@params[["y_grp"]] %||% "Traitinfo"
 
 stopifnot(!is.null(quhf),
           !is.null(evdf),
@@ -30,10 +28,12 @@ if("SNPinfo" %in% snp_grps){
     snp_df_u <- snp_df
 }
 
+am <-flip_alleles(snp_df_u$allele,snp_df$allele)
+stopifnot(all(abs(am)==1))
+
 stopifnot(nrow(snp_df)==nrow(snp_df_u))
 stopifnot(all(snp_df$chr==snp_df_u$chr),
-              all(snp_df$pos==snp_df_u$pos),
-              all(snp_df$allele==snp_df_u$allele))
+              all(snp_df$pos==snp_df_u$pos))
 
 exp_grps <- ls_h5(uhf)
 if(y_grp %in% exp_grps){
@@ -71,7 +71,7 @@ pl <- snakemake@wildcards
 if(is.null(pl[["simulation"]])){
   pl[["simulation"]] <-"gwas"
 }
-pl <- as_data_frame(pl[names(pl)!=""])
+pl <- as_tibble(pl[names(pl)!=""])
 write_df_h5(pl, filename = quhf, datapath = "Wildcards")
 
 
@@ -79,6 +79,6 @@ EigenH5::write_vector_h5(D,quhf,"D")
 create_matrix_h5(quhf,"quh",numeric(),dims=c(p,g),chunksizes = c(pmin(1024,p),1))
 
 EigenH5::write_df_h5(snp_df,quhf,"SNPinfo")
-SeqSupport::crossprod_quh_h5(list(Q=q_l,uh=uh_l,quh=quh_l),TRUE)
+SeqSupport::crossprod_quh_h5(list(Q=q_l,uh=uh_l,quh=quh_l),TRUE,allele_flip=as.numeric(am))
 
 cat("Done!\n")

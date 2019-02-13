@@ -71,7 +71,7 @@ if(!SNPfirst){
 snp_df <- dplyr::mutate(snp_df,ld_snp_id=snp_id)
 write_df_h5(snp_df,"LDinfo",output_file)
 pl <- snakemake@wildcards
-pl <- as_data_frame(pl[names(pl)!=""])
+pl <- as_tibble(pl[names(pl)!=""])
 write_df_h5(pl,groupname = "Wildcards",filename=output_file)
 
 

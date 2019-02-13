@@ -57,9 +57,9 @@ rule gen_grm:
 
 rule grmf:
     params:
-        in_pref=expand(config["KG_DIRECTORY"]+"split_grm/{{dataset}}/{{dataset}}.chr{chrom}",chrom=range(1,23))
+        in_pref=expand(config["KG_DIRECTORY"]+"split_grm/{{dataset}}/{{dataset}}.chr{chrom}",chrom=genome_chr)
     output:
-        outputf=temp("../params/merge_grm_{dataset}.txt")
+        outputf=temp("../params/merge_grm_{{dataset}}_{chri}.txt".format(chri=chrom_int))
     run:
         with open(output[0],"w") as out:
             for f in params.in_pref:
@@ -67,32 +67,32 @@ rule grmf:
 
 rule merge_grm:
     input:
-        grm_bin=expand(config["KG_DIRECTORY"]+"split_grm/{{dataset}}/{{dataset}}.chr{chrom}.grm.bin",chrom=range(1,23)),
-        grm_id=expand(config["KG_DIRECTORY"]+"split_grm/{{dataset}}/{{dataset}}.chr{chrom}.grm.id",chrom=range(1,23)),
-        grm_Nf=expand(config["KG_DIRECTORY"]+"split_grm/{{dataset}}/{{dataset}}.chr{chrom}.grm.N.bin",chrom=range(1,23)),
+        grm_bin=expand(config["KG_DIRECTORY"]+"split_grm/{{dataset}}/{{dataset}}.chr{chrom}.grm.bin",chrom=genome_chr),
+        grm_id=expand(config["KG_DIRECTORY"]+"split_grm/{{dataset}}/{{dataset}}.chr{chrom}.grm.id",chrom=genome_chr),
+        grm_Nf=expand(config["KG_DIRECTORY"]+"split_grm/{{dataset}}/{{dataset}}.chr{chrom}.grm.N.bin",chrom=genome_chr),
         mf=rules.grmf.output.outputf
     params:
-        out_pref=config["KG_DIRECTORY"]+"grm/{dataset}/{dataset}"
+        out_pref=config["KG_DIRECTORY"]+"grm/{{dataset}}/{{dataset}}_{chri}".format(chri=chrom_int)
     output:
-        grmf=temp(config["KG_DIRECTORY"]+"grm/{dataset}/{dataset}.grm.bin"),
-        grm_id=temp(config["KG_DIRECTORY"]+"grm/{dataset}/{dataset}.grm.id"),
-        grm_Nf=temp(config["KG_DIRECTORY"]+"grm/{dataset}/{dataset}.grm.N.bin")
+        grmf=temp(config["KG_DIRECTORY"]+"grm/{{dataset}}/{{dataset}}_{chri}.grm.bin".format(chri=chrom_int)),
+        grm_id=temp(config["KG_DIRECTORY"]+"grm/{{dataset}}/{{dataset}}_{chri}.grm.id".format(chri=chrom_int)),
+        grm_Nf=temp(config["KG_DIRECTORY"]+"grm/{{dataset}}/{{dataset}}_{chri}.grm.N.bin".format(chri=chrom_int))
     shell:
         "gcta64 --mgrm-bin {input.mf} --make-grm --out {params.out_pref}"
 
 rule cut_grm:
     input:
-        grmf=config["KG_DIRECTORY"]+"grm/{dataset}/{dataset}.grm.bin",
-        grm_id=config["KG_DIRECTORY"]+"grm/{dataset}/{dataset}.grm.id",
-        grm_Nf=config["KG_DIRECTORY"]+"grm/{dataset}/{dataset}.grm.N.bin"
+        grmf=rules.merge_grm.output.grmf,
+        grm_id=rules.merge_grm.output.grm_id,
+        grm_Nf=rules.merge_grm.output.grm_Nf
     params:
-        in_pref=config["KG_DIRECTORY"]+"grm/{dataset}/{dataset}",
+        in_pref=config["KG_DIRECTORY"]+"grm/{{dataset}}/{{dataset}}_{chri}".format(chri=chrom_int),
         cut="0.1",
-        cut_pref=config["KG_DIRECTORY"]+"grm_cut/{dataset}/{dataset}_0.1"
+        cut_pref=config["KG_DIRECTORY"]+"grm_cut/{{dataset}}/{{dataset}}_0.1_{chri}".format(chri=chrom_int)
     output:
-        grmf=temp(config["KG_DIRECTORY"]+"grm_cut/{dataset}/{dataset}_0.1.grm.bin"),
-        grm_id=temp(config["KG_DIRECTORY"]+"grm_cut/{dataset}/{dataset}_0.1.grm.id"),
-        grm_Nf=temp(config["KG_DIRECTORY"]+"grm_cut/{dataset}/{dataset}_0.1.grm.N.bin")
+        grmf=temp(config["KG_DIRECTORY"]+"grm_cut/{{dataset}}/{{dataset}}_0.1_{chri}.grm.bin".format(chri=chrom_int)),
+        grm_id=temp(config["KG_DIRECTORY"]+"grm_cut/{{dataset}}/{{dataset}}_0.1_{chri}.grm.id".format(chri=chrom_int)),
+        grm_Nf=temp(config["KG_DIRECTORY"]+"grm_cut/{{dataset}}/{{dataset}}_0.1_{chri}.grm.N.bin".format(chri=chrom_int))
     shell:
         "gcta64 --grm-bin {params.in_pref} --make-grm --grm-cutoff {params.cut} --out {params.cut_pref}"
 
@@ -103,7 +103,7 @@ rule merge_plink_cut_vcf:
         famf=config["PLINK_DIR"]+"{dataset}/{dataset}.chr{chrom}.fam",
         bimf=config["PLINK_DIR"]+"{dataset}/{dataset}.chr{chrom}.bim",
         bedf=config["PLINK_DIR"]+"{dataset}/{dataset}.chr{chrom}.bed",
-        grm_id=config["KG_DIRECTORY"]+"grm_cut/{dataset}/{dataset}_0.1.grm.id"
+        grm_id=config["KG_DIRECTORY"]+"grm_cut/{{dataset}}/{{dataset}}_0.1_{chri}.grm.id".format(chri=chrom_int)
     params:
         in_pref=config["PLINK_DIR"]+"{dataset}/{dataset}.chr{chrom}",
         out_pref=config["PLINK_DIR"]+"{dataset}/grmi/{dataset}.chr{chrom}"

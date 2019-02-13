@@ -8,7 +8,7 @@ chrom  <- as.integer(snakemake@params[["chrom"]])
 mat_path <- snakemake@params[["mat_path"]] %||% "dosage"
 stopifnot(all(!is.na(chrom)))
 
-dosage_df <- data_frame(filename=dosagef,chrom=chrom) %>%
+dosage_df <- tibble(filename=dosagef,chrom=chrom) %>%
     arrange(chrom)
 outf <- snakemake@output[["outf"]]
 

@@ -16,7 +16,7 @@ fgeneid <- snakemake@params[["fgeneid"]]
 outf <- snakemake@output[["logf"]]
 
 pl <- snakemake@wildcards
-pl <- as_data_frame(pl[names(pl)!=""]) %>% mutate(ttca=NA)
+pl <- as_tibble(pl[names(pl)!=""]) %>% mutate(ttca=NA)
 # tparam_df <- read_df_h5(rdsf,"SimulationInfo") %>% mutate(ttca=NA) %>% inner_join(pl) %>% select(-ttca)
 #save.image()
 res_df <- map2_dfr(inf,fgeneid,function(filen,genen){

@@ -12,7 +12,7 @@ gene_df %>% select(covariate=ID)  %>%  mutate(covariate_id=1:n())  %>% write_df_
 
 sample_df <- read_delim(sample_f, delim = "\t")
 
-sample_cdf <- data_frame(SampleID=colnames(gene_df)[-1])
+sample_cdf <- tibble(SampleID=colnames(gene_df)[-1])
 stopifnot(all(sample_df$SubjectID==sample_cdf$SampleID))
 
 cvrt_matrix  <- select(gene_df, -ID) %>% data.matrix()

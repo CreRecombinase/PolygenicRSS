@@ -66,7 +66,7 @@ pl <- snakemake@wildcards
 if(is.null(pl[["simulation"]])){
   pl[["simulation"]] <-"gwas"
 }
-pl <- as_data_frame(pl[names(pl)!=""])
+pl <- as_tibble(pl[names(pl)!=""])
 
 
 est_res  <-est_spve_h5(file_l=list(uh=uh_l,
@@ -75,7 +75,7 @@ est_res  <-est_spve_h5(file_l=list(uh=uh_l,
                        N=N,sigu=res_df$sigu)
 colnames(est_res) <- res_df$fgeneid
 stopifnot(nrow(est_res)==length(uh_l))
-est_df  <- as_data_frame(est_res) %>% mutate(region_id=names(uh_l)) %>% gather(fgeneid,pve_chunk,-region_id)
+est_df  <- as_tibble(est_res) %>% mutate(region_id=names(uh_l)) %>% gather(fgeneid,pve_chunk,-region_id)
 
 write_df_h5(est_df,"spve_chunks",est_spvef)
 write_df_h5(tparam_df,groupname="SimulationInfo",filename=est_spvef)
@@ -93,7 +93,7 @@ write_df_h5(pl,groupname = "Wildcards",filename=est_spvef)
 ##                         N=N,sigu=res_df$tsigu)
 ## colnames(true_res) <- res_df$fgeneid
 ## stopifnot(nrow(true_res)==length(se_l))
-## true_df  <- as_data_frame(true_res) %>% mutate(region_id=names(se_l)) %>% gather(fgeneid,pve_chunk,-region_id)
+## true_df  <- as_tibble(true_res) %>% mutate(region_id=names(se_l)) %>% gather(fgeneid,pve_chunk,-region_id)
 
 ## write_df_h5(true_df,"spve_chunks",true_spvef)
 ## write_df_h5(pl,groupname = "Wildcards",filename=true_spvef)
@@ -108,7 +108,7 @@ write_df_h5(pl,groupname = "Wildcards",filename=est_spvef)
 
 ## colnames(oracle_res) <- res_df$fgeneid
 ## stopifnot(nrow(oracle_res)==length(uh_l))
-## oracle_df  <- as_data_frame(oracle_res) %>% mutate(region_id=names(se_l)) %>% gather(fgeneid,pve_chunk,-region_id)
+## oracle_df  <- as_tibble(oracle_res) %>% mutate(region_id=names(se_l)) %>% gather(fgeneid,pve_chunk,-region_id)
 ## write_df_h5(oracle_df,"oracle_spve_chunks",true_spvef)
 ## write_df_h5(oracle_df,"oracle_spve_chunks",est_spvef)
 

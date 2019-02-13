@@ -14,14 +14,14 @@ explf <- snakemake@output[["sample_list"]]
 off_c1 <- read_delim(off_c1_expf,delim="\t",comment="#")
 off_c2 <- read_delim(off_c2_expf,delim="\t",comment="#")
 
-sample_off <-  rbind(data_frame(FileName=c(colnames(off_c1)[-1]),grp="c1",data="OFF"),
-                     data_frame(FileName=colnames(off_c2)[-1],grp="c2",data="OFF"))
+sample_off <-  rbind(tibble(FileName=c(colnames(off_c1)[-1]),grp="c1",data="OFF"),
+                     tibble(FileName=colnames(off_c2)[-1],grp="c2",data="OFF"))
 
 gen3_c1 <- read_delim(gen3_c1_expf,delim="\t",comment="#")
 gen3_c2 <- read_delim(gen3_c2_expf,delim="\t",comment="#")
 
-sample_gen3 <- rbind(data_frame(FileName=c(colnames(gen3_c1)[-1]),grp="c1",data="GENIII"),
-                     data_frame(FileName=colnames(gen3_c2)[-1],grp="c2",data="GENIII"))
+sample_gen3 <- rbind(tibble(FileName=c(colnames(gen3_c1)[-1]),grp="c1",data="GENIII"),
+                     tibble(FileName=colnames(gen3_c2)[-1],grp="c2",data="GENIII"))
 
 
 sample_exp <- rbind(sample_gen3,sample_off)
@@ -88,7 +88,7 @@ write_delim(subset_exp,explf,delim="\t")
 ##     gc()
 ## }
 
-## sample_df <- data_frame(sample_id=colnames(gene_df)[-1])
+## sample_df <- tibble(sample_id=colnames(gene_df)[-1])
 ## sample_df %>% write_df_h5(h5f,"SampleInfo")
 ## sample_df$sample_id %>% write(sample_f, ncolumns=1)
 

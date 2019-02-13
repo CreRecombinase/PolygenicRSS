@@ -32,14 +32,14 @@ stopifnot(!is.na(pvv),
 
 stopifnot(all(file.exists(quh_dff)))
 pl <- snakemake@wildcards
-pl <- as_data_frame(pl[names(pl)!=""]) %>% mutate(ttca=NA)
+pl <- as_tibble(pl[names(pl)!=""]) %>% mutate(ttca=NA)
 
 if("TraitInfo" %in% ls_h5(quh_dff[1])){
     trait_id_vec <- read_vector_h5(quh_dff[1],"TraitInfo/trait")
     stopifnot(sum(trait %in% trait_id_vec)==1)
     trait_id <- which(trait==trait_id_vec)[1]
     read_quh_fun <- function(x,y){
-        data_frame(D=read_vector_h5(x,"quh_df/D"),
+        tibble(D=read_vector_h5(x,"quh_df/D"),
                    region_id=read_vector_h5(x,"quh_df/region_id"),
                    quh=c(read_matrix_h5(x,"quh_df/quh",subset_cols=trait_id)),
                    tc=y)

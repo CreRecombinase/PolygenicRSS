@@ -58,7 +58,7 @@ rule gen_quh:
 
 rule rssp_est:
     input:
-        quhf=expand(config["KG_DIRECTORY"]+"quh/gwas_chr{chrom}AF{{AF}}SNP{{SNPCT}}N{{N}}_{{consortia}}0{{trait}}_{{pop}}_{{useLDetect}}_{{pop}}_gwas_{{useLDshrink}}_0.h5",chrom=range(1,23)),
+        quhf=expand(config["KG_DIRECTORY"]+"quh/gwas_chr{chrom}AF{{AF}}SNP{{SNPCT}}N{{N}}_{{consortia}}0{{trait}}_{{pop}}_{{useLDetect}}_{{pop}}_gwas_{{useLDshrink}}_0.h5",chrom=genome_chr),
         samp_f=config["KG_DIRECTORY"]+"summary_statistics_fst/{consortia}_{trait}_summary_statistics_sc.txt"
     params:
         doConfound="{useConfounding}",

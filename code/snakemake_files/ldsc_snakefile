@@ -33,7 +33,7 @@ rule ldsc_trait_est_int:
     input:
         ldsc_f="ldsc/ldsc.py",
         sumstatf=config["KG_DIRECTORY"]+"ldsc_sim_gwas_genome/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_sim_{fgeneid}_uh_{scenario}_{ncovar}.txt",
-        chroml2=expand(config["LDSC_LD"]+"eur_w_ld_chr_chr{chrom}AF{{AF}}SNP{{SNPCT}}N{{N}}_{{dataset}}_{{panel_dataset}}_{{bdf}}_{{hm}}_{{lds}}/{chrom}.l2.ldscore.gz",chrom=range(1,23)),
+        chroml2=expand(config["LDSC_LD"]+"eur_w_ld_chr_chr{chrom}AF{{AF}}SNP{{SNPCT}}N{{N}}_{{dataset}}_{{panel_dataset}}_{{bdf}}_{{hm}}_{{lds}}/{chrom}.l2.ldscore.gz",chrom=genome_chr),
         soutf=rules.ldsc_trait_chunk.output.soutf
     params:
         out_pref=config["KG_DIRECTORY"]+"ldsc_est_gwas_genome/est_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{bdf}_{hm}_sim_{fgeneid}_{scenario}_{lds}_{ncovar}_T",

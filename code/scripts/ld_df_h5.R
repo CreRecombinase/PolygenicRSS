@@ -49,7 +49,7 @@ if(!useLDT){
         stopifnot(all(tmat[upper.tri(tmat, diag=T)]>0))
         trow <- row(tmat)[tmat==chunk_ind]
         tcol <- col(tmat)[tmat==chunk_ind]
-        retdf <- data_frame(row=trow, col=tcol, chunk_tot=mat_size, chunk_ind=chunk_ind)
+        retdf <- tibble(row=trow, col=tcol, chunk_tot=mat_size, chunk_ind=chunk_ind)
         stopifnot(nrow(retdf)==1)
         return(retdf)
     }

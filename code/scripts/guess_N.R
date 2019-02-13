@@ -7,7 +7,7 @@ gwasf <- snakemake@input[["gwasf"]]
 ogwasf <- snakemake@output[["ogwasf"]]
 pl <- snakemake@params
 
-param_df <- as_data_frame(pl[names(pl)!=""])%>% mutate(tNA=NA)
+param_df <- as_tibble(pl[names(pl)!=""])%>% mutate(tNA=NA)
 
 gwas_df <- read_fst(gwasfst)
 if(is.null(gwas_df[["sample_size"]])){

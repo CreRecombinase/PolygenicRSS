@@ -17,7 +17,7 @@ library(tidyverse)
 library(fs)
 snp_df <- map_df(snp_inf,read_delim,progress=T, col_names=T,delim="\t",col_types=cols(chrom="i",snp="c",pos="i",map="d",snp_id="i",ld_snp_id="i"))
 
-gene_df <- data_frame(filename=inf,probe_id=path_ext_remove(path_file(inf))) %>% mutate(fgeneid=1:n())
+gene_df <- tibble(filename=inf,probe_id=path_ext_remove(path_file(inf))) %>% mutate(fgeneid=1:n())
 
 write_df_h5(gene_df,outf,"EXPinfo")
 write_df_h5(snp_df,outf,"SNPinfo")

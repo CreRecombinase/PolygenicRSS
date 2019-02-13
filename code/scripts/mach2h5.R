@@ -32,7 +32,7 @@ snp_df <- read_delim(snpif, delim = "\t") %>%
 p <- nrow(snp_df)
 
 all_alleles  <- outer(c("A", "C", "T", "G"),c("A", "C", "T", "G"), function(x,y)paste(x, y, sep=","))
-all_alleles <- data_frame(allele=c(all_alleles[upper.tri(all_alleles)], all_alleles[lower.tri(all_alleles)]))
+all_alleles <- tibble(allele=c(all_alleles[upper.tri(all_alleles)], all_alleles[lower.tri(all_alleles)]))
 
 good_snp_df <- snp_df %>% filter(is.na(more)) %>% select(-more)  %>% semi_join(all_alleles)
 

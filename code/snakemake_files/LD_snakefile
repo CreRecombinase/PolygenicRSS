@@ -17,15 +17,15 @@ rule ld_chunk_1kg:
 
 rule ild_chunk_1kg:
     input:
-        input_file=config["HDF5_DIR"]+"{pop_a}/grmi/{pop_a}.chr{chr}.h5",
-        subsnpf=config["GDS_DIR"]+"{pop_a}/int/{pop_b}.chr{chr}.txt.gz",
+        input_file=config["HDF5_DIR"]+"{pop_a}/grmi/{pop_a}.chr{chrom}.h5",
+        subsnpf=rules.gds_intersect.output.gdslist_a,
         bdf=config["INPUT_DIR"]+"ldetect_{useLDetect}.txt.gz",
-        mapf=config["KG_MAPDIR"]+"interpolated_{geneticMap}.h5"
+        mapf=config["KG_MAPDIR"]+"{chrom}_interpolated_{geneticMap}.h5"
     params:
         useLDshrink="{useLDshrink}",
         useLDetect="{useLDetect}"
     output:
-        evdf=config["EVD_DIR"]+"{pop_a}/int/{pop_b}/chr{chr}_{useLDetect}_{geneticMap}_{useLDshrink}.h5"
+        evdf=config["EVD_DIR"]+"{pop_a}/int/{pop_b}/chr{chrom}_{useLDetect}_{geneticMap}_{useLDshrink}.h5"
     threads: 1
     script:
         "../scripts/evd_1kg_h5.R"
@@ -33,15 +33,15 @@ rule ild_chunk_1kg:
 
 rule rld_chunk_1kg:
     input:
-        input_file=config["HDF5_DIR"]+"{pop_a}/{pop_a}.chr{chr}.h5",
-        subsnpf=config["GDS_DIR"]+"{pop_a}/int/{pop_b}.chr{chr}.txt.gz",
+        input_file=config["HDF5_DIR"]+"{pop_a}/{pop_a}.chr{chrom}.h5",
+        subsnpf=rules.gds_intersect.output.gdslist_b,
         bdf=config["INPUT_DIR"]+"ldetect_{useLDetect}.txt.gz",
-        mapf=config["KG_MAPDIR"]+"interpolated_{geneticMap}.h5"
+        mapf=config["KG_MAPDIR"]+"{chrom}_interpolated_{geneticMap}.h5"
     params:
         useLDshrink="{useLDshrink}",
         useLDetect="{useLDetect}"
     output:
-        evdf=config["EVD_DIR"]+"{pop_a}/{pop_b}/chr{chr}_{useLDetect}_{geneticMap}_{useLDshrink}.h5"
+        evdf=config["EVD_DIR"]+"{pop_a}/{pop_b}/chr{chrom}_{useLDetect}_{geneticMap}_{useLDshrink}.h5"
     threads: 1
     script:
         "../scripts/evd_1kg_h5.R"
@@ -153,18 +153,24 @@ rule without_ldetect_breakpoints:
 
 rule dl_map_h5:
     output:
-        expand(config["KG_MAPDIR"]+"interpolated_from_hapmap/chr{chrom}.interpolated_genetic_map.gz",chrom=range(1,23))
+        expand(config["KG_MAPDIR"]+"interpolated_from_hapmap/chr{chrom}.interpolated_genetic_map.gz",chrom=genome_chr)
     params:
         gdir=config["KG_MAPDIR"]
     shell:
         "git clone https://github.com/CreRecombinase/1000-genomes-genetic-maps {params.gdir}"
 
 
+
+
+
+
+
+
 rule gen_map_h5:
     input:
-        mapf=expand(config["KG_MAPDIR"]+"interpolated_from_hapmap/chr{chrom}.interpolated_genetic_map.gz",chrom=range(1,23))
+        mapf=expand(config["KG_MAPDIR"]+"interpolated_from_hapmap/chr{chrom}.interpolated_genetic_map.gz",chrom=genome_chr)
     params:
-        chrom=expand("{mchr}",mchr=range(1,23))
+        chrom=expand("{mchr}",mchr=genome_chr)
     output:
         mapf=config["KG_MAPDIR"]+"interpolated_hapmap.h5"
     script:
@@ -180,31 +186,45 @@ rule pop_map_rds:
 
 rule gen_omni_h5:
     input:
-        mapf=expand(config["KG_MAPDIR"]+"interpolated_OMNI/chr{chrom}.OMNI.interpolated_genetic_map.gz",chrom=range(1,23))
+        mapf=expand(config["KG_MAPDIR"]+"interpolated_OMNI/chr{chrom}.OMNI.interpolated_genetic_map.gz",chrom=genome_chr)
     params:
-        chrom=expand("{mchr}",mchr=range(1,23))
+        chrom=expand("{mchr}",mchr=genome_chr)
     output:
         mapf=config["KG_MAPDIR"]+"interpolated_omni.h5"
     script:
         "../scripts/map2RDS.R"
-        
+
+
+rule gen_c_EUR_h5:
+    input:
+        mapf=config["KG_MAPDIR"]+"interpolated_OMNI/chr{chrom}.OMNI.interpolated_genetic_map.gz"
+    params:
+        chrom="{chrom}"
+    output:
+        mapf=config["KG_MAPDIR"]+"{chrom}_interpolated_EUR.h5"
+    script:
+        "../scripts/map2RDS.R"
+
+
+
+
 rule vcf_2_clean:
     input:
-        vcff=config["KG_VCFDIR"]+"ALL.chr{chr}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
+        vcff=config["KG_VCFDIR"]+"ALL.chr{chrom}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
         filt_f="EUR.samples"
     params:
-        out_pref=config["KG_VCFDIR"]+"EUR.chr{chr}_maf_01.vcf.gz"
+        out_pref=config["KG_VCFDIR"]+"EUR.chr{chrom}_maf_01.vcf.gz"
     output:
-        vcff=config["KG_VCFDIR"]+"EUR.chr{chr}_maf_01.vcf.gz"
+        vcff=config["KG_VCFDIR"]+"EUR.chr{chrom}_maf_01.vcf.gz"
     threads: 2
     shell:
         "bcftools view {input.vcff} -Oz -o {params.out_pref} -S {input.filt_f} --min-alleles 2 --max-alleles 2 --min-af 0.01 --threads {threads}"
 
 rule vcf_2_allel:
     input:
-        vcff=config["VCF_DIR"]+"EUR.chr{chr}_maf_01.vcf.gz"
+        vcff=config["VCF_DIR"]+"EUR.chr{chrom}_maf_01.vcf.gz"
     output:
-        legf=config["VCF_DIR"]+"../impute/EUR.chr{chr}.h5"
+        legf=config["VCF_DIR"]+"../impute/EUR.chr{chrom}.h5"
     threads: 10
     conda:
         "envs/rssp.yml"
@@ -214,9 +234,9 @@ rule vcf_2_allel:
 
 rule allel2haplotype:
     input:
-        legf=config["VCF_DIR"]+"../impute/EUR.chr{chr}.h5"
+        legf=config["VCF_DIR"]+"../impute/EUR.chr{chrom}.h5"
     output:
-        h5f=config["HDF5_DIR"]+"1KG{chr}_seq_1kg_geno.h5"
+        h5f=config["HDF5_DIR"]+"1KG{chrom}_seq_1kg_geno.h5"
     script:
         "../scripts/allel2haplo_h5.R"
 

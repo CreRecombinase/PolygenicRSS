@@ -16,7 +16,7 @@ soutf <- snakemake@output[["soutf"]]
 file.create(outf)
 file.create(soutf)
 
-tdf <-data_frame(CHR=character(),
+tdf <-tibble(CHR=character(),
                  SNP=character(),
                  BP=integer(),
                  CM=numeric(),

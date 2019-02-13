@@ -1,8 +1,10 @@
 library(SeqArray)
 library(SeqSupport)
 library(dplyr)
+library(ldshrink)
 library(rlang)
 library(readr)
+
 
 
 ## input_f_a  <- "/scratch/t.cri.nknoblauch/polyg_scratch/gds/FRAM/grmi/FRAM.chr19.gds"
@@ -19,6 +21,7 @@ output_f_b <- snakemake@output[["gdslist_b"]]
 
 
 MAF_filter <- as.numeric(snakemake@params[["MAF"]] %||% 0)
+snp_only <- (snakemake@params[["snp_only"]] %||% "T") == "T"
 min_snps <- snakemake@params[["min_snps"]]
 
 threads <- as.integer(snakemake@threads)
@@ -31,7 +34,18 @@ gds_b  <- seqOpen(input_f_b)
 snp_df_a <- read_SNPinfo_gds(gds_a,MAF=T,alleles=T)%>% filter(between(MAF,MAF_filter,1-MAF_filter))
 snp_df_b <- read_SNPinfo_gds(gds_b,MAF=T,alleles=T) %>% filter(between(MAF,MAF_filter,1-MAF_filter))
 
-snp_df_both <- dplyr::inner_join(snp_df_a,snp_df_b,by=c("chr","pos"),suffix=c("_a","_b")) %>% distinct(chr,pos,.keep_all=T) %>% arrange(chr,pos)
+if(snp_only){
+    snp_df_a <- filter(snp_df_a,nchar(allele)==3)
+    snp_df_b <- filter(snp_df_b,nchar(allele)==3)
+
+}else{
+    snp_df_a <- filter(snp_df_a,nchar(allele)>=3)
+    snp_df_b <- filter(snp_df_b,nchar(allele)>=3)
+}
+
+
+snp_df_both <- dplyr::inner_join(snp_df_a,snp_df_b,by=c("chr","pos"),suffix=c("_a","_b")) %>%
+    filter(abs(flip_alleles(allele_a,allele_b))==1L) %>% distinct(chr,pos,.keep_all=T) %>% arrange(chr,pos)
 
 semi_join(snp_df_a,snp_df_both) %>% distinct(chr,pos,.keep_all=T) %>% arrange(chr,pos) %>%  write_tsv(output_f_a)
 semi_join(snp_df_b,snp_df_both) %>% distinct(chr,pos,.keep_all=T) %>% arrange(chr,pos) %>%  write_tsv(output_f_b)
