@@ -108,15 +108,15 @@ walk2(newfile_l,samp.annotl,~add.gdsn(.x, "sample.annot", .y))
 # snp.annot <- data.frame(pass=rep(T,p))
 # add.gdsn(newfile, "snp.annot", snp.annot)
                                         #seqSNP2GDS(gds,out.fn = )
-## new_tf <- replicate(n=length(newfile_l),fs::file_temp())
-## walk2(newfile_l,new_tf,seqSNP2GDS
-walk2(newfile_l,out_pref_plink,snpgdsGDS2BED,snpfirstdim=T)
+new_tf <- replicate(n=length(newfile_l),fs::file_temp())
+walk2(newfile_l,new_tf,seqSNP2GDS,storage.option="LZ4_RA.fast")
+walk2(new_tf,out_pref_plink,seqGDS2VCF)
 #walk2(newfile_l,snpgdsGDS2BED(newfile,out_pref_plink)
 walk(newfile_l,closefn.gds)
 #
 # walk2(outf_snpgds,outf_seqgds,seqSNP2GDS,storage.option = "LZ4_RA.fast")
 # merge_f <-"/media/nwknoblauch/Data/wtcc_input/combined_seq.gds"
-# seqMerge(outf_seqgds,merge_f,storage.option = "LZ4_RA.fast")
+# seqMerge(outf_seqgds,merge_f,storage.option = )
 # seqGDS2VCF()
 # Close the GDS file
 

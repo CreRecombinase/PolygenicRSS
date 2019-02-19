@@ -109,9 +109,11 @@ stopifnot(
 p <- nrow(snp_df)
 dosage_dims <- EigenH5::dim_h5(input_file, "dosage")
 tch <- EigenH5::dim_h5(input_file, "SNPinfo/chr")
+stopifnot(max(snp_df$snp_id)<=tch)
 SNPfirst <- dosage_dims[1] == tch
 if (!SNPfirst) {
-        stopifnot(dosage_dims[2] == tch)
+    stopifnot(dosage_dims[2] == tch,)
+
 }
 if (!is.null(subldf)) {
         if (fs::path_ext(subldf) == "h5") {
@@ -131,7 +133,7 @@ if (!is.null(subldf)) {
 
 
 
-snp_df <- dplyr::mutate(snp_df, ld_snp_id = snp_id)
+snp_df <- dplyr::mutate(snp_df, ld_snp_id = 1:n(),L2=rep(NA_real_,n()))
 
 write_df_h5(snp_df, output_file, "LDinfo")
 pl <- snakemake@wildcards
@@ -152,14 +154,14 @@ for (i in 1:num_b) {
             dosage <- EigenH5::read_matrix_h5(
                                    input_file,
                                    "dosage",
-                                   subset_rows = tdf$ld_snp_id,
+                                   subset_rows = tdf$snp_id,
                                    subset_cols = ind_v,
                                    doTranspose = T)
         } else {
             dosage <- EigenH5::read_matrix_h5(
                                    input_file,
                                    "dosage",
-                                   subset_cols = tdf$ld_snp_id,
+                                   subset_cols = tdf$snp_id,
                                    subset_rows = ind_v)
         }
         mrid <- unique(tdf$region_id)
@@ -170,8 +172,10 @@ for (i in 1:num_b) {
                 useldshrink = useLDshrink,
                 na.rm = F
         )
+        EigenH5::write_vector_h5(retl$L2, output_file, paste0("LDinfo/L2"),subset=tdf$ld_snp_id)
         stopifnot(length(retl$D) == length(tdf$pos))
         EigenH5::write_vector_h5(retl$D, output_file, paste0("EVD/", mrid, "/D"))
+
         EigenH5::write_matrix_h5(retl$Q, output_file, paste0("EVD/", mrid, "/Q"))
         #  EigenH5::write_vector_h5(retl$L2,output_file,paste0("L2/", mrid, "/L2"))
         pb$tick()
