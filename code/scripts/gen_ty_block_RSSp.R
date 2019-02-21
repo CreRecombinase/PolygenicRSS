@@ -39,6 +39,8 @@ tparam_df <- tparamdf_norm(pve,bias,nreps,n = n,p = p,mfgeneid) %>% mutate(n=n,p
 
 #stopifnot(!is.null(snp_df$AF),all(!is.na(snp_df$AF)))
 g <- nrow(tparam_df)
+# save.image("sim.RData")
+# stop()
 ymat <- gen_ty_h5(snp_df = snp_df,
                   snp_h5file = gdsf,
                   beta_h5file = beta_h5file,

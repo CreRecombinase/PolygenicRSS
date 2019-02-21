@@ -15,5 +15,8 @@ output_f <- snakemake@output[["gdsf"]]
 ## tf <- tempfile()
 ## seqExport(gds,out.fn=tf)
 ## seqClose(gds)
-
-seqMerge(input_f,out.fn=output_f,storage.option="LZ4_RA.fast")
+if(length(input_f)>1){
+    seqMerge(input_f,out.fn=output_f,storage.option="LZ4_RA.fast")
+}else{
+    file.copy(input_f,output_f)
+}
