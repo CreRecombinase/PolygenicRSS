@@ -39,8 +39,8 @@ def count_lines(fname):
         return count
 
 #You can change this to pretend the genome doesn't have 23 chromosomes
-#genome_chr=set(range(1,23))
-genome_chr=set([19,20])
+genome_chr=set(range(1,23))
+#genome_chr=set([19,21])
 chrom_int = int(''.join(([str(int(x in genome_chr)) for x in range(1,23)])),2)
 
 #This sets the allele frequency cutoff
@@ -54,10 +54,10 @@ GWAS_NAMES = ["bd","cad","cd","ht","ra","t1d","t2d"]
 COMB_NAME="T1D-T2D"
 #Come up with a unique name for the PVE+BIAS+NREPS combo (No underscores please)
 #SCEN="RatherLargePVE"
-SCEN="NewDirD"
+SCEN="NewDirF"
 #Number of replicates per PVE+BIAS combo
 NREPS ={SCEN:10}
-PVE={SCEN:[.1,0.5]}
+PVE={SCEN:[0,.1,0.5,0.8]}
 #PVE=[0.06,0.08,.1,.3,.5,.7]
 #PVE (must be between 0 and 1)
 # PVE=[0.8,
@@ -69,7 +69,7 @@ PVE={SCEN:[.1,0.5]}
 #      0.2,
 #      0.1]
 #Bias (must be nonnegative )
-BIAS={SCEN:[0.0,0.1,0.4]}
+BIAS={SCEN:[0.0,0.1,0.2]}
 #Don't change this
 TOT_SIM=NREPS[SCEN]*len(PVE[SCEN])*len(BIAS[SCEN])
 #Don't change this either

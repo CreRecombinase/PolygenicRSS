@@ -18,7 +18,7 @@ rule ld_chunk_1kg:
 rule ild_chunk_1kg:
     input:
         input_file=config["HDF5_DIR"]+"{pop_a}/grmi/{pop_a}.chr{chrom}.h5",
-        subsnpf=rules.gds_intersect.output.gdslist_a,
+        subsnpf=config["GDS_DIR"]+"{{pop_a}}/{maf}_i/{{pop_b}}.chr{{chrom}}.txt.gz".format(maf=MAF_CUTOFF),
         bdf=config["INPUT_DIR"]+"ldetect_{useLDetect}.txt.gz",
         mapf=config["KG_MAPDIR"]+"{chrom}_interpolated_{geneticMap}.h5"
     params:
@@ -33,8 +33,8 @@ rule ild_chunk_1kg:
 
 rule rld_chunk_1kg:
     input:
-        input_file=config["HDF5_DIR"]+"{pop_a}/{pop_a}.chr{chrom}.h5",
-        subsnpf=rules.gds_intersect.output.gdslist_b,
+        input_file=config["HDF5_DIR"]+"{pop_b}/{pop_b}.chr{chrom}.h5",
+        subsnpf=config["GDS_DIR"]+"{{pop_b}}/{maf}/{{pop_a}}.chr{{chrom}}.txt.gz".format(maf=MAF_CUTOFF),
         bdf=config["INPUT_DIR"]+"ldetect_{useLDetect}.txt.gz",
         mapf=config["KG_MAPDIR"]+"{chrom}_interpolated_{geneticMap}.h5"
     params:

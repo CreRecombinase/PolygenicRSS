@@ -15,6 +15,14 @@ rule rssp_est:
         nterms="{nterms}",
         pvv="{percentEigen}"
     output:
-        dff=config["OUTPUT_DIR"]+"{{pop_a}}_{{pop_b}}_{chri}_{{useLDetect}}_{{geneticMap}}_{{scenario}}_{{useLDshrink}}_{{ncovar}}_gwas_RSSp_res_gwas_{{percentEigen}}_{{nterms}}.RDS".format(chri=chrom_int)
+        dff=temp(config["OUTPUT_DIR"]+"{{pop_a}}_{{pop_b}}_{chri}_{{useLDetect}}_{{geneticMap}}_{{scenario}}_{{useLDshrink}}_{{ncovar}}_gwas_RSSp_res_gwas_{{percentEigen}}_{{nterms}}.RDS".format(chri=chrom_int))
     script:
         "../scripts/simple_RSSp.R"
+
+rule rssp_dropbox_cp:
+    input:
+        dff=config["OUTPUT_DIR"]+"{{pop_a}}_{{pop_b}}_{chri}_{{useLDetect}}_{{geneticMap}}_{{scenario}}_{{useLDshrink}}_{{ncovar}}_gwas_RSSp_res_gwas_{{percentEigen}}_{{nterms}}.RDS".format(chri=chrom_int)
+    output:
+        DBox.remote("PolygenicRSS/output/{{pop_a}}/{{pop_b}}_{chri}_{{useLDetect}}_{{geneticMap}}_{{scenario}}_{{useLDshrink}}_{{ncovar}}_gwas_RSSp_res_gwas_{{percentEigen}}_{{nterms}}.RDS".format(chri=chrom_int))
+    shell:
+        "cp {input} {output}"

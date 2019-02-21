@@ -19,18 +19,35 @@ rule wtccc_plink_gds:
         "../scripts/h52tplink.R"
 
 
-# rule vcf_to_goodplink:
-#     ''' This rule makes a plink file from a vcf file'''
-#     input:
-#         in_vcf=config["VCF_DIR"]+"{gn}_19.vcf.gz"
-#     output:
-#         out_bed=config["PLINK_DIR"]+"{gn}_19.bed",
-#         out_bim=config["PLINK_DIR"]+"{gn}_19.bim",
-#         out_fam=config["PLINK_DIR"]+"{gn}_19.fam"
-#     params:
-#         out_pref_plink=config["PLINK_DIR"]+"{gn}_19"
-#     shell:
-#         "plink --vcf {input.in_vcf} --make-bed --out {params.out_pref_plink}"
+rule wtccc_vcf_gds:
+    ''' This rule converts HDF5 to vcf files using SeqArray'''
+    input:
+        input_h5=config["WTCC_INPUT_H5"]+"{gn}.h5"
+    output:
+        outf_snpgds=temp(config["SNPGDS_DIR"]+"{gn}_17_snp_wtcc_geno.gds"),
+        outf_vcf=temp(config["WTCC_INPUT_H5"]+"{gn}_17.vcf"),
+    params:
+        outf_pref_plink=config["PLINK_DIR"]+"{gn}_17",
+        gn="{gn}"
+    resources:
+        fh5=1
+    script:
+        "../scripts/h52tplink.R"
+
+
+
+rule crossover_vcf:
+    ''' This rule changes WTCCC coordinates from hg17 (My best guess based on googling rsid numbers) to hg19'''
+    input:
+        in_vcf=config["WTCC_INPUT_H5"]+"{gn}_17.vcf.gz",
+        in_chain="../../data/hg17ToHg19.over.chain.gz",
+        in_hg19=config["HG19_DIR"]+"hg19.fa"
+    output:
+        out_vcf=temp(config["WTCC_INPUT_H5"]+"{gn}_19.vcf")
+    conda:
+        "envs/ldpred.yml"
+    shell:
+        "CrossMap.py vcf {input.in_chain} {input.in_vcf} {input.in_hg19} {output.out_vcf}"
 
 
 
@@ -44,3 +61,18 @@ rule interp_i_map_wtcc:
         outf=config["HDF5_DIR"]+"ALL_{cn}_geno.h5"
     script:
         "../scripts/gds2h5.R"
+
+
+rule split_wtccc:
+    input:
+        h5f=config["WTCC_INPUT_H5"]+"ALL_{cn}_geno.h5"
+    params:
+        chrom="{chrom}"
+    output:
+        ohf=config["HDF5_DIR"]+"{cn}/grmi/{cn}.chr{chrom}.h5"
+    script:
+        "../scripts/split_chr_h5.R"
+
+
+        # outf=config["HDF5_DIR"]+"ALL_{cn}_geno.h5"
+        # input_gds=config["GDS_DIR"]+"{cn}_19.gds",

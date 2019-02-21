@@ -1,9 +1,25 @@
 #snakefile for aligning two genotype datasets
 
-rule gds_intersect:
+# rule gds_intersect:
+#     input:
+#         gds_a=config["GDS_DIR"]+"{pop_a}/grmi/{pop_a}.chr{chrom}.gds",
+#         gds_b=config["GDS_DIR"]+"{pop_b}/{pop_b}.chr{chrom}.gds",
+#     params:
+#         MAF=MAF_CUTOFF,
+#         min_snps=10000,
+#         snp_only="T"
+#     output:
+#         gdslist_a=config["GDS_DIR"]+"{{pop_a}}/{maf}_i/{{pop_b}}.chr{{chrom}}.txt.gz".format(maf=MAF_CUTOFF),
+#         gdslist_b=config["GDS_DIR"]+"{{pop_b}}/{maf}/{{pop_a}}.chr{{chrom}}.txt.gz".format(maf=MAF_CUTOFF)
+#     script:
+#         "../scripts/intersect_gds.R"
+
+
+
+rule h5_intersect:
     input:
-        gds_a=config["GDS_DIR"]+"{pop_a}/grmi/{pop_a}.chr{chrom}.gds",
-        gds_b=config["GDS_DIR"]+"{pop_b}/{pop_b}.chr{chrom}.gds",
+        gds_a=config["HDF5_DIR"]+"{pop_a}/grmi/{pop_a}.chr{chrom}.h5",
+        gds_b=config["HDF5_DIR"]+"{pop_b}/{pop_b}.chr{chrom}.h5",
     params:
         MAF=MAF_CUTOFF,
         min_snps=10000,
@@ -12,4 +28,4 @@ rule gds_intersect:
         gdslist_a=config["GDS_DIR"]+"{{pop_a}}/{maf}_i/{{pop_b}}.chr{{chrom}}.txt.gz".format(maf=MAF_CUTOFF),
         gdslist_b=config["GDS_DIR"]+"{{pop_b}}/{maf}/{{pop_a}}.chr{{chrom}}.txt.gz".format(maf=MAF_CUTOFF)
     script:
-        "../scripts/intersect_gds.R"
+        "../scripts/intersect_h5.R"

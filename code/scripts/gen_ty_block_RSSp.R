@@ -31,7 +31,7 @@ stopifnot(!file.exists(beta_h5file),file.exists(evd_h5file))
 snp_df <- read_df_h5(evd_h5file,"LDinfo")
 
 
-n <- dim_h5(gdsf,"dosage")[2]
+n <- dim_h5(gdsf,"SampleInfo/sample_id")
 
 p <- snpct
 tparam_df <- tparamdf_norm(pve,bias,nreps,n = n,p = p,mfgeneid) %>% mutate(n=n,p=p)
@@ -53,6 +53,7 @@ stopifnot(all(!is.na(ymat)))
 
 EigenH5::write_matrix_h5(ymat,out_h5f,glue("genetic_trait/genetic_ymat"))
 EigenH5::write_df_h5(tparam_df,out_h5f,"SimulationInfo")
+EigenH5::write_df_h5(read_df_h5(gdsf,"SampleInfo"),out_h5f,"SampleInfo")
 
 pl <- snakemake@wildcards
 pl <- as_tibble(pl[names(pl)!=""])

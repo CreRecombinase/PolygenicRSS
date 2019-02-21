@@ -1,0 +1,21 @@
+rule ukb_snplist:
+    input:
+        input_f="/gpfs/data/pierce-lab/uk-biobank-genotypes/ukb_imp_chr{chrom}_v3.bgen",
+        input_i="/gpfs/data/pierce-lab/uk-biobank-genotypes/ukb_imp_chr{chrom}_v3.bgen.bgi"
+    output:
+        snplist_f=temp(config["KG_DIRECTORY"]+"ukb_g/{chrom}_snplist.txt")
+    shell:
+        "/home/t.cri.nknoblauch/Downloads/gavinband-bgen-0b7a2803adb5/build/apps/bgenix -g {input.input_f} -i {input.input_i} -list > {output.snplist_f}"
+
+
+
+rule ukb2h5:
+    input:
+        snplist_f=config["KG_DIRECTORY"]+"ukb_g/{chrom}_snplist.txt"
+        input_f="/gpfs/data/pierce-lab/uk-biobank-genotypes/ukb_imp_chr{chrom}_v3.bgen",
+        input_i="/gpfs/data/pierce-lab/uk-biobank-genotypes/ukb_imp_chr{chrom}_v3.bgen.bgi",
+    params:
+
+    output:
+        output_f="/gpfs/data/xhe-lab/uk-biobank/data/genotypes_h5/ukb_imp_dosage_chr{chrom}_v3.h5"
+    script:

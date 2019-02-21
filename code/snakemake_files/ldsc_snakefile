@@ -1,9 +1,9 @@
 rule ldsc_trait_chunk:
     input:
-        evdf=config["EVD_DIR"]+"chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{bdf}_{hm}_{lds}.h5"
+        evdf=config["EVD_DIR"]+"{pop_a}/{pop_b}/chr{chrom}_{useLDetect}_{geneticMap}_{useLDshrink}.h5"
     output:
-        outf =config["LDSC_LD"]+"eur_w_ld_chr_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{bdf}_{hm}_{lds}/{chrom}.l2.ldscore.gz",
-        soutf=config["LDSC_LD"]+"eur_w_ld_chr_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{bdf}_{hm}_{lds}/{chrom}.l2.M_5_50"
+        outf =config["LDSC_LD"]+"{{pop_a}}_{{pop_b}}_{{useLDetect}}_{{geneticMap}}_{{useLDshrink}}_chr{chri}/{chrom}.l2.ldscore.gz".format(chri=chrom_int),
+        soutf=config["LDSC_LD"]+"{{pop_a}}_{{pop_b}}_{{useLDetect}}_{{geneticMap}}_{{useLDshrink}}_chr{chri}/{chrom}.l2.M_5_50".format(chri=chrom_int)
     script:
         "../scripts/ldsc_trait_chunk.R"        
 

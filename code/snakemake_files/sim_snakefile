@@ -14,11 +14,11 @@ rule sim_pheno_ty_RSSp:
     comparisons
         '''
     input:
-        gdsf=config["HDF5_DIR"]+"{pop_a}/grmi/{pop_b}.chr{chrom}.h5",
+        gdsf=config["HDF5_DIR"]+"{pop_a}/grmi/{pop_a}.chr{chrom}.h5",
         evdf=config["EVD_DIR"]+"{{pop_a}}/int/{{pop_b}}/chr{{chrom}}_{useLDetect}_{{pop_b}}_{useLDshrink}.h5".format(useLDetect="T",
                                                                                                                         geneticMap="EUR",
                                                                                                                         useLDshrink="T"),
-        subsnpf=rules.gds_intersect.output.gdslist_a,
+        subsnpf=config["GDS_DIR"]+"{{pop_a}}/{maf}_i/{{pop_b}}.chr{{chrom}}.txt.gz".format(maf=MAF_CUTOFF),
         snpctf=expand("../params/snp_ct_{maf}_{chrom}_{{pop_a}}_int_{{pop_b}}.txt.gz",chrom=genome_chr,maf=MAF_CUTOFF)
     params:
         fgeneid=expand("{fgeneid}",fgeneid=FGENEID[SCEN]),
@@ -39,7 +39,42 @@ rule sum_pheno_ty_RSSp:
     ''' This rule generates the final phenotype from all of the chromosomes'''
     input:
         input_f=expand(config["KG_DIRECTORY"]+"tpheno/chr{chrom}_{{pop_a}}_{{pop_b}}_{{scenario}}_trait.h5",chrom=genome_chr),
+        covarf=config["KG_DIRECTORY"]+"covar/{{pop_a}}_{{pop_b}}_{{scenario}}_{chri}_covar.h5".format(chri=chrom_int)
+    params:
+        nc="{ncovar}"
     output:
-        h5f=config["KG_DIRECTORY"]+"pheno/{{pop_a}}_{{pop_b}}_{{scenario}}_{chri}_trait.h5".format(chri=chrom_int)
+        h5f=config["KG_DIRECTORY"]+"pheno/{{pop_a}}_{{pop_b}}_{{scenario}}_{chri}_{{ncovar}}.h5".format(chri=chrom_int)
     script:
         "../scripts/sum_ty.R"
+
+
+rule ds_gds:
+    input:
+        gdsf=config["GDS_DIR"]+"{pop}/{pop}.chr{chrom}.gds",
+        hf=config["HDF5_DIR"]+"{pop}/grmi/{pop}.chr{chrom}.h5"
+    params:
+        MAF=0.15
+    output:
+        gdsf=temp(config["GDS_DIR"]+"temp_{chrom}_{pop}_{pop}.gds")
+    script:
+        "../scripts/sub_maf_gds.R"
+
+rule pca_join_gds:
+    input:
+        gdsf=expand(config["GDS_DIR"]+"temp_{chrom}_{{pop}}_{{pop}}.gds",chrom=genome_chr)
+    output:
+        gdsf=config["GDS_DIR"]+"{maf}_{chri}_{{pop}}_{{pop}}.gds".format(chri=chrom_int,maf=0.15)
+    script:
+        "../scripts/merge_gds.R"
+
+
+rule calc_covar:
+    input:
+        snpgdsf=config["GDS_DIR"]+"{maf}_{chri}_{{pop_a}}_{{pop_a}}.gds".format(chri=chrom_int,maf=0.15)
+#        subsnpf=rules.sim_pheno_RSSp.input.subsnpf,
+ #       subgwasf=rules.sim_pheno_RSSp.input.subgwasf,
+    output:
+        covarf=config["KG_DIRECTORY"]+"covar/{{pop_a}}_{{pop_b}}_{{scenario}}_{chri}_covar.h5".format(chri=chrom_int)
+    threads: 14
+    script:
+        "../scripts/calc_pca_gds.R"

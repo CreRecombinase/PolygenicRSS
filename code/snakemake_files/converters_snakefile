@@ -19,17 +19,17 @@ rule snplist_vcf:
         "bcftools view -H -ghet -G -m2 -M2 {input.vcff} > {output.snplistf}"
 
 
-rule vcf2plink:
-    input:
-        vcff=config["VCF_DIR"]+"{pop}/{pop}.chr{chr}.vcf.gz"
-    params:
-        out_pref=config["PLINK_DIR"]+"{pop}/{pop}.chr{chr}"
-    output:
-        famf=config["PLINK_DIR"]+"{pop}/{pop}.chr{chr}.fam",
-        bimf=config["PLINK_DIR"]+"{pop}/{pop}.chr{chr}.bim",
-        bedf=config["PLINK_DIR"]+"{pop}/{pop}.chr{chr}.bed"
-    shell:
-        "plink --vcf {input.vcff} --make-bed --out {params.out_pref}"
+# rule vcf2plink:
+#     input:
+#         vcff=config["VCF_DIR"]+"{pop}/{pop}.chr{chr}.vcf.gz"
+#     params:
+#         out_pref=config["PLINK_DIR"]+"{pop}/{pop}.chr{chr}"
+#     output:
+#         famf=config["PLINK_DIR"]+"{pop}/{pop}.chr{chr}.fam",
+#         bimf=config["PLINK_DIR"]+"{pop}/{pop}.chr{chr}.bim",
+#         bedf=config["PLINK_DIR"]+"{pop}/{pop}.chr{chr}.bed"
+#     shell:
+#         "plink --vcf {input.vcff} --make-bed --out {params.out_pref}"
 
 
 
@@ -86,14 +86,14 @@ rule ivcf2seqgds:
 
 rule iplink2seqgds:
     input:
-        famf=config["PLINK_DIR"]+"{pop}/grmi/{pop}.chr{chrom}.fam",
-        bimf=config["PLINK_DIR"]+"{pop}/grmi/{pop}.chr{chrom}.bim",
-        bedf=config["PLINK_DIR"]+"{pop}/grmi/{pop}.chr{chrom}.bed"
+        famf=config["PLINK_DIR"]+"{pop_a}/grmi/{pop_b}.chr{chrom}.fam",
+        bimf=config["PLINK_DIR"]+"{pop_a}/grmi/{pop_b}.chr{chrom}.bim",
+        bedf=config["PLINK_DIR"]+"{pop_a}/grmi/{pop_b}.chr{chrom}.bed"
     params:
         geno_compression="LZ4_RA",
         anno_compression="LZ4_RA"
     output:
-        gds=config["GDS_DIR"]+"{pop}/grmi/{pop}.chr{chrom}.gds"
+        gds=config["GDS_DIR"]+"{pop_a}/grmi/{pop_b}.chr{chrom}.gds"
     script:
         "../scripts/plink2gds.R"
 
@@ -101,8 +101,8 @@ rule iplink2seqgds:
 rule igds2h5:
     ''' This rule reformats the h5 files. No SNPs are filtered (but SNPs are possibly rearranged)'''
     input:
-        input_gds=config["GDS_DIR"]+"{pop}/grmi/{pop}.chr{chr}.gds"
+        input_gds=config["GDS_DIR"]+"{pop_a}/grmi/{pop_b}.chr{chrom}.gds"
     output:
-        outf=config["HDF5_DIR"]+"{pop}/grmi/{pop}.chr{chr}.h5"
+        outf=config["HDF5_DIR"]+"{pop_a}/grmi/{pop_b}.chr{chrom}.h5"
     script:
         "../scripts/gds2h5.R"
