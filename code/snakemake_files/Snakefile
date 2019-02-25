@@ -7,16 +7,14 @@ include: "param_snakefile"
 #include: "grm_snakefile"
 include: "intersect_snakefile"
 include: "LD_snakefile"
-include: "kg_snakefile"
+include: "ldsc_snakefile"
+
 include: "wtcc_snakefile"
 include: "rssp_snakefile"
 include: "sim_snakefile"
 include: "trait_snakefile"
 import pandas as pd
 import numpy as np
-
-
-
 
 
 
@@ -71,7 +69,16 @@ localrules: all,ukb_dropbox_cp,grmf,gen_merge_f,isnpct,rssp_dropbox_cp
 
 rule all:
     input:
-        DBox.remote(expand("PolygenicRSS/output/{{pop_a}}/{{pop_b}}_{chri}_{{useLDetect}}_{{geneticMap}}_{{scenario}}_{{useLDshrink}}_{{ncovar}}_gwas_RSSp_res_gwas_{{percentEigen}}_{{nterms}}.RDS".format(chri=chrom_int),
+        expand(config["OUTPUT_DIR"]+"ldsc_res/est_chr{chri}_{{pop_a}}_{{pop_b}}_{{scenario}}_{{useLDetect}}_{{geneticMap}}_{{useLDshrink}}_sim_{{ncovar}}_{{useIntercept}}.txt.gz".format(chri=chrom_int),
                pop_a="FRAM",
                pop_b="EUR",
-               chri=chrom_int,useLDetect="T",geneticMap="EUR",scenario=SCEN,useLDshrink="T",ncovar="3",percentEigen=0.01,nterms=[1,2]))
+               chri=chrom_int,
+               useLDetect="T",
+               geneticMap="EUR",
+               scenario=SCEN,
+               useLDshrink="T",
+               ncovar="3",
+               useIntercept=["T","F"])
+
+        # DBox.remote(expand("PolygenicRSS/output/{{pop_a}}/{{pop_b}}_{chri}_{{useLDetect}}_{{geneticMap}}_{{scenario}}_{{useLDshrink}}_{{ncovar}}_gwas_RSSp_res_gwas_{{percentEigen}}_{{nterms}}.RDS".format(chri=chrom_int),
+        #

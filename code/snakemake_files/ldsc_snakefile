@@ -2,44 +2,33 @@ rule ldsc_trait_chunk:
     input:
         evdf=config["EVD_DIR"]+"{pop_a}/{pop_b}/chr{chrom}_{useLDetect}_{geneticMap}_{useLDshrink}.h5"
     output:
-        outf =config["LDSC_LD"]+"{{pop_a}}_{{pop_b}}_{{useLDetect}}_{{geneticMap}}_{{useLDshrink}}_chr{chri}/{chrom}.l2.ldscore.gz".format(chri=chrom_int),
-        soutf=config["LDSC_LD"]+"{{pop_a}}_{{pop_b}}_{{useLDetect}}_{{geneticMap}}_{{useLDshrink}}_chr{chri}/{chrom}.l2.M_5_50".format(chri=chrom_int)
+        outf =config["LDSC_LD"]+"{{pop_a}}_{{pop_b}}_{{useLDetect}}_{{geneticMap}}_{{useLDshrink}}_chr{chri}/{{chrom}}.l2.ldscore.gz".format(chri=chrom_int),
+        soutf=config["LDSC_LD"]+"{{pop_a}}_{{pop_b}}_{{useLDetect}}_{{geneticMap}}_{{useLDshrink}}_chr{chri}/{{chrom}}.l2.M_5_50".format(chri=chrom_int)
     script:
         "../scripts/ldsc_trait_chunk.R"        
 
         
 rule prep_ldsc_uh:
     input:
-        rdsf=rules.map_uh_RSSp.output.uhf
+        rdsf=expand(config["KG_DIRECTORY"]+"gwas_uh/chr{chrom}_{{pop_a}}_{{pop_b}}_{{scenario}}_{{ncovar}}_sim.h5",chrom=genome_chr)
     params:
-        fgeneid=FGENEID
-    output: ldscf=temp(expand(config["KG_DIRECTORY"]+"ldsc_sim_gwas_genome/chr{{chrom}}AF{{AF}}SNP{{SNPCT}}N{{N}}_{{dataset}}_{{panel_dataset}}_sim_{fgeneid}_uh_{{scenario}}_{{ncovar}}.txt",fgeneid=FGENEID))
+        fgeneid=FGENEID[SCEN]
+    output:
+        ldscf=temp(expand(config["KG_DIRECTORY"]+"ldsc_sim_gwas_genome/chr{chri}_{{pop_a}}_{{pop_b}}_sim_{fgeneid}_uh_{{scenario}}_{{ncovar}}.txt",fgeneid=FGENEID[SCEN],chri=chrom_int))
     script:
         "../scripts/prep_ldsc_uh.R"
-
-
-rule prep_ldsc_direct_uh:
-    input:
-        rdsf=rules.gen_uh_direct.output.uhf
-    params:
-        fgeneid=FGENEID
-    output: ldscf=temp(expand(config["KG_DIRECTORY"]+"ldsc_sim_direct_genome/chr{{chrom}}AF{{AF}}SNP{{SNPCT}}N{{N}}_{{dataset}}_{{panel_dataset}}_{{bdf}}_{{hm}}_{{lds}}_{fgeneid}_{{scenario}}_0.txt",fgeneid=FGENEID))
-    script:
-        "../scripts/prep_ldsc_uh.R"
-
 
         
 rule ldsc_trait_est_int:
     input:
         ldsc_f="ldsc/ldsc.py",
-        sumstatf=config["KG_DIRECTORY"]+"ldsc_sim_gwas_genome/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_sim_{fgeneid}_uh_{scenario}_{ncovar}.txt",
-        chroml2=expand(config["LDSC_LD"]+"eur_w_ld_chr_chr{chrom}AF{{AF}}SNP{{SNPCT}}N{{N}}_{{dataset}}_{{panel_dataset}}_{{bdf}}_{{hm}}_{{lds}}/{chrom}.l2.ldscore.gz",chrom=genome_chr),
-        soutf=rules.ldsc_trait_chunk.output.soutf
+        sumstatf=config["KG_DIRECTORY"]+"ldsc_sim_gwas_genome/chr{chri}_{{pop_a}}_{{pop_b}}_sim_{{fgeneid}}_uh_{{scenario}}_{{ncovar}}.txt".format(chri=chrom_int),
+        chroml2=expand(config["LDSC_LD"]+"{{pop_a}}_{{pop_b}}_{{useLDetect}}_{{geneticMap}}_{{useLDshrink}}_chr{chri}/{chrom}.l2.ldscore.gz",chri=chrom_int,chrom=genome_chr)
     params:
-        out_pref=config["KG_DIRECTORY"]+"ldsc_est_gwas_genome/est_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{bdf}_{hm}_sim_{fgeneid}_{scenario}_{lds}_{ncovar}_T",
-        ld_dir=config["LDSC_LD"]+"eur_w_ld_chr_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{bdf}_{hm}_{lds}/"
+        out_pref=config["KG_DIRECTORY"]+"ldsc_est_gwas_genome/est_chr{chri}_{{pop_a}}_{{pop_b}}_{{scenario}}_{{useLDetect}}_{{geneticMap}}_{{useLDshrink}}_sim_{{fgeneid}}_{{ncovar}}_T".format(chri=chrom_int),
+        ld_dir=config["LDSC_LD"]+"{{pop_a}}_{{pop_b}}_{{useLDetect}}_{{geneticMap}}_{{useLDshrink}}_chr{chri}/".format(chri=chrom_int)
     output:
-        logf=temp(config["KG_DIRECTORY"]+"ldsc_est_gwas_genome/est_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{bdf}_{hm}_sim_{fgeneid}_{scenario}_{lds}_{ncovar}_T.log")
+        logf=temp("ldsc_est_gwas_genome/est_chr{chri}_{{pop_a}}_{{pop_b}}_{{scenario}}_{{useLDetect}}_{{geneticMap}}_{{useLDshrink}}_sim_{{fgeneid}}_{{ncovar}}_T.log".format(chri=chrom_int))
     conda:
         "envs/ldpred.yml"
     shell:
@@ -49,66 +38,28 @@ rule ldsc_trait_est_int:
 rule ldsc_trait_est_noint:
     input:
         ldsc_f="ldsc/ldsc.py",
-        sumstatf=config["KG_DIRECTORY"]+"ldsc_sim_gwas_genome/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_sim_{fgeneid}_uh_{scenario}_{ncovar}.txt",
-        chroml2=rules.ldsc_trait_chunk.output.outf,
-        soutf=rules.ldsc_trait_chunk.output.soutf
+        sumstatf=config["KG_DIRECTORY"]+"ldsc_sim_gwas_genome/chr{chri}_{{pop_a}}_{{pop_b}}_sim_{{fgeneid}}_uh_{{scenario}}_{{ncovar}}.txt".format(chri=chrom_int),
+        chroml2=expand(config["LDSC_LD"]+"{{pop_a}}_{{pop_b}}_{{useLDetect}}_{{geneticMap}}_{{useLDshrink}}_chr{chri}/{chrom}.l2.ldscore.gz",chri=chrom_int,chrom=genome_chr)
     params:
-        out_pref=config["KG_DIRECTORY"]+"ldsc_est_gwas_genome/est_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{bdf}_{hm}_sim_{fgeneid}_{scenario}_{lds}_{ncovar}_F",
-        ld_dir=config["LDSC_LD"]+"eur_w_ld_chr_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{bdf}_{hm}_{lds}/"
+        out_pref=config["KG_DIRECTORY"]+"ldsc_est_gwas_genome/est_chr{chri}_{{pop_a}}_{{pop_b}}_{{scenario}}_{{useLDetect}}_{{geneticMap}}_{{useLDshrink}}_sim_{{fgeneid}}_{{ncovar}}_F".format(chri=chrom_int),
+        ld_dir=config["LDSC_LD"]+"{{pop_a}}_{{pop_b}}_{{useLDetect}}_{{geneticMap}}_{{useLDshrink}}_chr{chri}/".format(chri=chrom_int)
     output:
-        logf=temp(config["KG_DIRECTORY"]+"ldsc_est_gwas_genome/est_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{bdf}_{hm}_sim_{fgeneid}_{scenario}_{lds}_{ncovar}_F.log")
+        logf=temp("ldsc_est_gwas_genome/est_chr{chri}_{{pop_a}}_{{pop_b}}_{{scenario}}_{{useLDetect}}_{{geneticMap}}_{{useLDshrink}}_sim_{{fgeneid}}_{{ncovar}}_F.log".format(chri=chrom_int))
     conda:
         "envs/ldpred.yml"
+
     shell:
         "python2 ./ldsc/ldsc.py --h2 {input.sumstatf}  --no-intercept --ref-ld-chr {params.ld_dir} --w-ld-chr {params.ld_dir} --out {params.out_pref} "
 
 
-
-
-rule ldsc_trait_direct_est_int:
-    input:
-        ldsc_f="ldsc/ldsc.py",
-        sumstatf=config["KG_DIRECTORY"]+"ldsc_sim_direct_genome/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{bdf}_{hm}_{lds}_{fgeneid}_{scenario}.txt",
-        chroml2=rules.ldsc_trait_chunk.output.outf,
-        soutf=rules.ldsc_trait_chunk.output.soutf
-    params:
-        out_pref=config["KG_DIRECTORY"]+"ldsc_est_direct_genome/est_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{bdf}_{hm}_sim_{fgeneid}_{scenario}_{lds}_{ncovar}_T",
-        ld_dir=config["LDSC_LD"]+"eur_w_ld_chr_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{bdf}_{hm}_{lds}/"
-    output:
-        logf=temp(config["KG_DIRECTORY"]+"ldsc_est_direct_genome/est_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{bdf}_{hm}_sim_{fgeneid}_{scenario}_{lds}_{ncovar}_T.log")
-    conda:
-        "envs/ldpred.yml"
-    shell:
-        "python2 ./ldsc/ldsc.py --h2 {input.sumstatf} --ref-ld-chr {params.ld_dir} --w-ld-chr {params.ld_dir} --out {params.out_pref}"
-
-
-
-rule ldsc_trait_direct_est_noint:
-    input:
-        ldsc_f="ldsc/ldsc.py",
-        sumstatf=config["KG_DIRECTORY"]+"ldsc_sim_direct_genome/chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{bdf}_{hm}_{lds}_{fgeneid}_{scenario}.txt",
-        chroml2=rules.ldsc_trait_chunk.output.outf,
-        soutf=rules.ldsc_trait_chunk.output.soutf
-    params:
-        out_pref=config["KG_DIRECTORY"]+"ldsc_est_direct_genome/est_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{bdf}_{hm}_sim_{fgeneid}_{scenario}_{lds}_{ncovar}_F",
-        ld_dir=config["LDSC_LD"]+"eur_w_ld_chr_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{bdf}_{hm}_{lds}/"
-    output:
-        logf=temp(config["KG_DIRECTORY"]+"ldsc_est_direct_genome/est_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{bdf}_{hm}_sim_{fgeneid}_{scenario}_{lds}_{ncovar}_F.log")
-    conda:
-        "envs/ldpred.yml"
-    shell:
-        "python2 ./ldsc/ldsc.py --h2 {input.sumstatf} --no-intercept --ref-ld-chr {params.ld_dir} --w-ld-chr {params.ld_dir} --out {params.out_pref}"
-         
-
-
 rule ldsc_trait_parse:
     input:
-        logf=expand(config["KG_DIRECTORY"]+"ldsc_est_{{simulation}}_genome/est_chr{{chrom}}AF{{AF}}SNP{{SNPCT}}N{{N}}_{{dataset}}_{{panel_dataset}}_{{useLDetect}}_{{geneticMap}}_sim_{fgeneid}_{{scenario}}_{{useLDshrink}}_{{ncovar}}_{{useIntercept}}.log",fgeneid=FGENEID),
-        true_f=rules.map_uh_RSSp.output.uhf
+        logf=expand("ldsc_est_gwas_genome/est_chr{chri}_{{pop_a}}_{{pop_b}}_{{scenario}}_{{useLDetect}}_{{geneticMap}}_{{useLDshrink}}_sim_{fgeneid}_{{ncovar}}_{{useIntercept}}.log",chri=chrom_int,fgeneid=FGENEID[SCEN]),
+        true_f=config["KG_DIRECTORY"]+"gwas_uh/chr{chrom}_{{pop_a}}_{{pop_b}}_{{scenario}}_{{ncovar}}_sim.h5".format(chrom=list(genome_chr)[0])
     output:
-        logf=config["OUTPUT_DIR"]+"ldsc_res/sim_chr{chrom}AF{AF}SNP{SNPCT}N{N}_{dataset}_{panel_dataset}_{useLDetect}_{geneticMap}_{simulation}_ldsc_res_{scenario}_{useLDshrink}_{ncovar}_{useIntercept}.txt.gz"
+        logf=config["OUTPUT_DIR"]+"ldsc_res/est_chr{chri}_{{pop_a}}_{{pop_b}}_{{scenario}}_{{useLDetect}}_{{geneticMap}}_{{useLDshrink}}_sim_{{ncovar}}_{{useIntercept}}.txt.gz".format(chri=chrom_int)
     params:
-        fgeneid=expand("{fgeneid}",fgeneid=FGENEID)
+        fgeneid=expand("{fgeneid}",fgeneid=FGENEID[SCEN])
     script:
         "../scripts/parse_ldsc.R"                
                 

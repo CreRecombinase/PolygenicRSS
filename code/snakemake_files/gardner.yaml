@@ -91,4 +91,11 @@ ild_chunk_1kg:
 rld_chunk_1kg:
   time: '05:00:00'
   mem: '16gb'
+merge_gds:
+  time: '02:00:00'
+  mem: '16gb'
+calc_covar:
+  time: '05:00:00'
+  mem: '64gb'
+  mincpus: '12'
 
