@@ -6,8 +6,8 @@ library(ldshrink)
 library(rlang)
 library(readr)
 
-
-
+use_hm3 <- as.character(snakemake@params[["use_hm3"]] %||% "F")=="T"
+hm3f <- snakemake@input[["hm3f"]]
 ## input_f_a  <- "/scratch/t.cri.nknoblauch/polyg_scratch/gds/FRAM/grmi/FRAM.chr19.gds"
 ## input_f_b  <- "/scratch/t.cri.nknoblauch/polyg_scratch/gds/EUR/EUR.chr19.gds"
 ## threads <- 8
@@ -41,8 +41,21 @@ if(snp_only){
 }
 
 
+if(use_hm3){
+    tsnp_df <- read_tsv(hm3f) %>% mutate(allele=paste0(A1,",",A2))
+#    p <- nrow(tsnp_df)
+    snp_df_a <-semi_join(snp_df_a,tsnp_df)
+    snp_df_b <-semi_join(snp_df_b,tsnp_df)
+}
+
+
+
+
 snp_df_both <- dplyr::inner_join(snp_df_a,snp_df_b,by=c("chr","pos"),suffix=c("_a","_b")) %>%
     filter(abs(flip_alleles(allele_a,allele_b))==1L) %>% distinct(chr,pos,.keep_all=T) %>% arrange(chr,pos)
+
+
+
 
 semi_join(snp_df_a,snp_df_both) %>% distinct(chr,pos,.keep_all=T) %>% arrange(chr,pos) %>%  write_tsv(output_f_a)
 semi_join(snp_df_b,snp_df_both) %>% distinct(chr,pos,.keep_all=T) %>% arrange(chr,pos) %>%  write_tsv(output_f_b)

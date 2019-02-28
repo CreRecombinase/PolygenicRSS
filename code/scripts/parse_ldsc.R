@@ -10,7 +10,7 @@ library(SeqSupport)
 
 inf <- snakemake@input[["logf"]]
 true_f <- snakemake@input[["true_f"]]
-tparam_df <- read_df_h5(true_f,"SimulationInfo")
+tparam_df <- read_df_h5(true_f,"Traitinfo")
 # rdsf <- snakemake@input[["rdsf"]]
 fgeneid <- snakemake@params[["fgeneid"]]
 outf <- snakemake@output[["logf"]]

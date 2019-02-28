@@ -15,17 +15,29 @@
 #         "../scripts/intersect_gds.R"
 
 
+rule h3_snplist:
+    ''' Concatenated list of hapmap 3 snps'''
+    input:
+        HTTP.remote("https://data.broadinstitute.org/alkesgroup/LDSCORE/w_hm3.snplist.bz2")
+    output:
+        "../params/w_hm3.snplist.txt"
+    run:
+        shell("bzcat {input} > {output}")
+
+
 
 rule h5_intersect:
     input:
         gds_a=config["HDF5_DIR"]+"{pop_a}/grmi/{pop_a}.chr{chrom}.h5",
         gds_b=config["HDF5_DIR"]+"{pop_b}/{pop_b}.chr{chrom}.h5",
+        hm3f=rules.h3_snplist.output
     params:
         MAF=MAF_CUTOFF,
         min_snps=10000,
-        snp_only="T"
+        snp_only="T",
+        use_hm3=USE_HM3[SCEN]
     output:
-        gdslist_a=config["GDS_DIR"]+"{{pop_a}}/{maf}_i/{{pop_b}}.chr{{chrom}}.txt.gz".format(maf=MAF_CUTOFF),
-        gdslist_b=config["GDS_DIR"]+"{{pop_b}}/{maf}/{{pop_a}}.chr{{chrom}}.txt.gz".format(maf=MAF_CUTOFF)
+        gdslist_a=config["GDS_DIR"]+"{{pop_a}}/{maf}_i/{hm3}_{{pop_b}}.chr{{chrom}}.txt.gz".format(maf=MAF_CUTOFF,hm3=USE_HM3[SCEN]),
+        gdslist_b=config["GDS_DIR"]+"{{pop_b}}/{maf}_i/{hm3}_{{pop_a}}.chr{{chrom}}.txt.gz".format(maf=MAF_CUTOFF,hm3=USE_HM3[SCEN])
     script:
         "../scripts/intersect_h5.R"

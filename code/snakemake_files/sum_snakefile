@@ -1,0 +1,21 @@
+rule merge_ldsc_rssp:
+    input:
+        ldsc_noif=config["OUTPUT_DIR"]+"ldsc_res/est_chr{chri}_{{pop_a}}_{{pop_b}}_{{scenario}}_{{useLDetectL}}_{{geneticMap}}_{{useLDshrinkL}}_sim_{{ncovar}}_F.txt.gz".format(chri=chrom_int),
+        ldsc_if=config["OUTPUT_DIR"]+"ldsc_res/est_chr{chri}_{{pop_a}}_{{pop_b}}_{{scenario}}_{{useLDetectL}}_{{geneticMap}}_{{useLDshrinkL}}_sim_{{ncovar}}_T.txt.gz".format(chri=chrom_int),
+        rsspf=config["OUTPUT_DIR"]+"rssp_res/{{pop_a}}_{{pop_b}}_{chri}_{{useLDetect}}_{{geneticMap}}_{{scenario}}_{{useLDshrink}}_{{ncovar}}_gwas_RSSp_res_gwas_{{percentEigen}}_1.RDS".format(chri=chrom_int)
+    output:
+        data_f=config["OUTPUT_DIR"]+"res_ldsc_rssp/{{pop_a}}_{{pop_b}}_{chri}_{{useLDetect}}_{{useLDetectL}}_{{geneticMap}}_{{scenario}}_{{useLDshrink}}_{{useLDshrinkL}}_{{ncovar}}_gwas_RSSp_res_gwas_{{percentEigen}}_1.RDS".format(chri=chrom_int),
+        param_f=config["OUTPUT_DIR"]+"res_ldsc_rssp/{{pop_a}}_{{pop_b}}_{chri}_{{useLDetect}}_{{useLDetectL}}_{{geneticMap}}_{{scenario}}_{{useLDshrink}}_{{useLDshrinkL}}_{{ncovar}}_gwas_RSSp_res_gwas_{{percentEigen}}_1_param.RDS".format(chri=chrom_int)
+    script:
+        "../scripts/merge_rssp_ldsc.R"
+
+
+        # expand(
+        #        pop_b="EUR",
+        #        useLDetect="T",
+        #        geneticMap="EUR",
+        #        scenario=SCEN,
+        #        useLDshrink="T",
+        #        ncovar="3",
+        #        percentEigen=0.001,nterms=1,
+        #        useIntercept=["T","F"])

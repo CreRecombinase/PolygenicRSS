@@ -10,12 +10,12 @@ rule gen_quh:
 rule rssp_est:
     input:
         quhf=expand(config["KG_DIRECTORY"]+"quh/gwas_chr{chrom}_{{pop_a}}_{{pop_b}}_{{useLDetect}}_{{geneticMap}}_{{scenario}}_{{useLDshrink}}_{{ncovar}}.h5",chrom=genome_chr),
-        samp_f=config["KG_DIRECTORY"]+"pheno/{{pop_a}}_{{pop_b}}_{{scenario}}_{chri}_trait.h5".format(chri=chrom_int)
+        samp_f=config["KG_DIRECTORY"]+"pheno/{{pop_a}}_{{pop_b}}_{{scenario}}_{chri}_{{ncovar}}.h5".format(chri=chrom_int)
     params:
         nterms="{nterms}",
         pvv="{percentEigen}"
     output:
-        dff=temp(config["OUTPUT_DIR"]+"{{pop_a}}_{{pop_b}}_{chri}_{{useLDetect}}_{{geneticMap}}_{{scenario}}_{{useLDshrink}}_{{ncovar}}_gwas_RSSp_res_gwas_{{percentEigen}}_{{nterms}}.RDS".format(chri=chrom_int))
+        dff=config["OUTPUT_DIR"]+"{{pop_a}}_{{pop_b}}_{chri}_{{useLDetect}}_{{geneticMap}}_{{scenario}}_{{useLDshrink}}_{{ncovar}}_gwas_RSSp_res_gwas_{{percentEigen}}_{{nterms}}.RDS".format(chri=chrom_int)
     script:
         "../scripts/simple_RSSp.R"
 
@@ -23,6 +23,6 @@ rule rssp_dropbox_cp:
     input:
         dff=config["OUTPUT_DIR"]+"{{pop_a}}_{{pop_b}}_{chri}_{{useLDetect}}_{{geneticMap}}_{{scenario}}_{{useLDshrink}}_{{ncovar}}_gwas_RSSp_res_gwas_{{percentEigen}}_{{nterms}}.RDS".format(chri=chrom_int)
     output:
-        DBox.remote("PolygenicRSS/output/{{pop_a}}/{{pop_b}}_{chri}_{{useLDetect}}_{{geneticMap}}_{{scenario}}_{{useLDshrink}}_{{ncovar}}_gwas_RSSp_res_gwas_{{percentEigen}}_{{nterms}}.RDS".format(chri=chrom_int))
+        dbo
     shell:
         "cp {input} {output}"

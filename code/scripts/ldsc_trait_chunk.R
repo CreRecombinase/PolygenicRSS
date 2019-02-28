@@ -1,3 +1,5 @@
+# save.image("ldi.RData")
+# stop()
 library(tidyverse)
 library(SeqArray)
 library(EigenH5)
@@ -24,30 +26,34 @@ tdf <-tibble(CHR=character(),
                  L2=numeric())
 walk(outf,write_delim,x=tdf,delim="\t")
 walk(soutf,write,x=0L)
+stopifnot(length(soutf)==length(outf),
+          length(soutf)==22L)
+walk(evdf,function(x){
+    snp_df <- read_df_h5(x,"LDinfo") %>% rename(CHR=chr,BP=pos,CM=map)
 
-snp_df <- read_df_h5(evdf,"LDinfo") %>% rename(CHR=chr,BP=pos,CM=map)
+                                        #select(break_df,chr,region_id) %>%
+                                        # inner_join(read_df_h5(evdf,"LDinfo")) %>%
+                                        #    %>% select(-snp_id)
 
-#select(break_df,chr,region_id) %>%
-  # inner_join(read_df_h5(evdf,"LDinfo")) %>%
-  #    %>% select(-snp_id)
+    ## if(is.null(snp_df[["MAF"]])){
+    ##     stopifnot(!is.null(snp_df[["AF"]]))
+    ##     snp_df <- mutate(snp_df,MAF=AF)
+    ## }
 
-if(is.null(snp_df[["MAF"]])){
-    stopifnot(!is.null(snp_df[["AF"]]))
-    snp_df <- mutate(snp_df,MAF=AF)
-}
-#snp_df <- group_by(snp_df,region_id) %>% do(mutate(.,L2=read_vector_h5(evdf,paste0("L2/",as.character(.$region_id[1]),"/L2")))) %>% ungroup() %>% select(-region_id)
+                                        #pb <- progress_bar$new(total=length(outf))
+                                        # split(snp_df,snp_df$CHR) %>% walk(function(df){
+                                        #   pb$tick()
 
+    tchr <- as.integer(snp_df$CHR[1])
+    ldscoref <- outf[tchr]
+    countf <- soutf[tchr]
+    snp_df %>% select(CHR,SNP,BP,CM,MAF,L2) %>% readr::write_delim(path=outf[tchr],delim="\t")
+    nc <- dplyr::filter(snp_df,MAF>0.05) %>% nrow()
+    write(x=nc,file=soutf[tchr])
+    stopifnot(all(file.exists(c(ldscoref,countf))))
 
-pb <- progress_bar$new(total=length(outf))
-split(snp_df,snp_df$CHR) %>% walk(function(df){
-  pb$tick()
-  ldscoref <- outf[df$CHR[1]]
-  countf <- soutf[df$CHR[1]]
-  df %>% select(CHR,SNP,BP,CM,MAF,L2) %>% readr::write_delim(path=ldscoref,delim="\t")
-  nc <- dplyr::filter(df,MAF>0.05) %>% nrow()
-  write(x=nc,file=countf)
-  stopifnot(all(file.exists(c(ldscoref,countf))))
 })
+#})
 
 
 #Rprof(NULL)

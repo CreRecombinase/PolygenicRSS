@@ -1,11 +1,13 @@
 rule isnpct:
     ''' This rule counts the number of rows in a particular.txt.gz file '''
     input:
-        subsnpf=config["GDS_DIR"]+"{{pop_a}}/{maf}_i/{{pop_b}}.chr{{chrom}}.txt.gz".format(maf=MAF_CUTOFF)
+        subsnpf=config["GDS_DIR"]+"{{pop_a}}/{maf}_i/{{hm3}}_{{pop_b}}.chr{{chrom}}.txt.gz".format(maf=MAF_CUTOFF)
     output:
-        outf=temp("../params/snp_ct_{maf}_{{chrom}}_{{pop_a}}_int_{{pop_b}}.txt.gz".format(maf=MAF_CUTOFF))
+        outf=temp("../params/{{hm3}}_snp_ct_{maf}_{{chrom}}_{{pop_a}}_int_{{pop_b}}.txt.gz".format(maf=MAF_CUTOFF))
     shell:
         "zcat {input.subsnpf} | wc -l > {output.outf}"
+
+
 
 
 rule sim_pheno_ty_RSSp:
@@ -15,11 +17,8 @@ rule sim_pheno_ty_RSSp:
         '''
     input:
         gdsf=config["HDF5_DIR"]+"{pop_a}/grmi/{pop_a}.chr{chrom}.h5",
-        evdf=config["EVD_DIR"]+"{{pop_a}}/int/{{pop_b}}/chr{{chrom}}_{useLDetect}_{{pop_b}}_{useLDshrink}.h5".format(useLDetect="T",
-                                                                                                                        geneticMap="EUR",
-                                                                                                                        useLDshrink="T"),
         subsnpf=config["GDS_DIR"]+"{{pop_a}}/{maf}_i/{{pop_b}}.chr{{chrom}}.txt.gz".format(maf=MAF_CUTOFF),
-        snpctf=expand("../params/snp_ct_{maf}_{chrom}_{{pop_a}}_int_{{pop_b}}.txt.gz",chrom=genome_chr,maf=MAF_CUTOFF)
+        snpctf=expand("../params/{hm3}_snp_ct_{maf}_{chrom}_{{pop_a}}_int_{{pop_b}}.txt.gz",chrom=genome_chr,maf=MAF_CUTOFF,hm3=USE_HM3[SCEN]),
     params:
         fgeneid=expand("{fgeneid}",fgeneid=FGENEID[SCEN]),
         pve=PVE[SCEN],
@@ -44,6 +43,8 @@ rule sum_pheno_ty_RSSp:
         nc="{ncovar}"
     output:
         h5f=config["KG_DIRECTORY"]+"pheno/{{pop_a}}_{{pop_b}}_{{scenario}}_{chri}_{{ncovar}}.h5".format(chri=chrom_int)
+    wildcard_constraints:
+        ncovar="[0-9]"
     script:
         "../scripts/sum_ty.R"
 

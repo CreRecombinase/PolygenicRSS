@@ -10,7 +10,9 @@ gdsf <- snakemake@input[["gdsf"]]
 subsnpf <- snakemake@input[["subsnpf"]]
 mfgeneid <- as.character(snakemake@params[["fgeneid"]])
 beta_h5file <- as.character(snakemake@output[["beta_hf"]])
-evd_h5file  <- snakemake@input[["evdf"]]
+
+
+use_hm3 <- as.character(snakemake@params[["use_hm3"]] %||% "F")=="T"
 pve <- as.numeric(snakemake@params[["pve"]])
 bias <- as.numeric(snakemake@params[["bias"]])
 chrom <- snakemake@params[["chrom"]]
@@ -26,9 +28,10 @@ stopifnot(!is.null(mfgeneid))
 if(file.exists(beta_h5file)){
   file.remove(beta_h5file)
 }
-stopifnot(!file.exists(beta_h5file),file.exists(evd_h5file))
-#snp_df <- read_delim(subsnpf,delim="\t")
-snp_df <- read_df_h5(evd_h5file,"LDinfo")
+stopifnot(!file.exists(beta_h5file))
+
+
+snp_df <- read_delim(subsnpf,delim="\t")
 
 
 n <- dim_h5(gdsf,"SampleInfo/sample_id")

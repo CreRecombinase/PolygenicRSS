@@ -32,7 +32,7 @@ stopifnot(all(nfgeneid==mfgeneid))
 snpinfo_l <- map(rss_rdsf,function(x){
     snp_df <- read_df_h5(x,"SNPinfo") %>%
         select(SNP,allele) %>%
-        separate(allele,c("A1","A2")) %>% mutate(SNP=paste0("rs",SNP))
+        separate(allele,c("A1","A2")) #%>% mutate(SNP=paste0("rs",SNP))
     return(snp_df)
 })
 
