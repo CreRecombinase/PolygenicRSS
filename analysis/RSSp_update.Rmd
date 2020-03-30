@@ -1,0 +1,30 @@
+---
+title: "RSSp Update"
+author: "Nicholas Knoblauch"
+date: "2018-03-30"
+output: workflowr::wflow_html
+---
+
+
+# Current Status of the `RSSp` project
+
+
+## Simulation 
+
+The most recent simulations result shows RSSp vs LDSC on a dataset with 4798 individuals and 308,193 snps and *in-sample* LD. The section "RSSp vs LDSC" shows that LDSC (with and without an intercept) is slightly outperformed by RSSp, and that using LDshrink exacerbates this difference (LDshrink results in an optimization for RSSp and a pessimization for LDSC, and a significant pessimization for LDSC fit without an intercept). Those results can be found [here](New_WholeGenome.html).  For out-of sample LD, the story is slightly more nuanced.  In these simulations I used WTCCC cardiovascular cases for gwas simulation and the bipolar disorder cases for a reference LD panel. The results (link [here](OutOfSampleLD.html)) show the same pattern of LDshrink being and optimization for  RSSp and a pessimization for LDSC, but in the out-of sample scenario RSSp without LDshrink actually does worse than LD score regression (without LDshrink).  RSSp with LDsrhink still does the best however. *TODO items include: 1) running the simulation on a larger number of SNPs and samples, and making the in-sample and out-of-sample simulation results more comparable (the in-sample simulation genotypes did not overlap with any of the out-of-sample genotypes, which is weird)
+
+## Real data (UK biobank)
+
+The most recent RSSp result (which can be found [here](ukb_pve.html)) is the comparison of RSSp with ld score regression, using the Neale lab's individual-level-data method `mmhe` as a "gold standard".  The results indicate that `RSSp` heritability estimates are slightly closer to `mmhe` than `ldsc` heritability estimates. *TODO* items include 1) refitting `LDSC` on the data without an intercept to make a more direct comparison, 2) running RSSp on the rest of the traits in the uk biobank GWAS summary statistics catalog and comparing to LDSC (with and maybe without intercept)
+
+
+    
+
+
+
+
+
+
+
+
+
