@@ -1,0 +1,120 @@
+---
+title: "UK Biobank in-sample simulations"
+author: "Nicholas Knoblauch"
+date: "2020-04-15"
+output: workflowr::wflow_html
+---
+
+
+# Simulation 
+
+## Samples
+First, I randomly selected 12,000 samples from the UK biobank.  I computed a GRM from these 12000, and created a list of 11309 unrelated individuals (GRM cutoff 0.05).  I then sampled without replacement to obtain 10000 individuals for my GWAS simulation.  
+
+## Causal Variants/Simulating Phenotype 
+I used GCTA to simulate broadly polygenic traits from 1,077,146 variants that roughly corresponds to the Hapmap3 SNP list.  It should be noted that I did _not_ check to ensure that these variants varied in my subsample.  I assume that GCTA drops causal variants that do not vary in the sample.  These variants are the variants that the Neale lab used for LD score regression on UK biobank traits.
+
+GCTA uses the additive genetic model:
+
+$$y_j = \sum_i(w_{i,j}u_i) + e_j$$
+where $w_{i,j} = (x_{i,j} - 2p_i) / \sqrt{2p_i(1 - p_i)}$, (which is undefined for $p_i=0$ and $p_i=1$). $e_j$ is the residual effect generated from a normal distribution with a mean of 0 and variance of $\text{Var}(\sum_i(w_{i,j}u_i))(1 / h^2 - 1)$.
+
+I simulated traits with heritabilities of 0.2, 0.1 and 0.5.  For each heritability value ,GCTA simulates _one_ vector of "true" effects, and then simulates 10 replicates from the "true" effect.  
+
+## GWAS 
+
+I used the `plink2` glm function to fit the gwas, and used 10 principle components (also obtained from `plink2`) as covariates, and a 5 percent MAF threshold.
+
+## GCTA
+
+I estimated individual-level heritability using GCTA's GREML, again using 10 PCs as continuous covariates.
+
+## LDSC
+
+I estimated LD scores from the 10000 samples, then estimated heritability (with and without an intercept) using those LD scores and the summary statistics. 
+
+## RSSp
+
+I ran RSSp on the gwas summary stats using the 10000 samples as the reference LD panel.
+
+
+```{r,echo=F,message=F,warning=F}
+suppressMessages(library(plotly))
+suppressMessages(library(tidyverse))
+library(fs)
+library(forcats)
+library(magrittr)
+library(vroom)
+library(ldmap)
+library(EigenH5)
+```
+
+
+
+```{r,echo=F,message=F,warning=F}
+ldsc_intf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb/", glob="*.int.log")
+ldsc_nointf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb/", glob="*.noint.log")
+rsspf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb/", glob="*RDS")
+gctaf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb/", glob="*hsq")
+
+
+parse_ldsc_h2log <- function(h2lf){
+    h2_dat <- scan(h2lf,what=character(), sep = "\n")
+    h2_rowi <- grep("Total Observed scale", h2_dat)
+    h2_row <- h2_dat[h2_rowi]
+    h2_data <- h2_dat[h2_rowi:length(h2_dat)]
+    h2_data <- h2_data[grep("^[^:]+:[^:]+$", h2_data)]
+    h2_datd <- purrr::transpose(strsplit(h2_data, split=":"))
+    names(h2_datd) <- c("Variable", "Value")
+    h2_datdf <- tidyr::unnest(as_data_frame(h2_datd)) %>%
+        dplyr::mutate(Variable=chartr(" ^", "__", Variable), Value = trimws(Value)) %>%
+      tidyr::separate(Value, c("Est", "SD"), sep = "[ s\\(\\)]+", remove = T, fill = "right", convert = T)
+    tibble(h2=as.numeric(h2_datdf$Est[1]),h2_sd=as.numeric(h2_datdf$SD[1]),Lambda_GC=as.numeric(h2_datdf$Est[2]),Mean_Chi_2=as.numeric(h2_datdf$Est[3]),Intercept=as.numeric(h2_datdf$Est[4]),Intercept_sd=as.numeric(h2_datdf$SD[4])) %>% replace_na(list(Intercept=1.0,Intercept_sd=0.0))
+
+
+}
+
+parse_logf <- function(x){
+    nx <- str_remove(x,"\\.[^0-9]+$")
+  ret <- as.numeric(stringr::str_split_fixed(fs::path_file(nx),pattern="_",n=4))
+  tibble::tibble(rep=ret[1],rep_total=ret[2],num_pcs=ret[3],true_h2=ret[4])
+}
+
+parse_gcta <- function(x){
+  tdf <- read_tsv(x)
+  select(tdf,-SE) %>% mutate(row=1) %>% tidyr::spread(Source,Variance) %>%
+    rename(h2=`V(G)/Vp`) %>% mutate(h2_sd=tdf$SE[4]) %>% select(h2,h2_sd,Pval,n)
+}
+
+
+ldsc_df_noint <- map_df(ldsc_nointf,~bind_cols(parse_ldsc_h2log(.x),parse_logf(.x)))
+ldsc_df_int <- map_df(ldsc_intf,~bind_cols(parse_ldsc_h2log(.x),parse_logf(.x)))
+
+gcta_df <- map_df(gctaf,~bind_cols(parse_gcta(.x),parse_logf(.x)))
+rssp_df <- map_df(rsspf,~bind_cols(readRDS(.x),parse_logf(.x)))
+
+check_df <- bind_rows(transmute(rssp_df,h2=pve,rep=rep,true_h2=true_h2,method="RSSp"),
+                      transmute(ldsc_df_int,h2=h2,rep=rep,true_h2=true_h2,method="LDSC_INT"),
+                      transmute(ldsc_df_noint,h2=h2,rep=rep,true_h2=true_h2,method="LDSC_NOINT"),
+                      transmute(gcta_df,h2=h2,rep=rep,true_h2=true_h2,method="GCTA"))
+```
+
+
+
+
+
+
+
+```{r,echo=F,message=F,warning=F}
+
+
+ggplot(check_df,aes(x=method,y=abs(true_h2-h2),fill=method))+geom_boxplot()+geom_point()+facet_wrap(~true_h2,labeller="label_both")+ylab("RMSE")+xlab("Method")
+
+
+```
+
+
+
+```{r,echo=F,message=F,warning=F}
+ggplot(check_df,aes(x=method,y=abs(true_h2-h2),fill=method))+geom_point()+geom_boxplot()
+```
