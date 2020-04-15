@@ -101,20 +101,36 @@ check_df <- bind_rows(transmute(rssp_df,h2=pve,rep=rep,true_h2=true_h2,method="R
 
 
 
+# Results
 
+## Estimate vs Ground Truth
 
+The line for each method is the best fit line through 0 (i.e methods should estimate heritability of 0 when true $h^2$ is 0)
 
 
 ```{r,echo=F,message=F,warning=F}
-
-
-ggplot(check_df,aes(x=method,y=abs(true_h2-h2),fill=method))+geom_boxplot()+geom_point()+facet_wrap(~true_h2,labeller="label_both")+ylab("RMSE")+xlab("Method")
-
-
+ggplot(check_df,aes(x=true_h2,y=h2,col=method))+geom_point()+geom_smooth(method="lm",formula=y~x+0)+geom_abline(slope=1)+facet_wrap(~method)
 ```
 
 
 
+## RMSE
+
+First, the overall results (collapsing across replicate and heritability estimate).  Here it looks like we just manage to edge out a lead over LDSC, though I think I need to increase the number of simulations to be sure. 
+
 ```{r,echo=F,message=F,warning=F}
-ggplot(check_df,aes(x=method,y=abs(true_h2-h2),fill=method))+geom_point()+geom_boxplot()
+
+ggplot(check_df,aes(x=method,y=abs(true_h2-h2),fill=method))+geom_point()+geom_boxplot()+theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+
+```
+
+Next we stratify by heritability.  In this setting we seem to do somewhat worse than LDSC without an intercept in the intermediate heritability setting, which is weird.  Again, I think I need more simulations.
+
+```{r,echo=F,message=F,warning=F}
+
+
+
+ggplot(check_df,aes(x=method,y=abs(true_h2-h2),fill=method))+geom_boxplot()+geom_point()+facet_wrap(~true_h2,labeller="label_both")+ylab("RMSE")+xlab("Method")+theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
 ```
