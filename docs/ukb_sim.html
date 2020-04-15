@@ -529,10 +529,10 @@ relative
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomCreRecombinasePolygenicRSStreef1b73655dfcf7c5c4c48f81a1b009d04cdf14dddtargetblankf1b7365a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/f1b73655dfcf7c5c4c48f81a1b009d04cdf14ddd" target="_blank">f1b7365</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomCreRecombinasePolygenicRSStreef5c7796718f3c67377b4656a7b1888a86c07e6f1targetblankf5c7796a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/f5c7796718f3c67377b4656a7b1888a86c07e6f1" target="_blank">f5c7796</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomCreRecombinasePolygenicRSStreef1b73655dfcf7c5c4c48f81a1b009d04cdf14dddtargetblankf1b7365a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomCreRecombinasePolygenicRSStreef5c7796718f3c67377b4656a7b1888a86c07e6f1targetblankf5c7796a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -545,6 +545,7 @@ Ignored files:
     Ignored:    .httr-oauth
     Ignored:    analysis/.Rhistory
     Ignored:    analysis/PolygenicEstimation_cache/
+    Ignored:    analysis/figure/
     Ignored:    code/.Rhistory
     Ignored:    code/scripts/.Rhistory
     Ignored:    code/snakemake_files/.RData
@@ -778,6 +779,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/f5c7796718f3c67377b4656a7b1888a86c07e6f1/analysis/ukb_sim.Rmd" target="_blank">f5c7796</a>
+</td>
+<td>
+CreRecombinase
+</td>
+<td>
+2020-04-15
+</td>
+<td>
+workflowr::wflow_publish(“analysis/ukb_sim.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/9ebd5aa8b356d98a5b44f2e2ba6313ecb5ccc37e/docs/ukb_sim.html" target="_blank">9ebd5aa</a>
+</td>
+<td>
+CreRecombinase
+</td>
+<td>
+2020-04-15
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/f1b73655dfcf7c5c4c48f81a1b009d04cdf14ddd/analysis/ukb_sim.Rmd" target="_blank">f1b7365</a>
 </td>
 <td>
@@ -825,8 +860,95 @@ workflowr::wflow_publish(“analysis/ukb_sim.Rmd”)
 <div id="rssp" class="section level2">
 <h2>RSSp</h2>
 <p>I ran RSSp on the gwas summary stats using the 10000 samples as the reference LD panel.</p>
+</div>
+</div>
+<div id="results" class="section level1">
+<h1>Results</h1>
+<div id="estimate-vs-ground-truth" class="section level2">
+<h2>Estimate vs Ground Truth</h2>
+<p>The line for each method is the best fit line through 0 (i.e methods should estimate heritability of 0 when true <span class="math inline">\(h^2\)</span> is 0)</p>
 <p><img src="figure/ukb_sim.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
+Past versions of unnamed-chunk-3-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/9ebd5aa8b356d98a5b44f2e2ba6313ecb5ccc37e/docs/figure/ukb_sim.Rmd/unnamed-chunk-3-1.png" target="_blank">9ebd5aa</a>
+</td>
+<td>
+CreRecombinase
+</td>
+<td>
+2020-04-15
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="rmse" class="section level2">
+<h2>RMSE</h2>
+<p>First, the overall results (collapsing across replicate and heritability estimate). Here it looks like we just manage to edge out a lead over LDSC, though I think I need to increase the number of simulations to be sure.</p>
 <p><img src="figure/ukb_sim.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/9ebd5aa8b356d98a5b44f2e2ba6313ecb5ccc37e/docs/figure/ukb_sim.Rmd/unnamed-chunk-4-1.png" target="_blank">9ebd5aa</a>
+</td>
+<td>
+CreRecombinase
+</td>
+<td>
+2020-04-15
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Next we stratify by heritability. In this setting we seem to do somewhat worse than LDSC without an intercept in the intermediate heritability setting, which is weird. Again, I think I need more simulations.</p>
+<p><img src="figure/ukb_sim.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -866,20 +988,21 @@ loaded via a namespace (and not attached):
 [10] evaluate_0.14         httr_1.4.1            highr_0.8            
 [13] pillar_1.4.3.9001     rlang_0.4.5.9000      lazyeval_0.2.2       
 [16] readxl_1.3.1          rstudioapi_0.11       data.table_1.12.8    
-[19] whisker_0.4           rmarkdown_2.1         labeling_0.3         
-[22] htmlwidgets_1.3       bit_1.1-15.2          munsell_0.5.0        
-[25] broom_0.5.2           compiler_3.6.3        modelr_0.1.4         
-[28] xfun_0.12             pkgconfig_2.0.3       htmltools_0.4.0      
-[31] tidyselect_1.0.0.9000 workflowr_1.4.0       fansi_0.4.1          
-[34] viridisLite_0.3.0     crayon_1.3.4          withr_2.1.2          
-[37] grid_3.6.3            nlme_3.1-144          jsonlite_1.6.1       
-[40] gtable_0.3.0          lifecycle_0.2.0.9000  git2r_0.26.1         
-[43] scales_1.1.0          RcppParallel_4.4.4    cli_2.0.2            
-[46] stringi_1.4.6         farver_2.0.3          xml2_1.2.2           
-[49] ellipsis_0.3.0.9000   generics_0.0.2        vctrs_0.2.99.9010    
-[52] tools_3.6.3           bit64_0.9-7           glue_1.3.2           
-[55] hms_0.5.3             yaml_2.2.1            colorspace_1.4-1     
-[58] rvest_0.3.4           knitr_1.28            haven_2.1.0          </code></pre>
+[19] whisker_0.4           Matrix_1.2-18         rmarkdown_2.1        
+[22] labeling_0.3          splines_3.6.3         htmlwidgets_1.3      
+[25] bit_1.1-15.2          munsell_0.5.0         broom_0.5.2          
+[28] compiler_3.6.3        modelr_0.1.4          xfun_0.12            
+[31] pkgconfig_2.0.3       mgcv_1.8-31           htmltools_0.4.0      
+[34] tidyselect_1.0.0.9000 workflowr_1.4.0       fansi_0.4.1          
+[37] viridisLite_0.3.0     crayon_1.3.4          withr_2.1.2          
+[40] grid_3.6.3            nlme_3.1-144          jsonlite_1.6.1       
+[43] gtable_0.3.0          lifecycle_0.2.0.9000  git2r_0.26.1         
+[46] scales_1.1.0          RcppParallel_4.4.4    cli_2.0.2            
+[49] stringi_1.4.6         farver_2.0.3          xml2_1.2.2           
+[52] ellipsis_0.3.0.9000   generics_0.0.2        vctrs_0.2.99.9010    
+[55] tools_3.6.3           bit64_0.9-7           glue_1.3.2           
+[58] hms_0.5.3             yaml_2.2.1            colorspace_1.4-1     
+[61] rvest_0.3.4           knitr_1.28            haven_2.1.0          </code></pre>
 </div>
 </div>
 </div>
