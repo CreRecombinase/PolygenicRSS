@@ -52,14 +52,14 @@ library(EigenH5)
 
 
 ```{r,echo=F,message=F,warning=F}
-ldsc_intf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb/", glob="*.int.log")
-ldsc_nointf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb/", glob="*.noint.log")
-rsspf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb/", glob="*RDS")
-gctaf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb/", glob="*hsq")
+ldsc_intf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb_ind/", glob="*.int.log")
+ldsc_nointf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb_ind/", glob="*.noint.log")
+rsspf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb_ind/", glob="*shrink.RDS")
+gctaf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb_ind/", glob="*hsq")
 
 
 parse_ldsc_h2log <- function(h2lf){
-    h2_dat <- scan(h2lf,what=character(), sep = "\n")
+    h2_dat <- suppressMessages(scan(h2lf,what=character(), sep = "\n"))
     h2_rowi <- grep("Total Observed scale", h2_dat)
     h2_row <- h2_dat[h2_rowi]
     h2_data <- h2_dat[h2_rowi:length(h2_dat)]
@@ -70,8 +70,6 @@ parse_ldsc_h2log <- function(h2lf){
         dplyr::mutate(Variable=chartr(" ^", "__", Variable), Value = trimws(Value)) %>%
       tidyr::separate(Value, c("Est", "SD"), sep = "[ s\\(\\)]+", remove = T, fill = "right", convert = T)
     tibble(h2=as.numeric(h2_datdf$Est[1]),h2_sd=as.numeric(h2_datdf$SD[1]),Lambda_GC=as.numeric(h2_datdf$Est[2]),Mean_Chi_2=as.numeric(h2_datdf$Est[3]),Intercept=as.numeric(h2_datdf$Est[4]),Intercept_sd=as.numeric(h2_datdf$SD[4])) %>% replace_na(list(Intercept=1.0,Intercept_sd=0.0))
-
-
 }
 
 parse_logf <- function(x){
@@ -109,14 +107,29 @@ The line for each method is the best fit line through 0 (i.e methods should esti
 
 
 ```{r,echo=F,message=F,warning=F}
-ggplot(check_df,aes(x=true_h2,y=h2,col=method))+geom_point()+geom_smooth(method="lm",formula=y~x+0)+geom_abline(slope=1)+facet_wrap(~method)
+ggplot(check_df,aes(x=true_h2,y=h2,col=method))+geom_point()+geom_smooth(method="lm")+geom_abline(slope=1)+facet_wrap(~method)
+```
+
+## Error
+
+First, the overall results (collapsing across replicate and heritability estimate).  Here it looks like we just manage to edge out a lead over LDSC, though I think I need to increase the number of simulations to be sure. 
+
+
+```{r,echo=F,message=F,warning=F}
+check_df %>%
+    group_by(method,true_h2) %>%
+    summarise(RMSE=sqrt(mean((h2 - true_h2)^2))) %>%
+    ungroup() %>%
+    spread(method,RMSE)
 ```
 
 
+```{r,echo=F,message=F,warning=F}
 
-## RMSE
+ggplot(check_df,aes(x=method,y=true_h2-h2,fill=method))+geom_point()+geom_boxplot()+theme(axis.text.x=element_text(angle = -90, hjust = 0))+geom_hline(yintercept = 0)
 
-First, the overall results (collapsing across replicate and heritability estimate).  Here it looks like we just manage to edge out a lead over LDSC, though I think I need to increase the number of simulations to be sure. 
+
+```
 
 ```{r,echo=F,message=F,warning=F}
 
@@ -131,6 +144,77 @@ Next we stratify by heritability.  In this setting we seem to do somewhat worse 
 
 
 
-ggplot(check_df,aes(x=method,y=abs(true_h2-h2),fill=method))+geom_boxplot()+geom_point()+facet_wrap(~true_h2,labeller="label_both")+ylab("RMSE")+xlab("Method")+theme(axis.text.x=element_text(angle = -90, hjust = 0))
+ggplot(check_df,aes(x=method,y=abs(true_h2-h2),fill=method))+geom_boxplot()+facet_wrap(~true_h2,labeller="label_both")+xlab("Method")+theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+```
+
+
+
+# Out of Sample
+
+
+```{r,echo=F,message=F,warning=F}
+oldsc_intf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb_panel/", glob="*.int.log")
+oldsc_nointf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb_panel/", glob="*.noint.log")
+orsspf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb_panel/", glob="*shrink.RDS")
+
+
+
+oldsc_df_noint <- map_df(oldsc_nointf,~bind_cols(parse_ldsc_h2log(.x),parse_logf(.x)))
+oldsc_df_int <- map_df(oldsc_intf,~bind_cols(parse_ldsc_h2log(.x),parse_logf(.x)))
+orssp_df <- map_df(orsspf,~bind_cols(readRDS(.x),parse_logf(.x)))
+
+ocheck_df <- bind_rows(transmute(orssp_df,h2=pve,rep=rep,true_h2=true_h2,method="RSSp"),
+                      transmute(oldsc_df_int,h2=h2,rep=rep,true_h2=true_h2,method="LDSC_INT"),
+                      transmute(oldsc_df_noint,h2=h2,rep=rep,true_h2=true_h2,method="LDSC_NOINT"))
+```
+
+
+# Results
+
+## Estimate vs Ground Truth
+
+The line for each method is the best fit line through 0 (i.e methods should estimate heritability of 0 when true $h^2$ is 0)
+
+
+```{r,echo=F,message=F,warning=F}
+ggplot(ocheck_df,aes(x=true_h2,y=h2,col=method))+geom_point()+geom_smooth(method="lm",formula=y~x)+geom_abline(slope=1)+facet_wrap(~method)
+```
+
+```{r}
+ocheck_df %>%
+    group_by(method,true_h2) %>%
+    summarise(RMSE=sqrt(mean((h2 - true_h2)^2))) %>%
+    ungroup() %>%
+    spread(method,RMSE)
+```
+
+
+## RMSE
+
+First, the overall results (collapsing across replicate and heritability estimate).  Here it looks like we just manage to edge out a lead over LDSC, though I think I need to increase the number of simulations to be sure. 
+
+```{r,echo=F,message=F,warning=F}
+
+ggplot(ocheck_df,aes(x=method,y=abs(true_h2-h2),fill=method))+geom_point()+geom_boxplot()+theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+
+```
+
+Next we stratify by heritability.  In this setting we seem to do somewhat worse than LDSC without an intercept in the intermediate heritability setting, which is weird.  Again, I think I need more simulations.
+
+```{r,echo=F,message=F,warning=F}
+
+
+
+ggplot(ocheck_df,aes(x=method,y=abs(true_h2-h2),fill=method))+geom_boxplot()+facet_wrap(~true_h2,labeller="label_both")+xlab("Method")+theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+```
+
+
+## Panel AF match
+
+```{r,echo=F,message=F,warning=F}
+
 
 ```
