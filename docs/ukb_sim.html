@@ -414,7 +414,7 @@ div.section {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-04-15
+<strong>Last updated:</strong> 2020-04-22
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
@@ -515,10 +515,18 @@ relative
 <tbody>
 <tr>
 <td style="text-align:left;">
-/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb/
+/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb_ind/
 </td>
 <td style="text-align:left;">
-../workflow/results/sim_ukb
+../workflow/results/sim_ukb_ind
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb_panel/
+</td>
+<td style="text-align:left;">
+../workflow/results/sim_ukb_panel
 </td>
 </tr>
 </tbody>
@@ -529,10 +537,10 @@ relative
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomCreRecombinasePolygenicRSStreef5c7796718f3c67377b4656a7b1888a86c07e6f1targetblankf5c7796a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/f5c7796718f3c67377b4656a7b1888a86c07e6f1" target="_blank">f5c7796</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomCreRecombinasePolygenicRSStree66c90fe9d3717ba0db36c1ad5eaa8f19e596c02etargetblank66c90fea"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/66c90fe9d3717ba0db36c1ad5eaa8f19e596c02e" target="_blank">66c90fe</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomCreRecombinasePolygenicRSStreef5c7796718f3c67377b4656a7b1888a86c07e6f1targetblankf5c7796a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomCreRecombinasePolygenicRSStree66c90fe9d3717ba0db36c1ad5eaa8f19e596c02etargetblank66c90fea" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -545,7 +553,6 @@ Ignored files:
     Ignored:    .httr-oauth
     Ignored:    analysis/.Rhistory
     Ignored:    analysis/PolygenicEstimation_cache/
-    Ignored:    analysis/figure/
     Ignored:    code/.Rhistory
     Ignored:    code/scripts/.Rhistory
     Ignored:    code/snakemake_files/.RData
@@ -557,7 +564,6 @@ Ignored files:
     Ignored:    code/snakemake_files/subset_data_pipeline/
     Ignored:    code/snakemake_files/temp_map_19.RDS
     Ignored:    code/snakemake_files/temp_target_19.RDS
-    Ignored:    code/workflow_params.json~
     Ignored:    data/rep_polygenic/
 
 Untracked files:
@@ -653,6 +659,7 @@ Untracked files:
     Untracked:  code/snakemake_files/vert.txt
     Untracked:  code/t_scripts/
     Untracked:  code/test_py.py
+    Untracked:  code/workflow_params.json~
     Untracked:  data/GREML_h2.xlsx
     Untracked:  data/LDSC_UKB_SumStatManifest.tsv
     Untracked:  data/NCBI34_to_GRCh38.chain.gz
@@ -692,6 +699,7 @@ Untracked files:
     Untracked:  output/bd/
     Untracked:  output/pve/
     Untracked:  output/rssp_res/
+    Untracked:  scripts/
     Untracked:  workflow/
 
 Unstaged changes:
@@ -774,6 +782,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/66c90fe9d3717ba0db36c1ad5eaa8f19e596c02e/analysis/ukb_sim.Rmd" target="_blank">66c90fe</a>
+</td>
+<td>
+CreRecombinase
+</td>
+<td>
+2020-04-22
+</td>
+<td>
+wflow_publish(“ukb_sim.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/50e8bc6d447ae4968afa16d71f8c85a2fb3e1b56/docs/ukb_sim.html" target="_blank">50e8bc6</a>
+</td>
+<td>
+CreRecombinase
+</td>
+<td>
+2020-04-15
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -892,6 +934,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/50e8bc6d447ae4968afa16d71f8c85a2fb3e1b56/docs/figure/ukb_sim.Rmd/unnamed-chunk-3-1.png" target="_blank">50e8bc6</a>
+</td>
+<td>
+CreRecombinase
+</td>
+<td>
+2020-04-15
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/9ebd5aa8b356d98a5b44f2e2ba6313ecb5ccc37e/docs/figure/ukb_sim.Rmd/unnamed-chunk-3-1.png" target="_blank">9ebd5aa</a>
 </td>
 <td>
@@ -906,16 +959,27 @@ CreRecombinase
 </div>
 </div>
 </div>
-<div id="rmse" class="section level2">
-<h2>RMSE</h2>
+<div id="error" class="section level2">
+<h2>Error</h2>
 <p>First, the overall results (collapsing across replicate and heritability estimate). Here it looks like we just manage to edge out a lead over LDSC, though I think I need to increase the number of simulations to be sure.</p>
-<p><img src="figure/ukb_sim.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code># A tibble: 8 x 5
+  true_h2   GCTA LDSC_INT LDSC_NOINT   RSSp
+    &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;  &lt;dbl&gt;
+1     0.1 0.0392   0.0425     0.0352 0.0435
+2     0.2 0.0420   0.0493     0.0395 0.0424
+3     0.3 0.0277   0.0506     0.0294 0.0432
+4     0.4 0.0365   0.0546     0.0253 0.0592
+5     0.5 0.0322   0.0425     0.0313 0.0523
+6     0.6 0.0296   0.0469     0.0373 0.0520
+7     0.7 0.0240   0.0531     0.0539 0.0358
+8     0.8 0.0170   0.0825     0.0501 0.0440</code></pre>
+<p><img src="figure/ukb_sim.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
-Past versions of unnamed-chunk-4-1.png
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
 </button>
 </p>
-<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div id="fig-unnamed-chunk-5-1" class="collapse">
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
 <thead>
@@ -934,7 +998,7 @@ Date
 <tbody>
 <tr>
 <td>
-<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/9ebd5aa8b356d98a5b44f2e2ba6313ecb5ccc37e/docs/figure/ukb_sim.Rmd/unnamed-chunk-4-1.png" target="_blank">9ebd5aa</a>
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/50e8bc6d447ae4968afa16d71f8c85a2fb3e1b56/docs/figure/ukb_sim.Rmd/unnamed-chunk-5-1.png" target="_blank">50e8bc6</a>
 </td>
 <td>
 CreRecombinase
@@ -947,8 +1011,46 @@ CreRecombinase
 </table>
 </div>
 </div>
+<p><img src="figure/ukb_sim.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Next we stratify by heritability. In this setting we seem to do somewhat worse than LDSC without an intercept in the intermediate heritability setting, which is weird. Again, I think I need more simulations.</p>
-<p><img src="figure/ukb_sim.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/ukb_sim.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="out-of-sample" class="section level1">
+<h1>Out of Sample</h1>
+</div>
+<div id="results-1" class="section level1">
+<h1>Results</h1>
+<div id="estimate-vs-ground-truth-1" class="section level2">
+<h2>Estimate vs Ground Truth</h2>
+<p>The line for each method is the best fit line through 0 (i.e methods should estimate heritability of 0 when true <span class="math inline">\(h^2\)</span> is 0)</p>
+<p><img src="figure/ukb_sim.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ocheck_df %&gt;%
+    group_by(method,true_h2) %&gt;%
+    summarise(RMSE=sqrt(mean((h2 - true_h2)^2))) %&gt;%
+    ungroup() %&gt;%
+    spread(method,RMSE)</code></pre>
+<pre><code># A tibble: 8 x 4
+  true_h2 LDSC_INT LDSC_NOINT   RSSp
+    &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;  &lt;dbl&gt;
+1     0.1   0.0452     0.0372 0.0493
+2     0.2   0.0495     0.0390 0.0492
+3     0.3   0.0495     0.0295 0.0611
+4     0.4   0.0654     0.0325 0.0903
+5     0.5   0.0420     0.0291 0.0875
+6     0.6   0.0499     0.0308 0.0976
+7     0.7   0.0409     0.0361 0.0851
+8     0.8   0.0651     0.0301 0.101 </code></pre>
+</div>
+<div id="rmse" class="section level2">
+<h2>RMSE</h2>
+<p>First, the overall results (collapsing across replicate and heritability estimate). Here it looks like we just manage to edge out a lead over LDSC, though I think I need to increase the number of simulations to be sure.</p>
+<p><img src="figure/ukb_sim.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Next we stratify by heritability. In this setting we seem to do somewhat worse than LDSC without an intercept in the intermediate heritability setting, which is weird. Again, I think I need more simulations.</p>
+<p><img src="figure/ukb_sim.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="panel-af-match" class="section level2">
+<h2>Panel AF match</h2>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -977,32 +1079,33 @@ attached base packages:
 
 other attached packages:
  [1] EigenH5_2.0.7     ldmap_1.5.2       vroom_1.2.0.9000  magrittr_1.5     
- [5] fs_1.3.2.9000     forcats_0.4.0     stringr_1.4.0     dplyr_0.8.99.9002
- [9] purrr_0.3.3.9000  readr_1.3.1       tidyr_1.0.2.9000  tibble_3.0.0     
+ [5] fs_1.4.1.9000     forcats_0.5.0     stringr_1.4.0     dplyr_0.8.99.9002
+ [9] purrr_0.3.3.9000  readr_1.3.1       tidyr_1.0.2.9000  tibble_3.0.1.9000
 [13] tidyverse_1.2.1   plotly_4.9.0.9000 ggplot2_3.3.0    
 
 loaded via a namespace (and not attached):
- [1] Rcpp_1.0.4.6          lubridate_1.7.4       lattice_0.20-38      
- [4] assertthat_0.2.1      rprojroot_1.3-2       digest_0.6.25        
- [7] R6_2.4.1              cellranger_1.1.0      backports_1.1.5      
-[10] evaluate_0.14         httr_1.4.1            highr_0.8            
-[13] pillar_1.4.3.9001     rlang_0.4.5.9000      lazyeval_0.2.2       
-[16] readxl_1.3.1          rstudioapi_0.11       data.table_1.12.8    
-[19] whisker_0.4           Matrix_1.2-18         rmarkdown_2.1        
-[22] labeling_0.3          splines_3.6.3         htmlwidgets_1.3      
-[25] bit_1.1-15.2          munsell_0.5.0         broom_0.5.2          
-[28] compiler_3.6.3        modelr_0.1.4          xfun_0.12            
-[31] pkgconfig_2.0.3       mgcv_1.8-31           htmltools_0.4.0      
-[34] tidyselect_1.0.0.9000 workflowr_1.4.0       fansi_0.4.1          
-[37] viridisLite_0.3.0     crayon_1.3.4          withr_2.1.2          
-[40] grid_3.6.3            nlme_3.1-144          jsonlite_1.6.1       
-[43] gtable_0.3.0          lifecycle_0.2.0.9000  git2r_0.26.1         
-[46] scales_1.1.0          RcppParallel_4.4.4    cli_2.0.2            
-[49] stringi_1.4.6         farver_2.0.3          xml2_1.2.2           
-[52] ellipsis_0.3.0.9000   generics_0.0.2        vctrs_0.2.99.9010    
-[55] tools_3.6.3           bit64_0.9-7           glue_1.3.2           
-[58] hms_0.5.3             yaml_2.2.1            colorspace_1.4-1     
-[61] rvest_0.3.4           knitr_1.28            haven_2.1.0          </code></pre>
+ [1] Rcpp_1.0.4.8          lubridate_1.7.4       lattice_0.20-38      
+ [4] utf8_1.1.4            assertthat_0.2.1      rprojroot_1.3-2      
+ [7] digest_0.6.25         R6_2.4.1              cellranger_1.1.0     
+[10] backports_1.1.5       evaluate_0.14         httr_1.4.1           
+[13] highr_0.8             pillar_1.4.3.9001     rlang_0.4.5.9000     
+[16] lazyeval_0.2.2        readxl_1.3.1          rstudioapi_0.11      
+[19] data.table_1.12.8     whisker_0.4           Matrix_1.2-18        
+[22] rmarkdown_2.1         labeling_0.3          splines_3.6.3        
+[25] htmlwidgets_1.3       bit_1.1-15.2          munsell_0.5.0        
+[28] broom_0.5.2           compiler_3.6.3        modelr_0.1.4         
+[31] xfun_0.12             pkgconfig_2.0.3       mgcv_1.8-31          
+[34] htmltools_0.4.0       tidyselect_1.0.0.9000 workflowr_1.4.0      
+[37] fansi_0.4.1           viridisLite_0.3.0     crayon_1.3.4         
+[40] withr_2.1.2           grid_3.6.3            nlme_3.1-144         
+[43] jsonlite_1.6.1        gtable_0.3.0          lifecycle_0.2.0.9000 
+[46] git2r_0.26.1          scales_1.1.0          RcppParallel_5.0.0   
+[49] cli_2.0.2             stringi_1.4.6         farver_2.0.3         
+[52] xml2_1.2.2            ellipsis_0.3.0.9000   generics_0.0.2       
+[55] vctrs_0.2.99.9011     tools_3.6.3           bit64_0.9-7          
+[58] glue_1.4.0            hms_0.5.3             yaml_2.2.1           
+[61] colorspace_1.4-1      rvest_0.3.4           knitr_1.28           
+[64] haven_2.1.0          </code></pre>
 </div>
 </div>
 </div>
