@@ -1,0 +1,255 @@
+#+TITLE: Polygenic RSS simulation pipeline
+#+SETUPFILE: setup.org
+
+
+* Cluster configuration
+
+I start off by defining some absolute directories that will be referred to throughout the script.  
+The motivation for the structure of this yaml file is that I can run the analysis on 
+different clusters and only have to change/add a ~path~ object and a ~flag~ file (a file
+or directory  that exists only on the file system for that machine)
+
+#+BEGIN_SRC yaml :tangle ../workflow/config_base.yaml
+  ---
+  flag_file: &hst !Host {options: {midway2: "/project2", gardner: "/gpfs/data/xhe-lab/", desktop: "/run/media/nwknoblauch/Data"} }
+  host: !Dep {host: *hst, pref:  null, path: { midway2: "midway2", gardner: "gardner", desktop: "desktop"}}
+  paths: 
+    'DL': &dl  !Dep {host: *hst, pref:  null, path: { midway2: "/project2/xinhe/", gardner: "/gpfs/data/xhe-lab/", desktop: "/run/media/nwknoblauch/Data/"}}
+    '1KG':     !Dep {host: *hst, pref: *dl, path: {midway2: &1kg "1kg/", gardner: *1kg , desktop: *1kg} }
+    'OBERF':   !Dep {host: *hst, pref: *dl, path: {midway2: "missing_file", gardner: 'Ober/', desktop: '' } }
+    'BED':     !Dep {host: *hst, pref: *dl, path: {midway2: &bed "genomic_annotation/ptb_epigenetic/", gardner: *bed, desktop: "ptb_scratch/new_bed/"}}
+    'L2':      !Dep {host: *hst, pref: *dl, path: {midway2: &l2 "genomic_annotation/L2/", gardner: *l2, desktop: "L2/"}}
+    'ANNO':    !Dep {host: *hst, pref: *dl, path: {midway2: "nwknoblauch/torus_annotations/", gardner: "genomic_annotation/torus_annotations/", desktop: "genomic_annotation/torus_annotations/"}}
+    'FINEMAP': !Dep {host: *hst, pref: *dl, path: {midway2: "nwknoblauch/susie_finemapping/", gardner: "genomic_annotation/susie_finemapping/", desktop: "genomic_annotation/susie_finemapping/"}}
+    'WEIGHTS': !Dep {host: *hst, pref: *dl, path: {midway2: &weight "1kg/1000G_Phase3_weights_hm3_no_MHC/", gardner: *weight, desktop: *weight}} 
+    'FRQF':    !Dep {host: *hst, pref: *dl, path: {midway2: &frq "1kg/1000G_Phase3_frq/", gardner: *frq, desktop: "1kg/1000G_Phase3_frq/"}} 
+    'GWAS':    !Dep {host: *hst, pref: null, path: {midway2: &gwas "ptb/", gardner: "/gpfs/data/xhe-lab/polyg/", desktop: "/run/media/nwknoblauch/Backup412/polyg/"}}
+    'GWASDB':    !Dep {host: *hst, pref: null, path: {midway2: "ptb/", gardner: "/gpfs/data/xhe-lab/polyg/", desktop: "/run/media/nwknoblauch/Backup412/polyg/"}}
+    'LD_DIR':    !Dep {host: *hst, pref: null, path: {midway2: "ptb/", gardner: "/gpfs/data/xhe-lab/polyg/", desktop: "/run/media/nwknoblauch/BackupData/"}}
+    'RSSPI':    !Dep {host: *hst, pref: null, path: {midway2: &rssp "ptb/", gardner: "/gpfs/data/xhe-lab/polyg/rssp_input/", desktop: "/run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/polyg/rssp_input/"}}
+    'UKB_LDSC':    !Dep {host: *hst, pref: *dl, path: {midway2: &ukbldsc "ukb_ldsc/", gardner: *ukbldsc, desktop: "../Backup412/ukb_ldsc/"}}
+    'UKB_SAMPLE':    !Dep {host: *hst, pref: null, path: {midway2:  "", gardner: "/gpfs/data/pierce-lab/uk-biobank-genotypes/ukb17346_imp_chr17_v3_s487378.sample", desktop: "/run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/bgen/ukb_imp_chr16_v3.sample"}}
+    'UKB_BGEN':    !Dep {host: *hst, pref: null, path: {midway2:  "", gardner: "/gpfs/data/pierce-lab/uk-biobank-genotypes/", desktop: "/run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/bgen/"}}
+    'SAMPLEN':    !Dep {host: *hst, pref: null, path: {midway2:  "", gardner: "12000", desktop: "200"}}
+    'CHUNKN':    !Dep {host: *hst, pref: null, path: {midway2:  "", gardner: "50", desktop: "1"}}
+    'SNPLIST_D':  !Dep {host: *hst, pref: null, path: {midway2:  "", gardner: "/scratch/t.cri.nknoblauch/intersect_snplist/", desktop: "/run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/snplist/"}}
+    'UKB_PED':    !Dep {host: *hst, pref: null, path: {midway2:  "", gardner: "/scratch/t.cri.nknoblauch/intersect_snplist/ukb_subset/", desktop: "/run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/snplist/ukb_subset/"}}
+    'MODELD':    !Dep {host: *hst, pref: null, path: {midway2:  "", gardner: "/scratch/t.cri.nknoblauch/intersect_snplist/ukb_subset/", desktop: "/run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/polyg/"}}
+    'LDSC':    !Dep {host: *hst, pref: null, path: {midway2: &ldsc "module load /home/nwknoblauch/spack_modules/ldsc/1.0.3; ", gardner: "spack env activate ldsc_v &&", desktop: "spack load py-ldsc-git && "}}
+    'TORUS_CMD': !Dep {host: *hst, pref: null, path: {midway2: &cmd "", gardner: "", desktop: "/run/media/nwknoblauch/Backup412/spack/opt/spack/linux-manjaro19-haswell/gcc-9.3.0/dap-cmake-git-master-wotuvad7zivnzwvlztsobu4llto5owdi/bin/torus"}}
+    'QCTCMD': !Dep {host: *hst, pref: null, path: {midway2: &qccmd "", gardner: "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/qctool-2.0.8-pgvvsx6rkjhmiryjqstoq2dioqncj5u7/bin/qctool_v2.0.8", desktop: "/run/media/nwknoblauch/Backup412/spack/opt/spack/linux-manjaro19-haswell/gcc-9.3.0/dap-cmake-git-master-wotuvad7zivnzwvlztsobu4llto5owdi/bin/torus"}}
+    'BGENIXCMD': !Dep {host: *hst, pref: null, path: {midway2: &bgencmd "", gardner: "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/bgen-default-f3kwhoklsgjdeojgjjzt6g4d5bqqmttt/bin/bgenix", desktop: "/run/media/nwknoblauch/Backup412/spack/opt/spack/linux-manjaro19-haswell/gcc-9.3.0/dap-cmake-git-master-wotuvad7zivnzwvlztsobu4llto5owdi/bin/torus"}}
+  envs:
+    'r':    !Dep {host: *hst, pref:  null, path: { midway2: null, gardner: null, desktop: null }}
+    'ldsc': !Dep {host: *hst, pref:  null, path: { midway2: null, gardner: null, desktop: null }}
+    'cmd_prefix': !Dep {host: *hst, pref:  null, path: { midway2: "", gardner: "spack load /3xjt5yk; ", desktop: ". /run/media/nwknoblauch/Backup412/spack/share/spack/setup-env.sh;"  }}
+#+END_SRC
+
+** Config :noexport:
+
+#+BEGIN_SRC R :tangle ../scripts/parse_yaml.R
+
+  config_basef <- "../workflow/config_base.yaml"
+  annotf <- "../workflow/annots.yaml"
+
+  host_fun <- function(x) {
+    xo <- x$options
+    for (n in names(xo)) {
+      if (fs::dir_exists(xo[[n]])) {
+        return(n)
+      }
+    }
+  }
+
+  dep_fun <- function(x) {
+    if (is.null(x$pref)) 
+      return(x$path[[x$host]])
+    return(fs::path(x$pref,x$path[[x$host]]))
+  }
+
+  handler_l <- list(
+    Host = host_fun,
+    Dep = dep_fun
+  )
+
+  config <- yaml::read_yaml(
+                      config_basef,
+                    handlers =  handler_l)
+  config_d <- config$paths
+  annot <- yaml::read_yaml(annotf)
+#+END_SRC
+
+** PBS rules 
+
+
+#+BEGIN_SRC yaml :tangle ../workflow/cluster_config.yaml
+  ---
+  __default__:
+    partition: 'broadwl'
+    time: '01:30:00'
+    nodes: '1'
+    ntasks: '1'
+    cpuspertask: '1'
+    output: "output/{rule}_{wildcards}.txt"
+    error: "error/{rule}_{wildcards}.txt"
+    export: "ALL"
+    mem: '22gb'
+  gcta_h2:
+    time: '00:20:00'
+    mem: '16gb'
+  poly_sim_pheno:
+    time: '02:30:00'
+    mem: '64gb'
+  tbgen2bgen:
+    time: '05:30:00'
+    mem: '3gb'
+  cmp_baseline_ldscores:
+    time: '03:30:00'
+    mem: '32gb'
+  pull_map_p:
+    time: '03:30:00'
+    mem: '75gb'
+  rssp_quh_p:
+    time: '02:30:00'
+    mem: '32gb'
+  ldshrink_ld:
+    time: '03:30:00'
+    mem: '32gb'
+  plink_gwas_cov:
+    time: '01:30:00'
+    mem: '16gb'
+    cpuspertask: '12'
+  gcta_p_grm:
+    time: '02:00:00'
+    mem: '25gb'
+  all_bgen2plink:
+    time: '06:40:00'
+    mem: '32gb'
+    cpuspertask: '5'
+  subset_bgen_qctool:
+    time: '05:40:00'
+    mem: '32gb'
+  anno2torus_fdr:
+    mem: '45G'
+  ldshrink_ldo:
+    mem: '32gb'
+    time: '01:00:00'
+  rssp:
+    mem: '32gb'
+    time: '01:25:00'
+  subset_bgen_qctool:
+    mem: '32gb'
+    time: '03:25:00'
+  rssp_o:
+    mem: '32gb'
+    time: '00:35:00'
+  run_ldsc:
+    mem: '45gb'
+    time: '02:00:00'
+#+END_SRC
+
+
+#+BEGIN_SRC  R :results output :eval no
+  library(ldmap)
+  library(tidyverse)
+  lddf <- tibble::enframe(ldetect_EUR) %>%
+    explode_ldmap_region() %>% mutate(chrom = as.integer(chrom))
+  jsonlite::toJSON(lddf)
+#+END_SRC
+
+
+
+* Pipeline configurations
+
+
+** Snakemake Analysis Pipeline
+
+The entire pipeline from downloading data to running analysis to generating figures for the paper are all available in this repository.  
+There are additional software dependencies obviously not in this directory but they are all publicly available 
+
+** Master rule
+   
+#+BEGIN_SRC snakemake :tangle ../workflow/snakefile
+  import os
+  import yaml
+  from yaml import Loader
+  import json
+  import re
+
+
+  def host_loader(loader,node):
+      fields = loader.construct_mapping(node,deep=True)
+      options=fields['options']
+      # print([options[name] for name in options.keys()])
+      ret_opt = [name for name in options.keys() if os.path.exists(options[name])]
+      # print(ret_opt)
+      return ret_opt[0]
+
+
+  def dep_loader(loader,node):
+      options = loader.construct_mapping(node,deep=True)
+      host = options['host']
+      pref = options['pref']
+      # print(pref)
+      host =options['host']
+      path = options['path']
+      full_path = pref+path[host] if pref is not None else path[host]
+      return full_path
+
+  yaml.Loader.add_constructor('!Host', host_loader)
+  yaml.Loader.add_constructor('!Dep', dep_loader)
+
+  with open("../workflow/config_base.yaml") as stream:
+      config=yaml.load(stream,Loader=Loader)
+
+  config_d = config['paths']
+  host = config['host']
+  samplen = {'gardner': 10000, 'desktop': 100}
+  n_cvrt = {'gardner': 10, 'desktop': 1}
+  config_e = config['envs']
+  shell.prefix(config_e['cmd_prefix'])
+
+  wildcard_constraints:
+      h2="[+-]?[0-9]+\.[0-9]+",
+      samplesize="\d+",
+      chrom="\d+",
+      source="[^/]+",
+      model="[^/]+",
+      ps="[^_]+"
+
+  #      chrom="\d+",
+  #      gwas="[fgdptb]+",
+  #      new_base="[a-z]+",
+  #      region_id="\d+"
+  genome_chr=range(1,23)
+
+
+  ldc = 10
+  h2r = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8]
+  ntr = range(1,11)
+  include: "ukb_snakefile"
+
+  include: "rssp_snakefile"
+  #localrules: cat_grm_bin,cat_filefo,cat_filefp,cat_fileio,cat_fileipo,bgensplit_inp
+
+
+  # all_ukb_traits,= glob_wildcards(config_d["UKB_LDSC"]+"{ukbtrait}.tsv.bgz")
+  # print(all_ukb_traits[0:10])
+  #expand(config_d["UKB_PED"]+"chr{chrom}_"+config_d["SAMPLEN"]+"_01.bgen",chrom=genome_chr)
+
+
+
+  rule all:
+      input:
+          expand("results/sim_ukb_{ip}/{model}_{nt}_10_{h2}_{samplesize}.noshrink.RDS",ip=["ind","panel"],model=["polym"],h2=h2r,nt=ntr,samplesize="10000")
+          # expand("results/sim_ukb_{ip}/{model}_{nt}_10_{h2}_{samplesize}.int.log",ip=["ind","panel"],model=["polym"],h2=h2r,nt=ntr,samplesize="10000"),
+          # expand("results/sim_ukb_{ip}/{model}_{nt}_10_{h2}_{samplesize}.noint.log",ip=["ind","panel"],model=["polym"],h2=h2r,nt=ntr,samplesize="10000"),
+          # expand("results/sim_ukb_ind/{model}_{nt}_10_{h2}_{samplesize}.hsq",model=["polym"],h2=h2r,nt=ntr,samplesize="10000")
+
+          #expand(config_d["GWAS"]+"pheno/{model}_{h2}_{trait}_10_{samplesize}.1.causals",model=["poly"],trait=range(1,11),h2=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8],nt=[n_cvrt[host]],samplesize=[samplen[host]])
+
+          #
+          #expand(config_d["GWAS"]+"gwas_covar_fl_panel/onec_{h2}_{nt}_10_10000",
+
+
+#+END_SRC

@@ -1,0 +1,115 @@
+---
+title: "Preliminary WTCC simulation results"
+author: "Nicholas Knoblauch"
+date: 2017-11-08
+output: workflowr::wflow_html
+---
+
+
+
+
+
+#Introduction
+
+## Description of dataset
+
+There are 7 genotype datasets, representing the cases from 7 WTCC traits. The size and number of SNPs is as follows:
+
+
+
+
+```{r load_data_gwas,echo=F,message=F,warning=F}
+library(tidyverse)
+library(RSSp)
+
+gwas_names <- c("bd","cad","cd","ht","ra","t1d","t2d")
+gwas_traits <- c("Bipolar Disorder",
+                 "Coronary Artery Disease",
+                 "Crohn's Disease",
+                 "Hypertension",
+                 "Rheumatoid Arthritis",
+                 "Type I Diabetes",
+                 "Type 2 Diabetes")
+all_res <- sprintf("../output/RSSp_snakemake/sim_%s_gwas_RSSp_res_wtcc_NoConfound.txt.gz",gwas_names)
+
+res_dff <- data_frame(resf=all_res,trait=gwas_names,trait_name=gwas_traits)
+
+res_df <- pmap_df(res_dff,function(resf,trait,trait_name){
+  read_delim(resf,delim="\t") %>% 
+  filter(!log_params) %>% 
+  select(-log_params) %>% 
+  mutate(fgeneid=as.character(fgeneid),rel_bias=round(tbias/tpve,2),
+         rel_pve_error=(abs(pve-tpve)/(pve+tpve)),method=paste0("RSSp_",method),
+         p_n=p/n,trait_id=trait,trait_name=trait_name) 
+})
+
+idk <- distinct(res_df,trait_id,trait_name,p,n)
+tparam_df <- distinct(res_df,fgeneid,tpve) %>% mutate(fgeneid=as.integer(fgeneid))
+idt <- distinct(res_df,fgeneid,.keep_all=T) %>% group_by(tpve) %>% summarise(n_replicates=n()) %>% rename(true_pve=tpve)
+```
+
+
+
+
+
+
+```{r overview, results = 'asis'}
+knitr::kable(idk,align="l")
+```
+
+# Description of simulation
+
+```{r overview_sim, results = 'asis'}
+knitr::kable(idt,align="l")
+```
+
+
+```{r plotting}
+
+
+ggplot(res_df,aes(x=tpve,y=pve))+geom_point()+facet_wrap(~trait_id)+xlim(0,1)+ylim(0,1)+geom_abline(slope=1,intercept=0)+geom_smooth(method="lm")
+
+trim_est_df <- select_if(res_df,function(x){length(unique(x))>1})
+# ggplot(est_df,aes(x=tpve,y=pve))+geom_point()+xlim(0,1)+ylim(0,1)+geom_abline(slope=1,intercept=0)+geom_smooth(method="lm")+facet_wrap(~message)
+t1dr <- filter(res_df,trait_id=="t1d") %>% mutate(fgeneid=as.integer(fgeneid))
+
+```
+#GCTA
+
+```{r}
+gctarf <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake/gcta_h2_est",full.names = T)
+gcta_df <- map_df(gctarf,function(x){
+  gn <- gsub(".+gcta_h2_est/(.+)_seq_wtcc.+","\\1",x)
+  read_delim(x,delim="\t") %>% 
+    mutate(trait_id=gn,fgeneid=as.character(fgeneid)) %>%
+    filter(Source=="V(G)")%>% mutate(Source="gcta_pve",Variance=as.numeric(Variance)) %>% select(-SE) %>%spread(Source,Variance)
+})
+nres_df <- inner_join(res_df,gcta_df)
+
+```
+```{r}
+nres_df %>%ggplot(aes(x=tpve,y=gcta_pve))+geom_point()+facet_wrap(~trait_id)+geom_smooth(method="lm")+geom_abline(slope=1,intercept=0)
+
+```
+```{r}
+comp_df <- select(nres_df,fgeneid,tpve,trait_id,RSSp=pve,GCTA=gcta_pve) %>% gather(method,pve,RSSp,GCTA)
+ggplot(comp_df,aes(x=tpve,y=pve,col=method))+geom_point()+facet_wrap(~trait_id)+geom_smooth(method="lm")+geom_abline(slope=1,intercept=0)
+
+```
+
+```{r}
+ggplot(comp_df,aes(x=method,y=pve,col=method))+geom_point()+facet_wrap(~trait_id)+geom_smooth(method="lm")+geom_abline(slope=1,intercept=0)
+ggplot(comp_df,aes(group=paste0(tpve,"_",method),x=tpve,y=pve-tpve,fill=method))+geom_boxplot()
+
+```
+
+```{r}
+grid_resf <- "../output/RSSp_snakemake/sim_RA-CAD_gwas_grid_RSSp_res_wtcc_NoConfoundSmaller.txt.gz"
+grid_df <- read_delim(grid_resf,delim="\t")
+```
+```{r}
+select(res_df,fgeneid,pve_opt=pve) %>% mutate(fgeneid=as.integer(fgeneid))%>% inner_join(grid_df)%>%
+group_by(fgeneid) %>% mutate(slnZ=(lnZ-mean(lnZ))/var(lnZ)) %>% ggplot(aes(x=pve,y=slnZ))+geom_point()+facet_wrap(~tpve,scales = "free_y")+geom_vline(aes(xintercept=tpve),col="gold")+geom_vline(aes(xintercept=pve_opt))
+```
+
+

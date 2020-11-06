@@ -11,18 +11,17 @@ output: workflowr::wflow_html
 library(EigenH5)
 library(tidyverse)
 library(RSSp)
-quhf <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_genome_gwas_quh/chr1-22_genred2_genred2_T_omni_AllPVE_T.h5"
-estf <- "/home/nwknoblauch/Dropbox/PolygenicRSS/output/RSSp_snakemake/sim_chr1-22_genred2_genred2_T_omni_gwas_RSSp_res_AllPVE_1_T_F.txt.gz"
+quhf <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_genome_gwas_quh/chr2_genred2_genred2_T_omni_RatherLargePVE_T_F.h5"
+estf <- "/home/nwknoblauch/Dropbox/PolygenicRSS/output/RSSp_snakemake/sim_chr2_genred2_genred2_T_omni_gwas_RSSp_res_RatherLargePVE_0.0_T_F_F.txt.gz"
 res_df <- read_delim(estf,delim="\t") %>% select(optim_pve=pve,tpve,fgeneid) %>% mutate(fgeneid=as.character(fgeneid))
 tparam_df <- read_df_h5(quhf,"SimulationInfo")
 tparam_df <- group_by(tparam_df,tpve) %>% mutate(pve_replicate=1:n()) %>% ungroup()
 
-#p_n <- unique(tparam_df$p/tparam_df$n)
-
-#quhm <- read_matrix_h5(quhf,"/","quh")
-#D <- read_vector_h5(quhf,"/","D")
-grid_df <- readRDS("out_res.RDS")
-#grid_df <- array_branch(quhm,2) %>% map2_df(tparam_df$fgeneid,~RSSp_estimate_grid(v_hat = .x,eigenvalues = D,p_n = p_n,grid_points = 100)%>% mutate(fgeneid=.y)) %>% inner_join(tparam_df)
+p_n <- unique(tparam_df$p/tparam_df$n)
+quhm <- read_matrix_h5(quhf,"/","quh")
+D <- zapsmall(read_vector_h5(quhf,"/","D"))
+# grid_df <- readRDS("out_res.RDS")
+grid_df <- array_branch(quhm,2) %>% map2_df(tparam_df$fgeneid,~RSSp_estimate_grid(v_hat = .x,eigenvalues = D,p_n = p_n,grid_points = 100)%>% mutate(fgeneid=.y)) %>% inner_join(tparam_df)
 
 #saveRDS(grid_df,"out_res.RDS")
 
@@ -36,19 +35,19 @@ For each simulation (`pve_replicate`), I calculated the log-likelihood for 100 v
 
 
 ```{r}
-filter(grid_df,fgeneid %in% c("16","21")) %>% mutate(PVE_replicate=factor(pve_replicate)) %>% rename(True_PVE=tpve) %>% ggplot(aes(x=pve,y=rel_lnZ,col=PVE_replicate))+
-  geom_point()+
-  geom_vline(aes(xintercept = True_PVE),linetype=2)+xlab(bquote(PVE))+ylab("Normalized Log Likelihood")+ggtitle("'True' PVE is sometimes far from the minimum","True PVE along black dotted line")+
-  facet_wrap(~True_PVE,scales = "free_y",labeller = "label_both")+
-  geom_vline(aes(xintercept=optim_pve,col=PVE_replicate))
+grid_df <- group_by(grid_df,fgeneid) %>% mutate(rel_lnZ=(lnZ-mean(lnZ))/sd(lnZ)) %>% ungroup() %>% inner_join(res_df)
+#filter(grid_df,fgeneid %in% c("16","21")) %>% mutate(PVE_replicate=factor(pve_replicate)) %>% rename(True_PVE=tpve) %>% ggplot(aes(x=pve,y=rel_lnZ,col=PVE_replicate))+
+  # geom_point()+
+  # geom_vline(aes(xintercept = True_PVE),linetype=2)+xlab(bquote(PVE))+ylab("Normalized Log Likelihood")+ggtitle("'True' PVE is sometimes far from the minimum","True PVE along black dotted line")+
+  # facet_wrap(~True_PVE,scales = "free_y",labeller = "label_both")+
+  # geom_vline(aes(xintercept=optim_pve,col=PVE_replicate))
 ```
 
 
 And here's the plot for several more simulations
 
 ```{r}
-grid_df <- group_by(grid_df,fgeneid) %>% mutate(rel_lnZ=(lnZ-mean(lnZ))/sd(lnZ)) %>% ungroup() %>% inner_join(res_df)
-mutate(grid_df,PVE_replicate=factor(pve_replicate)) %>% ggplot(aes(x=pve,y=rel_lnZ,col=PVE_replicate))+
+mutate(grid_df,PVE_replicate=factor(pve_replicate)) %>% ggplot(aes(x=pve,y=lnZ,col=PVE_replicate))+
   geom_point()+
   geom_vline(aes(xintercept = tpve),linetype=2)+xlab(bquote(PVE))+ylab("Normalized Log Likelihood")+ggtitle("Normalized Log likelihood along with MLE","True PVE along black dotted line")+
   facet_wrap(~tpve,scales = "free_y")+

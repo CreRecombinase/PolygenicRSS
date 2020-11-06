@@ -1,0 +1,154 @@
+---
+title: "Combined WTCC simulation results"
+author: "Nicholas Knoblauch"
+date: 2017-11-08
+output: workflowr::wflow_html
+---
+
+
+
+
+
+#Introduction
+
+## Description of datasets
+
+I concatenated the 7 WTCCC genotype datasets (`33807` individuals in total) and took the intersection of all typed loci (`435669` in total).  
+I then simulated as previously.
+
+
+```{r}
+
+```
+
+
+```{r load_data_gwas,echo=F,message=F,warning=F}
+library(tidyverse)
+library(RSSp)
+library(EigenH5)
+#setwd("")
+#getwd()
+#freqf <- "~/plink.frq"
+#nfreq_dat <- read.table(freqf,header = T) %>% as_data_frame()
+gwas_names <- c("RA & CAD")
+# gwas_traits <- c("Bipolar Disorder",
+#                  "Coronary Artery Disease",
+#                  "Crohn's Disease",
+#                  "Hypertension",
+#                  "Rheumatoid Arthritis",
+#                  "Type I Diabetes",
+#                  "Type 2 Diabetes")
+all_res <- ("../output/RSSp_snakemake/sim_RA-CAD_gwas_RSSp_res_wtcc_NoConfoundSmaller.txt.gz")
+quhf <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_genome_gwas_quh_chunk/RA-CAD_wtcc_NoConfoundSmaller_sim.h5"
+ldsc_f <- "/home/nwknoblauch/Dropbox/PolygenicRSS/output/RSSp_snakemake/sim_RA"
+```
+
+```{r}
+tparam_df <- read_df_h5(quhf,"SimulationInfo") %>% mutate(fgeneid=as.integer(fgeneid))
+
+```
+
+```{r}
+res_dff <- data_frame(resf=all_res,trait=gwas_names)
+ldsc_df <- read_delim(ldsc_f,delim="\t") %>% inner_join(tparam_df)
+
+
+res_df <- pmap_df(res_dff,function(resf,trait,trait_name){
+  read_delim(resf,delim="\t") %>% 
+  filter(!log_params) %>% 
+  select(-log_params) %>% 
+  mutate(fgeneid=as.character(fgeneid),rel_bias=round(tbias/tpve,2),
+         rel_pve_error=(abs(pve-tpve)/(pve+tpve)),method=paste0("RSSp_",method),
+         p_n=p/n,trait_id=trait) 
+})
+tparam_df <- distinct(res_df,fgeneid,tbias,tpve,tsigu)
+
+idk <- distinct(res_df,trait_id,trait_name,p,n)
+idt <- distinct(res_df,fgeneid,.keep_all=T) %>% group_by(tpve) %>% summarise(n_replicates=n()) %>% rename(true_pve=tpve)
+```
+
+
+
+```{r overview, results = 'asis'}
+knitr::kable(idk,align="l")
+```
+
+# Description of simulation
+
+```{r overview_sim, results = 'asis'}
+knitr::kable(idt,align="l")
+```
+```{r plotting}
+ggplot(res_df,aes(x=tpve,y=pve))+geom_point()+facet_wrap(~trait_id)+xlim(0,1)+ylim(0,1)+geom_abline(slope=1,intercept=0)
+```
+
+```{r}
+ggplot(res_df,aes(x=tsigu,y=sigu))+geom_point()+facet_wrap(~trait_id)+geom_abline(slope=1,intercept=0)+geom_smooth(method="lm")
+
+```
+
+
+```{r}
+ldsc_df  %>% ggplot(aes(x=tpve,y=Total_Observed_scale_h2))+geom_point()+geom_abline(slope=1,intercept=0)+ggtitle("LDSC")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+gctaf <- "../output/RSSp_snakemake/gcta_h2_est/RA-CAD_seq_wtcc_NoConfoundSmaller_est.txt"
+gcta_df <- readr::read_delim(gctaf,delim="\t") %>% mutate(fgeneid=as.character(fgeneid)) %>%
+    filter(Source=="V(G)")%>% mutate(Source="gcta_pve",Variance=as.numeric(Variance)) %>% select(-SE) %>%spread(Source,Variance) %>% inner_join(tparam_df)
+ggplot(gcta_df,aes(x=tpve,y=gcta_pve))+geom_point()+geom_abline(slope=1,intercept=0)+ggtitle("GCTA")
+```
+
+
+```{r}
+
+gctarf <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake/gcta_h2_est",full.names = T)
+gcta_df <- map_df(gctarf,function(x){
+  gn <- gsub(".+gcta_h2_est/(.+)_seq_wtcc.+","\\1",x)
+  
+})
+nres_df <- inner_join(res_df,gcta_df)
+
+```
+```{r}
+nres_df %>%ggplot(aes(x=tpve,y=gcta_pve))+geom_point()+facet_wrap(~trait_id)+geom_smooth(method="lm")+geom_abline(slope=1,intercept=0)
+
+```
+```
+
+
+

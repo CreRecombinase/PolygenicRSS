@@ -1,0 +1,102 @@
+---
+title: "GREML vs RSSp (UKB)"
+author: "Nicholas Knoblauch"
+date: "2018-11-14"
+output: workflowr::wflow_html
+---
+
+```{r}
+suppressMessages(library(plotly))
+suppressMessages(library(tidyverse))
+library(fs)
+library(forcats)
+```
+
+
+```{r}
+est_frds <- dir_ls("~/Dropbox/PolygenicRSS/output/pve/ukb/",recurse = T,type = "file",glob="*_1.RDS")
+est_df <- file_info(est_frds) %>% filter(size<fs::as_fs_bytes(1e6))
+ukb_rssp_c <- map(est_df$path,safely(readRDS)) %>% map( "result") %>% compact()%>%map(~select(.x,-bias,-info) ) %>%  bind_rows() %>%  filter(convergence==0) %>% mutate(trait=gsub("ukb_","",trait_id)) %>% select(trait,pve_rssp=pve) 
+# arrange(est_df,desc(size
+```
+
+
+
+```{r}
+
+est_f <- dir_ls("~/Dropbox/PolygenicRSS/output/pve/ukb/",
+    recurse = T,
+    type = "file",
+    glob = "*gz"
+)
+ukb_rssp_a <- map_df(est_f, ~ suppressMessages(read_delim(.x, delim = "	"))) %>%
+    select(pve_rssp = pve, trait = trait_id) %>%
+    mutate(trait = gsub("ukb_", "", trait))
+greml_est <- readxl::read_xlsx("~/Dropbox/PolygenicRSS/data/GREML_h2.xlsx",
+                               sheet = "Table S1",
+                               skip = 3)
+## %>%
+##     select(trait_id = ID,
+##            Desc = Description,
+##            Sample_size=Cases,
+##            H2_obs = Est.,
+##            H2_li = `...13`) %>%
+##     mutate(trait_name = str_remove_all(str_to_lower(trait_name),
+##                                        "[^a-z]"),
+##            trait_id = gsub(pattern = "-.+", "", trait_id))
+ukb_ldsc <- read_tsv("~/Dropbox/PolygenicRSS/data/ldsc_h2.txt.gz")
+## %>%
+##     select(trait = phenotype, pve_ldsc = h2_observed, N_ldsc = N, int_ldsc = intercept, trait_name = description) %>%
+##     mutate(trait_name = str_remove_all(str_to_lower(trait_name), "[^a-z]"))
+
+
+
+all_trait_desc <- inner_join(select(ukb_ldsc,
+                                    id_ldsc = phenotype,
+                                    desc_ldsc = description,
+                                    N_ldsc = N,
+                                    N_case_ldsc = N_case,
+                                    N_control_ldsc = N_control,
+                                    prev_ldsc = prevelence,
+                                    h2_obs_ldsc = h2_observed,
+                                    h2_lia_ldsc = h2_liability
+                                    ) %>%
+                             mutate(ina = NA),
+                             select(greml_est,
+                                 id_greml = ID,
+                                 desc_greml = Description,
+                                 N_greml = Cases,
+                                 h2_obs_greml = Est.,
+                                 h2_lia_greml = `...13`
+                             ) %>% mutate(ina = NA))
+           
+
+## so untidy!
+all_trait_desc <- all_trait_desc[, sort(colnames(all_trait_desc))]
+cn <- colnames(all_trait_desc)
+
+
+
+greml_ldsc <- anti_join(ukb_ldsc,greml_est,by=c("description" = "Desc")
+
+                        
+
+
+lbt <- inner_join(ukb_rssp_a, ukb_ldsc)
+ubt <- inner_join(lbt, greml_est, by = c("trait" = "trait_id"))
+
+
+
+fbt <- inner_join(greml_est, lbt, by = "trait_name")
+```
+```{r}
+ggplot(fbt,aes(x=ot,y=pve_rssp)) +
+    geom_point() +
+    geom_abline(slope=1,intercept=0) +
+    geom_smooth(method="lm")
+```
+
+```{r}
+select(fbt,-N_ldsc,-int_ldsc) %>% gather(key="method",value="pve",pve_ldsc,pve_rssp) %>% ggplot(aes(x=pve_ind,y=pve,col=method))+geom_point()+geom_smooth(method="lm")+geom_abline(slope=1,intercept=0)+facet_wrap(~method)
+```
+

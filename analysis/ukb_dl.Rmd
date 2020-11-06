@@ -1,0 +1,294 @@
+---
+title: "UK Biobank Sumstat DL"
+author: "Nicholas Knoblauch"
+date: "2018-11-14"
+output: workflowr::wflow_html
+---
+
+## Introduction
+
+
+We need to download the gwas sumstats from UK biobank
+
+
+
+```{r,echo=F,message=F,warning=F}
+suppressMessages(library(plotly))
+suppressMessages(library(tidyverse))
+library(fs)
+library(forcats)
+library(magrittr)
+library(vroom)
+library(ldmap)
+library(EigenH5)
+```
+
+
+
+```{r, echo = FALSE, eval = FALSE}
+all_pheno_url <- "https://www.dropbox.com/s/ipeqyhrpdqav5uh/ukb31063_h2_all.02Oct2019.tsv.gz?dl=1"
+destf <- "~/Dropbox/PolygenicRSS/data/ukb31063_h2_all.02Oct2019.tsv.gz"
+sumstatf   <- "~/Dropbox/PolygenicRSS/data/LDSC_UKB_SumStatManifest.tsv"
+sumstat_dl_df <- readr::read_tsv(sumstatf) %>%
+    mutate(dl_gwas = fs::path("/run/media/nwknoblauch/Backup412/ukb_gwas/", gwas_file),
+           dl_ldsc = fs::path("/run/media/nwknoblauch/Backup412/ukb_ldsc", ldsc_sumstat_file),
+           exists_gwas = file.exists(dl_gwas),
+           exists_ldsc = file.exists(dl_ldsc))
+
+```
+
+
+```{r, echo = F, message = F, warning = F}
+clean_vroom <- function(){
+    length(fs::file_delete(suppressWarnings(fs::dir_ls("/tmp",regexp="vroom-.*",recurse=TRUE,fail=FALSE))))
+}
+    
+clean_vroom()
+ukb_ldsc <- vroom::vroom(destf, delim = "\t")  %>%
+    rename(trait = phen_stem,
+           desc_ldsc = description,
+           trait_t = phenotype,
+           ldsc_o = h2_observed,
+           ldsc_l = h2_liability,
+           N_ldsc = Neff,
+           int_ldsc = intercept)
+```
+
+
+```{r}
+base_dir <- "/run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg"
+gwas_h5 <- "/run/media/nwknoblauch/Backup412/ukb_gwas.h5"
+leg_dir <- fs::path(base_dir,"haplotypes/")
+
+snp_hf <- fs::path(base_dir,"haplotype.h5")
+
+map_files <- dl_1kg_map("CEU",base_dir)
+
+mdf <- read_1kg_maps(map_files)
+
+stopifnot(all(!is.na(mdf$map)),all(!is.na(mdf$snp)))
+```
+
+
+```{r}
+    vc <- cols(
+        SNP = col_character(),
+        A1 = col_skip(),
+        A2 = col_skip(),
+        N = col_integer(),
+        Z = col_double()
+    )
+
+bgz_files <- "/run/media/nwknoblauch/Backup412/ldsc_snp_hash.txt"
+sumstat_dl_df <- read.table(bgz_files) %>%
+    set_colnames(c("ldsc_sumstat_file",
+                   "ldsc_sumstat_hash",
+                   "std")) %>%
+    select(-std) %>%
+    as_tibble() %>%
+    inner_join(sumstat_dl_df)
+
+
+
+exemp_dlf <- group_by(sumstat_dl_df, ldsc_sumstat_hash) %>%
+    sample_n(1) %>%
+    mutate(tdfl = map(
+               dl_ldsc,
+               ~ vroom::vroom(gzfile(.x),
+                              delim = "	",
+                              col_types = vc
+                              )
+           ))
+
+exdf <- map2_dfr(exemp_dlf$tdfl,
+                 exemp_dlf$ldsc_sumstat_hash,
+                 ~mutate(.x, hash = .y))
+
+exdf <- exdf %>%
+    mutate(rsid = ldmap::rsid2int(SNP))
+
+
+
+write_subset_fun <- function(snplist,num_files,output_file,dataset_name="Z") {
+    ctr <- 0
+    out_f  <- output_file
+    pb <- progress::progress_bar$new(total=num_files)
+    vc <- cols(
+        SNP = col_character(),
+        A1 = col_skip(),
+        A2 = col_skip(),
+        N = col_integer(),
+        Z = col_double()
+    )
+    dsm <- dataset_name
+    ## create_matrix_h5(
+    ##             filename = out_f,
+    ##             datapath = dsm,
+    ##             data = numeric(), dim = c(NROW(snplist), num_files))
+
+    return(function(dl_ldsc,trait_id) {
+        ctr <<- ctr + 1
+        pb$tick()
+        if(ctr %% 100 == 0)
+            gc()
+        Zv  <- left_join(snplist,
+                  vroom::vroom(gzfile(dl_ldsc),
+                               delim = "\t",
+                               col_types = vc
+                               ) %>%
+                  mutate(rsid = ldmap::rsid2int(SNP)), by = "rsid") %>%
+            pull(Z)
+        return(Zv)
+        ## Zm <- matrix(Zv,nrow=length(Zv), ncol=1, byrow=FALSE)
+        ## write_matrix_h5(Zm, out_f, dsm, offset = c(0L,trait_id - 1L),
+        ##                 datasize = dim(Zm))
+    })
+
+}
+
+both_irnt_df <- filter(
+    sumstat_dl_df, str_detect(phenotype, "irnt"),
+    str_detect(dl_ldsc, "both_sexes")
+)
+
+read_N <- function(filename) {
+    if (fs::path_ext(filename) != "bgz") {
+        return(NA)
+    }
+    fd <- ldmap:::open_bgzf(filename)
+    r <- ldmap:::read_bgzf(fd)
+    rN <- as.integer(stringr::str_split_fixed(ldmap:::readlines_chunk_bgzf(fd)[2], pattern = "\t", n = 5)[4])
+    rm(fd)
+    return(rN)
+}
+        
+    
+    
+tdf <-  exdf %>%
+    count(rsid) %>%
+    filter(n == 7) %>% 
+    select(rsid)
+
+
+snplist <- tdf$rsid
+ld_snp_df <- ldmap::read_snp_rsid_h5(snp_hf,
+    snplist,
+    snp_id = TRUE,
+    allow_missing = TRUE
+) %>%
+    mutate(
+        ld_id = snp_in_region(snp, ldetect_EUR),
+        ldmr = ldetect_EUR[ld_id]
+    ) %>%
+    assign_genetic_map(mdf)
+stopifnot(all(!is.na(ld_snp_df$map)))
+snp_dfl <- mutate(ld_snp_df,
+    rsid = paste0("rs", rsid),
+    chrom = chromosomes(snp)
+) %>%
+    group_by(chrom) %>%
+    group_split()
+fs::dir_create(fs::path(base_dir, "intersect_snplist"))
+walk(snp_dfl, function(x) {
+    chrom_f <- fs::path(base_dir, "intersect_snplist", paste0("chr", x$chrom[1]), ext = "txt")
+    write_tsv(select(x, rsid), chrom_f, col_names = FALSE)
+    })
+    
+ld_snplist <- select(ld_snp_df, rsid, snp_id)
+sf <- write_subset_fun(ld_snplist,nrow(both_irnt_df),gwas_h5,dataset_name="both_irnt/Z")
+
+```
+
+
+```{r}
+
+gwas_l <- imap(both_irnt_df$dl_ldsc,sf)
+
+zv <- unlist(gwas_l)
+
+write_df_h5(both_irnt_df,gwas_h5,"both_irnt/df")
+write_vector_h5(
+Z <- matrix(zv,
+            NROW(ld_snplist),
+            NROW(both_irnt_df),
+            byrow = FALSE)
+
+write_matrix_h5(Z,gwas_h5,"both_irnt/Z")
+
+gc()
+
+```
+
+
+```{r}
+Z <- read_matrix_h5(gwas_h5,"both_irnt/Z")
+ld_f <- as.character(fs::path(base_dir, "ld.h5"))
+
+gsnp_df <- group_by(ld_snp_df, ldmr)
+
+prog_fun <- function(N) {
+    pb <- progress::progress_bar$new(total = N)
+    retff <- function(x, y) {
+        ldmr_string <- as.character(y$ldmr)
+
+        hap_l <- map(read_list_of(snp_hf, "haplotypes", subset_cols = x$snp_id), ~ structure(.x, class = c("ldmap_ht", "vctrs_vctr"), N = 1006))
+        R <- ldmap:::ldshrink_S(hap_l, x$map, cutof f= 1e-5)
+        evdR <- eigen(R, symmetric = TRUE)
+        write_matrix_h5(
+            R,
+            ld_f, fs::path("LD", ldmr_string)
+        )
+        write_matrix_h5(
+            evdR$vectors,
+            ld_f, fs::path("Q", ldmr_string)
+        )
+        write_vector_h5(x$snp,
+                        ld_f,
+                        fs::path("snps",ldmr_string))
+        write_vector_h5(
+            evdR$values,
+            ld_f, fs::path("D", ldmr_string)
+        )
+        pb$tick()
+    }
+    return(retff)
+}
+
+pf <- prog_fun(n_groups(gsnp_df))
+group_walk(gsnp_df,pf)
+tsnp_df <- filter(snp_df,ldmr == ldmr[1])
+
+squh_h5 <- function(ldmr,Z,ld_f,rsid){
+    Q <- read_matrix_h5(ld_f,fs::path("Q",as.character(ldmr[1])))
+    tZ <- Z[as.character(rsid),,drop=FALSE]
+    return(RSSp::convert_quh(tZ,Q))
+}
+
+rownames(Z) <- as.character(ld_snp_df$rsid)
+colnames(Z) <- as.character(both_irnt_df$ldsc_sumstat_file)
+samp_df <- dplyr::select(ukb_ldsc,gwas_file,pve_ldsc_l=ldsc_l,pve_ldsc_o=ldsc_o)
+mn <- map_int(both_irnt_df$dl_ldsc,read_N)
+mn_df <- select(both_irnt_df,dl_ldsc) %>% mutate(N=mn)
+ib_irnt_df <- left_join(both_irnt_df,samp_df) %>% inner_join(mn_df)
+qsnp_df <- mutate(gsnp_df,
+                  quh = squh_h5(ldmr,Z,ld_f,rsid),
+                  D = read_vector_h5(ld_f, fs::path("D",as.character(ldmr[1])))
+                  )  %>% ungroup()
+
+quhl <- array_branch(qsnp_df$quh, 2)
+quh_df <- mutate(ib_irnt_df,quh=quhl) %>%
+    filter(!is.na(N))
+res_df <- pmap_dfr(quh_df,function(ldsc_sumstat_file,quh,N,...){
+    RSSp::RSSp_estimate(quh,qsnp_df$D,N,trait_id=ldsc_sumstat_file)
+})
+rdf_df <- inner_join(ib_irnt_df,
+                     res_df,
+                     by=c("ldsc_sumstat_file"="trait_id")) %>%
+    mutate(p_n = sum(qsnp_df$D)/N,
+           o_pve = RSSp:::calc_pve(sigu,p_n))
+
+
+
+
+saveRDS(rdf_df,"~/tmp/rssp_res1.RDS")
+```

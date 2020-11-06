@@ -1,0 +1,57 @@
+---
+title: "Chunking Sparse Symmetric Matrices"
+output: html_notebook
+---
+
+
+#Introduction
+
+
+Let's explore some strategies for chunking sparse, symmetric (implictly) banded matrices for the purposes of eigenvalue decomposition.
+
+## Data representation 
+
+Sparse symmetric matrices are represented in `R`'s `Matrix` package (included in every `R` installation) by the `dsCMatrix` class.  We'll use a 5x5 toeplitz matrix with `1`s along the diagonal as well as non-zero entries in 2 of the 4 off-diagonals.
+
+```{r }
+library(Matrix)
+mm <- Matrix(toeplitz(c(1, 2, 3, 0, 0)), sparse = TRUE)
+print(mm)
+```
+
+The `dsCMatrix` class has 7 "slots" (slots are `R`'s way of referring to a class's member objects)
+
+```{r}
+str(mm)
+```
+
+For our purposes, we really only care about 4 of these slots `i`,`p`,`x` and `Dim`
+
+From the docs:
+
+> i:
+Object of class "integer" of length nnZ (half number of non-zero elements). These are the row numbers for each non-zero element in the lower triangle of the matrix.
+
+(Note that in our case the matrix is actually stored as upper triangular, not lower triangular)
+
+> p:
+(only in class "dsCMatrix":) an integer vector for providing pointers, one for each column, see the detailed description in CsparseMatrix.
+
+> j:
+(only in class "dsTMatrix":) Object of class "integer" of length nnZ (as i). These are the column numbers for each non-zero element in the lower triangle of the matrix.
+
+> x:
+Object of class "numeric" of length nnZ – the non-zero elements of the matrix (to be duplicated for full matrix).
+
+
+## Chunking
+
+The most straightforward approach to chunking I can think of is to simply divide the full matrix into the largest (dense) submatrices possible based on the number of nonzero elements in the submatrix.  
+
+
+```{r}
+eigen(mm)
+```
+
+
+

@@ -1,0 +1,36 @@
+---
+title: "Effect of LDshrink"
+author: "Nicholas Knoblauch"
+date: 2017-11-10
+output: workflowr::wflow_html
+---
+
+
+
+
+
+ LDshrink has a parameter `cutoff` that zeros out covariance entries below `cutoff`.  What effect does that have on `RSSp`?
+ 
+ 
+ 
+ 
+```{r}
+library(tidyverse)
+RSSp_f <- "~/Dropbox/PolygenicRSS/output/RSSp_snakemake/sim_scz2_gwas_RSSp_res_ALL.txt.gz"
+est_df <- read_delim(RSSp_f,delim="\t") %>% filter(!log_params) %>% select(-log_params,-useGradient)
+
+
+
+filter(est_df,tbias==0,method=="Confound") %>% mutate(tpve=round(tpve,3)) %>%  ggplot(aes(x=shrinkage,y=abs(pve-tpve),col=method))+
+  geom_point()+
+  geom_smooth(method="lm")+
+  facet_grid(tpve~method,labeller = label_both)+scale_x_log10()+scale_y_log10()
+```
+```{r}
+filter(est_df,tbias==0,method=="Confound") %>% mutate(tpve=round(tpve,3),shrinkage=round(shrinkage,3)) %>%  ggplot(aes(x=tpve,y=pve,col=factor(shrinkage)))+
+  geom_point()+
+  geom_smooth(method="lm")+scale_x_log10()+scale_y_log10()
+```
+
+
+

@@ -1,0 +1,75 @@
+---
+title: "The Confounding Model"
+author: "Nicholas Knoblauch"
+date: "May 28, 2018"
+output: workflowr::wflow_html
+---
+
+I've done a few simple simulations to investigate the effects of confounding
+
+
+## The model
+
+
+$$\textbf{Y}= \textbf{X} \boldsymbol{\beta_g}+\textbf{U}\boldsymbol{\beta_c}+\boldsymbol{\epsilon}$$
+
+Where $\boldsymbol{U}$ are the left singular vectors of $\boldsymbol{X}$.  This is equivalent to 
+
+$$\textbf{Y}= \textbf{X}(\boldsymbol{\beta_g}+\textbf{V}\boldsymbol{\Lambda}^{-1}\boldsymbol{\beta_c})+\boldsymbol{\epsilon}$$
+
+Note that the sample data matrix $\textbf{X}$ is not generally of rank $p$ (the number of SNPs), meaning that $\boldsymbol{\Lambda}^{-1}$ is undefined if it is defined in the usual fashion (as the square of the singular values of $\textbf{X}$).
+
+
+
+
+## The simulation
+
+The simulation scheme for this model is as follows:
+
+1) Obtain 1 genotype set for simulating phenotypes and 1 for a reference LD panel.
+2) Compute LD and EVD blockwise for LD reference _and_ GWAS reference (use `ldshrink` for both)
+3) Simulate $\Beta_g$ as per previous simulations (i.e simulate standardized effects from $N(0,\sigma_u$) and transform them using the allele frequency at each locus)
+4) Set $\sigma_c$ as a percent of $\sigma_u$ (e.g 10%)
+5) Compute $\textbf{X}(\boldsymbol{\beta_g}+\textbf{V}\boldsymbol{\Lambda}^{-1}\boldsymbol{\beta_c})$
+6) Compute $\text{Var}(\epsilon)$ so $\frac{\text{Var(\textbf{Y})}{}}
+
+```{r}
+library(tidyverse)
+inpf <- "~/Dropbox/PolygenicRSS/output/rssp_res/comp/FRAM_EUR_4194303_T_T_EUR_NewDirB_T_T_3_gwas_RSSp_res_gwas_0.001_1.RDS"
+res_df <- readRDS(inpf)
+#%>% unnest()
+```
+
+```{r}
+filter(res_df,tbias==0) %>% ggplot(aes(x=tpve,y=pve,col=method))+geom_point()+facet_wrap(~method)+geom_smooth(method="lm")+geom_abline(slope=1)
+```
+
+
+```{r}
+filter(res_df,tbias==0) %>% ggplot(aes(group=tpve,y=abs(pve-tpve),fill=method))+geom_boxplot()
+```
+
+
+
+```{r}
+beta_f <- "/run/media/nwknoblauch/Data/polyg_scratch/beta/chr19_EUR_EUR_NewDirC_beta.h5"
+library(EigenH5)
+rb <- read_matrix_h5(beta_f,"Beta")
+```
+
+
+```{r}
+ggplot(res_df,aes(x=tsigu,y=sigu))+geom_point()+geom_abline(slope=1,intercept=0)+geom_smooth(method="lm")+xlab(bquote(sigma[u]))+ylab(bquote(hat(sigma[u])))
+```
+
+
+
+```{r}
+ggplot(res_df,aes(x=tbias,y=value))+geom_point()+geom_smooth(method="lm")+geom_abline(slope=1,intercept=0)+xlab(bquote(sigma[u]))+ylab(bquote(hat(sigma[u])))
+```
+
+
+
+
+
+

@@ -1,0 +1,133 @@
+---
+title: "LDshrink Effects"
+author: "Nicholas Knoblauch"
+date: 2018-04-12
+output: workflowr::wflow_html
+---
+
+# How much does `LDshrink` shrink? How big are `LDetect` blocks on average?
+
+
+
+```{r load_data,echo=F,message=F,warning=F}
+library(tidyverse)
+library(EigenH5)
+library(SeqSupport)
+library(RSSp)
+evdf_dir <- "/home/nwknoblauch/Dropbox/scratch/polyg_scratch/EVD_H5"
+evdf <- dir(evdf_dir,full.names = T,pattern='h5')
+
+ldinfo_df <- map_df(evdf,function(x){
+  read_df_h5(x,"Wildcards") %>% mutate(filename_ld=x)
+})
+```
+
+```{r}
+uhd <- "/home/nwknoblauch/Dropbox/scratch/polyg_scratch/gwas_uh"
+uhf <- dir(uhd,full.names = T,pattern = "h5$")
+uh_df <- map_df(uhf,function(x){
+  read_df_h5(x,"Wildcards") %>% mutate(filename_uh=x)
+})
+```
+
+
+```{r}
+parse_evdf <- function(filename){
+  info_df <- read_df_h5(filename,"Wildcards") %>% mutate(filename=filename)
+  # evd_grp <- ls_h5(filename,"EVD")
+   ld_df <- read_df_h5(filename,"LDinfo") %>% group_by(region_id) %>% summarise(n_snps=n(),
+                                                                           p_dist=max(pos)-min(pos),
+                                                                           map_dist=max(map)-min(map)) %>% 
+  mutate(L2SQ=map_dbl(as.character(region_id),~sum(read_vector_h5(filename,paste0("L2/",.x,"/L2")))))
+  # pd <- map_dbl(evd_grp,function(x){
+  #   spd <- dim_h5(filename,paste0("LDi/",x,"/pos"))
+  #   if(spd>1){
+  #   diff(read_vector_h5(filename,groupname=paste0("LDi/",x),dataname="pos",subset=c(1,spd)))
+  #   }else{
+  #     0
+  #   }
+  # })
+  #   md <- map_dbl(evd_grp,function(x){
+  #   spd <- dim_h5(filename,paste0("LDi/",x,"/pos"))
+  #   if(spd>1){
+  #   diff(read_vector_h5(filename,groupname=paste0("LDi/",x),dataname="map",subset=c(1,spd)))
+  #   }else{
+  #     0
+  #   }
+  # })
+  mutate(info_df,ldet=list(ld_df)) %>% unnest() %>%return()
+}
+all_ld <- map_df(evdf,parse_evdf)
+```
+
+
+Number of SNPs per block across chunking schemes
+
+```{r}
+filter(all_ld,AF==0.05,useLDshrink=="T") %>% ggplot(aes(x=n_snps,..density..))+geom_histogram(bins=100)+facet_wrap(~useLDetect,scales = "free_y")
+```
+
+
+
+```{r}
+filter(all_ld,N==0,SNPCT!=0) %>% ggplot(aes(x=L2SQ,y=ldet/n_snps,col=useLDshrink))+geom_point()+facet_grid(AF~SNPCT)+scale_x_log10()
+```
+
+## Distribution of LD scores with and without LDshrink
+
+```{r}
+filter(all_ld,N==0,SNPCT==0) %>%  ggplot(aes(x=L2SQ))+geom_histogram(bins=100)+facet_grid(useLDshrink~AF,labeller = label_both)+scale_x_log10()
+```
+
+
+```{r}
+filter(all_ld,N==0,SNPCT==0) %>%  ggplot(aes(x=L2SQ))+geom_histogram(bins=100)+facet_grid(useLDshrink~AF,labeller = label_both)+scale_x_log10()
+```
+
+
+```{r}
+all_ld_uh <- inner_join(ldinfo_df,uh_df)
+```
+
+```{r}
+read_l2_h5 <- function(filename_ld){
+  read_df_h5(filename_ld,"LDinfo") %>% dplyr::select(-info,-map,-rs,-SNP,-AF,-allele) %>% 
+  dplyr::group_by(region_id) %>% do(dplyr::mutate(.,L2=read_vector_h5(filename_ld,paste0("L2/",.$region_id[1]),"L2"))) %>% ungroup()
+}
+```
+
+
+```{r}
+
+ldd_uh <- function(filename_ld,filename_uh,...){
+  wc_df <- read_df_h5(filename_uh,"Wildcards") %>% inner_join( read_df_h5(filename_ld,"Wildcards")) %>% mutate(ina=NA)
+  puh_df <- read_df_h5(filename_uh,"SimulationInfo")
+  uh_s_id <- read_vector_h5(filename_uh,"SNPinfo","snp_id")
+  uh_df <- read_matrix_h5(filename_uh,"/","uh")  %>%magrittr::set_colnames(puh_df$fgeneid) %>% as_data_frame() %>% mutate(snp_id=uh_s_id) %>% gather(key = fgeneid,uh,-snp_id) %>% filter(fgeneid %in% c("1","3"))
+  ldi_df <- read_l2_h5(filename_ld) %>% 
+    inner_join(uh_df) %>% inner_join(puh_df) %>% mutate(ina=NA) %>% inner_join(wc_df) %>% select(-ina)
+}
+
+```
+
+```{r}
+ld_uh <- filter(all_ld_uh,AF==0.05,N==0,SNPCT==0) %>% pmap_dfr(ldd_uh)
+```
+
+
+
+```{r}
+ld_uh <- dplyr::filter(ld_uh) %>% dplyr::select(chr,snp_id,pos,region_id,L2,fgeneid,uh,n,p,tpve,tsigu,useLDshrink)
+```
+
+
+```{r}
+mutate(ld_uh,True_PVE=factor(tpve)) %>% ggplot(aes(x=L2,y=uh^2,col=True_PVE)) + geom_point() + facet_wrap(~useLDshrink,labeller=label_both) + geom_smooth(method=lm,formula=y~x+0)+ggtitle("Z^2 vs LD Scores With and Without LDshrink","No Intercept")
+```
+
+```{r}
+mutate(ld_uh,True_PVE=factor(tpve)) %>% ggplot(aes(x=L2,y=uh^2,col=True_PVE)) + geom_point() + facet_wrap(~useLDshrink,labeller=label_both) + geom_smooth(method=lm,formula=y~x)+ggtitle("Z^2 vs LD Scores With and Without LDshrink","With Intercept")
+```
+
+
+

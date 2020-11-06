@@ -1,0 +1,35 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r,engine='Rcpp'}
+#include "RcppArrayFire.h"
+
+// [[Rcpp::depends(RcppArrayFire)]]
+
+// RcppArrayFire needs C++11
+// add the following comment when you export your
+// C++ function to R via Rcpp::SourceCpp()
+// [[Rcpp::plugins(cpp11)]]
+//[[Rcpp::export]]
+af::array cov_af(const RcppArrayFire::typed_array<f32>& x) {
+    return af::cov(x ,x);
+}
+```
+
+
+```{r}
+library(ldshrink)
+library(ldshrink)
+tf <- "~/Dropbox/Repos/LD/data/genotype.h5"
+data("reference_genotype")
+data("reference_map")
+EigenH5::write_matrix_h5(reference_genotype,tf,"dosage")
+x <- reference_genotype
+rS <- EigenH5::read_matrix_h5("~/Dropbox/Repos/LD/data/S.h5","S")
+
+m_af <- cov_af(x)
+```
+

@@ -1,0 +1,19 @@
+---
+title: "Summary of Meeting"
+author: "Nicholas Knoblauch"
+date: 2017-12-15
+output: workflowr::wflow_html
+---
+
+
+
+
+
+# Topics discussed
+## Confounding model for RSSp
+The previous confounding model for `RSSp`
+
+
+
+
+

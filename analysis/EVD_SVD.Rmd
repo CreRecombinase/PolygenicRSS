@@ -1,0 +1,116 @@
+---
+title: "Comparing Likelihoods"
+author: "Nicholas Knoblauch"
+date: "May 9, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+
+# Data
+
+Data is from Chromosome 19 from the `bd` cohort
+
+
+##SVD 
+
+```{r}
+#load("~/Dropbox/PolygenicRSS/data/temp_ws.RData")
+library(EigenH5)
+library(tidyverse)
+library(RSSp)
+
+library(SeqSupport)
+snpf <- "~/Dropbox/PolygenicRSS/data/Snakemake_inputs/chr19AF0.01_genred2_genred2_trait.txt.gz"
+
+
+snp_df <- read_delim(snpf,delim="\t")
+genof <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/h5/ALL_genred2_geno.h5"
+
+snp_data <- t(read_matrix_h5(genof,"/","dosage",subset_rows=snp_df$snp_id))
+snp_data <- scale(snp_data,center=T,scale=F)
+p_n <- ncol(snp_data)/nrow(snp_data)
+
+snp_svd <- svd(snp_data,nu = 0)
+SVD_D <- snp_svd$d
+SVD_V <- snp_svd$v
+traitf <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_sim_gwas_pheno/chr20-22_genred2_genred2_RatherLargePVE_F_trait.h5"
+ymat <- read_matrix_h5(traitf,"trait","ymat")
+```
+
+```{r}
+estf <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_genome_gwas_uh/chr20-22_genred2_genred2_RatherLargePVE_F_sim.h5"
+tparam_df <- read_df_h5(estf,"SimulationInfo")
+uh_mat <- read_matrix_h5(estf,"/","uh")
+quh_mat <- crossprod(SVD_V,uh_mat)
+D <- SVD_D^2
+quh_df <- imap_dfr(purrr::array_branch(quh_mat,2),~data_frame(quh=.x,fgeneid=as.character(.y),D=D)) %>% inner_join(tparam_df)
+quh_df <-   mutate(quh_df,quantile=pnorm(quh,mean=0,sd=sqrt(tsigu^2*D^2+D)))
+
+result_df <- purrr::imap_dfr(~RSSp::RSSp(.x,eigenvalues=D,p_n=p_n,fgeneid=as.character(.y)))
+```
+
+```{r}
+filter(quh_df,fgeneid=="1",quantile>0) %>% ggplot(aes(x=quantile))+geom_histogram(bins=100)
+```
+
+
+```{r}
+inner_join(result_df,tparam_df) %>% ggplot(aes(x=tpve,y=pve))+geom_point()
+```
+
+
+## "Whitening"
+
+```{r}
+
+estf <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_sim_gwas_beta/chr19_genred2_genred2_RatherLargePVE_F_beta.h5"
+b_mat <- t(read_matrix_h5(estf,"/","Beta"))
+Svec <- read_vector_h5(estf,"/","S")
+U_mat <- b_mat/Svec
+apply(U_mat,2,sd)
+ts <- apply(U_mat,2,sd)
+mutate(tparam_df,true_sigu=ts) %>% ggplot(aes(x=true_sigu,y=tsigu))+geom_point()+geom_abline(slope=1,intercept=0)
+tW <- 1/SVD_D*t(SVD_U)
+Z <- tW%*%snp_data
+crossprod(Z)[1:4,1:4]
+```
+
+
+
+```{r}
+
+```
+
+
+
+
+
+```{r}
+uh_se <- calc_uh_se_exp(input_snpmat = Z,input_expmat =ymat,parallel = T)
+```
+
+
+
+
+
+## EVD
+```{r}
+evdf <- "/run/media/nwknoblauch/Data/EVD_H5/chr19_bd_bd_F_omni_F_F.h5"
+Q <- read_matrix_h5(evdf,groupname="EVD/19",dataname="Q")
+D <- read_vector_h5(evdf,groupname="EVD/19",dataname="D")
+```
+
+```{r}
+plot(SVD_D^2,D)
+```
+```{r}
+
+```
+
+
+

@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>Shared SNP Analysis</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.0.13/css/fa-svg-with-js.css" rel="stylesheet" />
+<script src="site_libs/font-awesome-5.0.13/js/fontawesome-all.min.js"></script>
+<script src="site_libs/font-awesome-5.0.13/js/fa-v4-shims.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">PolygenicRSS</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Shared SNP Analysis</h1>
+
+</div>
+
+
+<p><strong>Last updated:</strong> 2018-09-04</p>
+<strong>workflowr checks:</strong> <small>(Click a bullet for more information)</small>
+<ul>
+<li>
+<details>
+<p><summary> <strong style="color:red;">✖</strong> <strong>R Markdown file:</strong> uncommitted changes </summary> The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</details>
+</li>
+<li>
+<details>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>Environment:</strong> empty </summary></p>
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</details>
+</li>
+<li>
+<details>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>Seed:</strong> <code>set.seed(12345)</code> </summary></p>
+<p>The command <code>set.seed(12345)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</details>
+</li>
+<li>
+<details>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>Session information:</strong> recorded </summary></p>
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</details>
+</li>
+<li>
+<details>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/35139b4feb53dd99e02b8fb64da4cc4128470a2d" target="_blank">35139b4</a> </summary></p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+<pre><code>
+Ignored files:
+    Ignored:    .RData
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    .httr-oauth
+    Ignored:    analysis/PolygenicEstimation_cache/
+    Ignored:    analysis/figure/
+    Ignored:    code/.Rhistory
+    Ignored:    code/scripts/.Rhistory
+    Ignored:    code/snakemake_files/.Rhistory
+    Ignored:    code/snakemake_files/.snakemake/
+    Ignored:    code/snakemake_files/parameter_generation/
+    Ignored:    code/snakemake_files/subset_data_pipeline/.RData
+    Ignored:    data/rep_polygenic/
+
+Untracked files:
+    Untracked:  _workflowr.yml
+    Untracked:  analysis/#RSSp_WTCC_noConfounding.Rmd#
+    Untracked:  analysis/AFvsp.Rmd
+    Untracked:  analysis/ChunkingEffect.Rmd
+    Untracked:  analysis/ChunkingLD.Rmd
+    Untracked:  analysis/DownSamplingResults.Rmd
+    Untracked:  analysis/EVD_SVD.Rmd
+    Untracked:  analysis/GRM_estimation.Rmd
+    Untracked:  analysis/GenomeWideSimulation.Rmd
+    Untracked:  analysis/Heritability.Rmd
+    Untracked:  analysis/LDshrink_effect.Rmd
+    Untracked:  analysis/MeetingSummary1.Rmd
+    Untracked:  analysis/RSSR_PolygenicData.Rmd
+    Untracked:  analysis/RSSp.stan
+    Untracked:  analysis/RSSp2.stan
+    Untracked:  analysis/RSSp_LDshrink.Rmd
+    Untracked:  analysis/RSSp_Large_WTCC_noConfounding.Rmd
+    Untracked:  analysis/RSSp_Largest_Simulation.Rmd
+    Untracked:  analysis/RSSp_WTCC_noConfounding.Rmd
+    Untracked:  analysis/RSSp_ldsc_highPVE_chr1.Rmd
+    Untracked:  analysis/RSSp_ldsc_highPVE_hr.Rmd
+    Untracked:  analysis/RSSp_ldsc_noConfounding.Rmd
+    Untracked:  analysis/Running_ldetect.Rmd
+    Untracked:  analysis/SPVE.Rmd
+    Untracked:  analysis/SharedSNPAnalysis (dell-desktop's conflicted copy 2018-09-04).Rmd
+    Untracked:  analysis/SharedSNPAnalysis.Rmd
+    Untracked:  analysis/Summary.Rmd
+    Untracked:  analysis/Summary.org
+    Untracked:  analysis/Vanilla_LDSC.Rmd
+    Untracked:  analysis/chr_16.Rmd
+    Untracked:  analysis/derby.log
+    Untracked:  analysis/eQTL_Pipelines.Rmd
+    Untracked:  analysis/fquh_mod.RDS
+    Untracked:  analysis/importFramExp.Rmd
+    Untracked:  analysis/ltximg/
+    Untracked:  analysis/nquh_mod.RDS
+    Untracked:  analysis/out_res.RDS
+    Untracked:  analysis/pvv_opt.Rmd
+    Untracked:  analysis/quh_mod.RDS
+    Untracked:  analysis/scz_data.org
+    Untracked:  analysis/shrinkage_effect.Rmd
+    Untracked:  code/.ipynb_checkpoints/
+    Untracked:  code/RSSp_abstract.org
+    Untracked:  code/RSSp_abstract_notes.org
+    Untracked:  code/RSSp_talk_notes.org
+    Untracked:  code/RSSp_talk_notes.pdf
+    Untracked:  code/RSSp_talk_notes.tex
+    Untracked:  code/Untitled.ipynb
+    Untracked:  code/Untitled1.ipynb
+    Untracked:  code/ideas.org
+    Untracked:  code/ltximg/
+    Untracked:  code/rssp.yml
+    Untracked:  code/scripts/#compare_eqtl.R#
+    Untracked:  code/scripts/RSSp_ldsc_results.Rmd
+    Untracked:  code/scripts/bin/
+    Untracked:  code/scripts/compare_eqtl.R
+    Untracked:  code/scripts/ldsc_rssp.Rmd
+    Untracked:  code/scripts/matlab2h5.py
+    Untracked:  code/scripts/vcf-liftover.sh
+    Untracked:  code/scripts/vcf2allel.py
+    Untracked:  code/snakemake_files/environment_rssp.yml
+    Untracked:  code/snakemake_files/eqtl_check.RDS
+    Untracked:  code/snakemake_files/kg_snakefile~
+    Untracked:  code/snakemake_files/ldsc/
+    Untracked:  code/snakemake_files/plink.log
+    Untracked:  code/snakemake_files/rssp_ldsc_report/
+    Untracked:  code/snakemake_files/temp_map_19.RDS
+    Untracked:  code/snakemake_files/temp_target_19.RDS
+    Untracked:  code/snakemake_files/vert.txt
+    Untracked:  code/snakemake_files/vgcore.30188
+    Untracked:  code/workflow_params.json~
+    Untracked:  data/NCBI34_to_GRCh38.chain.gz
+    Untracked:  data/SNP_ws.RData
+    Untracked:  data/Snakemake_inputs/
+    Untracked:  data/temp_ws.RData
+    Untracked:  docs/#RSSp_WTCC_noConfounding.Rmd#
+    Untracked:  docs/RSSp.stan
+    Untracked:  docs/RSSp2.stan
+    Untracked:  docs/Summary.org
+    Untracked:  docs/derby.log
+    Untracked:  docs/figure/LDshrink_effect.Rmd/
+    Untracked:  docs/figure/RSSp_Large_WTCC_noConfounding.Rmd/
+    Untracked:  docs/figure/RSSp_WTCC_noConfounding.Rmd/
+    Untracked:  docs/figure/RSSp_ldsc_highPVE_chr1.Rmd/
+    Untracked:  docs/figure/RSSp_ldsc_highPVE_hr.Rmd/
+    Untracked:  docs/fquh_mod.RDS
+    Untracked:  docs/log4j.spark.log
+    Untracked:  docs/ltximg/
+    Untracked:  docs/nquh_mod.RDS
+    Untracked:  docs/quh_mod.RDS
+    Untracked:  docs/scz_data.org
+    Untracked:  dosage.scan.RData
+    Untracked:  dosage.snp.RData
+    Untracked:  output/RSSp_snakemake/
+
+Unstaged changes:
+    Modified:   .gitignore
+    Modified:   analysis/DownsamplingResults2.Rmd
+    Modified:   analysis/IndependenceCheck.Rmd
+    Modified:   analysis/Meeting_Notes.Rmd
+    Modified:   analysis/New_WholeGenome.Rmd
+    Modified:   analysis/OutOfSampleLD.Rmd
+    Modified:   analysis/PolygenicEstimation.Rmd
+    Modified:   analysis/RSSP_standard_error.Rmd
+    Modified:   analysis/RSSp_Chunksize_Investigation.Rmd
+    Modified:   analysis/RSSp_Large_Simulation.Rmd
+    Modified:   analysis/RSSp_Posterior.Rmd
+    Modified:   analysis/RSSp_Prediction.Rmd
+    Modified:   analysis/RSSp_ldsc.Rmd
+    Modified:   analysis/RSSp_ldsc_gwas_direct_noConfounding.Rmd
+    Modified:   analysis/RSSp_ldsc_highPVE.Rmd
+    Modified:   analysis/SimulationPipeline.Rmd
+    Modified:   analysis/_site.yml
+    Modified:   analysis/about.Rmd
+    Modified:   analysis/chr_2.Rmd
+    Deleted:    analysis/chunks.R
+    Modified:   analysis/index.Rmd
+    Modified:   analysis/license.Rmd
+    Modified:   analysis/lnzDist.Rmd
+    Modified:   analysis/simulatingGWAS.Rmd
+    Modified:   analysis/simulation.Rmd
+    Modified:   code/TF_LDshrink.ipynb
+    Modified:   code/dask_LDshrink.ipynb
+    Modified:   code/snakemake_files/Snakefile
+    Modified:   code/snakemake_files/param_snakefile
+
+</code></pre>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</details>
+</li>
+</ul>
+<hr />
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>── Attaching packages ────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>✔ ggplot2 3.0.0     ✔ purrr   0.2.5
+✔ tibble  1.4.2     ✔ dplyr   0.7.6
+✔ tidyr   0.8.1     ✔ stringr 1.3.1
+✔ readr   1.1.1     ✔ forcats 0.3.0</code></pre>
+<pre><code>── Conflicts ───────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>#library(biomaRt)</code></pre>
+<div id="read-in-the-data" class="section level2">
+<h2>Read in the data</h2>
+<pre class="r"><code>height_cad_f &lt;- &quot;~/Downloads/giant_height__cardiogram_cad_data.tsv&quot;
+hdl_cad_f &lt;- &quot;~/Downloads/gls_hdl__cardiogram_cad_data.tsv&quot;
+height_cad &lt;- read_delim(height_cad_f,delim=&quot;\t&quot;)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  snp = col_character(),
+  beta_hat_1 = col_double(),
+  seb1 = col_double(),
+  beta_hat_2 = col_double(),
+  seb2 = col_double(),
+  prob_z1 = col_double()
+)</code></pre>
+<pre class="r"><code>hdl_cad &lt;- read_delim(hdl_cad_f,delim=&quot;\t&quot;)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  snp = col_character(),
+  beta_hat_1 = col_double(),
+  seb1 = col_double(),
+  beta_hat_2 = col_double(),
+  seb2 = col_double(),
+  prob_z1 = col_double()
+)</code></pre>
+<pre class="r"><code>all_rsid &lt;- rbind(select(hdl_cad,snp),select(height_cad,snp)) %&gt;% distinct(snp) %&gt;% rename(name=snp)</code></pre>
+</div>
+<div id="connect-to-the-ucsc-genome-browser-database" class="section level2">
+<h2>Connect to the UCSC genome browser database</h2>
+<pre class="r"><code>#mysql --user=genome --host=genome-mysql.cse.ucsc.edu -A -N -D hg19 -e &#39;SELECT chrom, chromStart, chromEnd, name FROM snp144Common where name=\&#39;rs10931091\&#39;&#39;
+
+con &lt;- RMariaDB::dbConnect(RMariaDB::MariaDB(),host=&quot;genome-mysql.cse.ucsc.edu&quot;,username=&quot;genome&quot;,dbname=&quot;hg19&quot;)
+variant_df &lt;- tbl(con,&quot;snp147&quot;)</code></pre>
+<pre class="r"><code>anno_df &lt;- filter(variant_df,name %in% all_rsid$name) %&gt;% collect()
+anno_df &lt;- mutate(anno_df,chrom=str_replace(chrom,pattern = &quot;chr&quot;,replacement = &quot;&quot;))</code></pre>
+</div>
+<div id="pull-coordinates-from-snps" class="section level2">
+<h2>Pull coordinates from SNPs</h2>
+<pre class="r"><code>snpmart = biomaRt::useMart(biomart = &quot;ENSEMBL_MART_SNP&quot;, dataset=&quot;hsapiens_snp&quot;)
+mart_anno_df &lt;- biomaRt::getBM(attributes = c(&#39;refsnp_id&#39;,&#39;allele&#39;,&#39;chrom_start&#39;,&#39;chrom_strand&#39;,&#39;clinical_significance&#39;,&#39;associated_gene&#39;,&#39;distance_to_transcript&#39;,&#39;polyphen_score&#39;,&#39;sift_score&#39;,&#39;ensembl_gene_stable_id&#39;,&#39;consequence_type_tv&#39;,&#39;consequence_allele_string&#39;), 
+      filters = c(&#39;snp_filter&#39;), 
+      values = list(anno_df$name), 
+      mart = snpmart)
+mart_anno_df &lt;- rename(mart_anno_df,name=refsnp_id)</code></pre>
+<pre class="r"><code>full_anno_df &lt;- left_join(anno_df,mart_anno_df) %&gt;% select_if(~length(unique(.x))&gt;1)</code></pre>
+<pre><code>Joining, by = &quot;name&quot;</code></pre>
+<pre class="r"><code>a_height_cad &lt;- rename(height_cad,name=snp) %&gt;% left_join(full_anno_df) %&gt;% distinct(name,.keep_all=T) %&gt;% mutate(funcl=str_split(func,pattern=&quot;,&quot;)) %&gt;% unnest(funcl)</code></pre>
+<pre><code>Joining, by = &quot;name&quot;</code></pre>
+<pre class="r"><code>a_hdl_cad &lt;- rename(hdl_cad,name=snp) %&gt;% left_join(full_anno_df) %&gt;% distinct(name,.keep_all=T) %&gt;% mutate(funcl=str_split(func,pattern=&quot;,&quot;)) %&gt;% unnest(funcl)</code></pre>
+<pre><code>Joining, by = &quot;name&quot;</code></pre>
+<pre class="r"><code>a_height_cad %&gt;% ggplot(aes(x=funcl,y=prob_z1))+geom_boxplot()+geom_hline(aes(yintercept=median(prob_z1)))+ggtitle(&quot;Height-&gt;CAD&quot;)+xlab(&quot;Function&quot;)</code></pre>
+<p><img src="figure/SharedSNPAnalysis.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>a_hdl_cad %&gt;% ggplot(aes(x=funcl,y=prob_z1))+geom_boxplot()+geom_hline(aes(yintercept=median(prob_z1)))+ggtitle(&quot;HDL-&gt;CAD&quot;)+xlab(&quot;Function&quot;)</code></pre>
+<p><img src="figure/SharedSNPAnalysis.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="gene-annotation" class="section level2">
+<h2>Gene Annotation</h2>
+<pre class="r"><code>ensembl = biomaRt::useMart(&quot;ensembl&quot;,dataset=&quot;hsapiens_gene_ensembl&quot;)
+gene_df = biomaRt::getBM(attributes = c(&#39;ensembl_gene_id&#39;, &#39;go_id&#39;,&#39;hgnc_symbol&#39;,&#39;description&#39;,&#39;family&#39;,&#39;name_1006&#39;,&#39;namespace_1003&#39;), 
+              filters = &#39;ensembl_gene_id&#39;, 
+              values = unique(full_anno_df$ensembl_gene_stable_id), 
+              mart = ensembl)</code></pre>
+<pre class="r"><code>a_hdl_cad &lt;- rename(a_hdl_cad,ensembl_gene_id=ensembl_gene_stable_id) %&gt;% inner_join(gene_df) </code></pre>
+<pre><code>Joining, by = &quot;ensembl_gene_id&quot;</code></pre>
+<pre class="r"><code>a_hdl_cad &lt;- a_hdl_cad %&gt;% arrange(desc(prob_z1))
+
+# go_ct &lt;- group_by(a_hdl_cad,namespace_1003,name_1006,go_id) %&gt;% summarise(n_genes=n_distinct(hgnc_symbol),n_tot=n(),mean_prob=mean(unique(prob_z1))) %&gt;% ungroup() %&gt;% arrange(desc(n_genes),desc(n_tot))
+# 
+# filter(go_ct,namespace_1003==&#39;biological_process&#39;,n_genes&gt;10) %&gt;% inner_join(a_hdl_cad) %&gt;% ggplot(aes(x=mean_prob,y=prob_z1,group=mean_prob))+geom_boxplot()</code></pre>
+</div>
+<div id="what-genes-do-top-signals-come-from" class="section level1">
+<h1>What genes do top signals come from?</h1>
+<pre class="r"><code>distinct(a_hdl_cad,name,beta_hat_1,seb1,beta_hat_2,seb2,prob_z1,hgnc_symbol) %&gt;% arrange(desc(prob_z1))</code></pre>
+<pre><code># A tibble: 541 x 7
+   name       beta_hat_1   seb1 beta_hat_2   seb2 prob_z1 hgnc_symbol
+   &lt;chr&gt;           &lt;dbl&gt;  &lt;dbl&gt;      &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;      
+ 1 rs6589565     -0.0854 0.0091     0.120  0.0258   0.843 BUD13      
+ 2 rs2954031     -0.0426 0.0049     0.0545 0.0140   0.667 &quot;&quot;         
+ 3 rs16963520     0.0719 0.0071    -0.0471 0.0200   0.662 SLC12A3    
+ 4 rs445925      -0.0983 0.0212     0.1    0.0429   0.653 &quot;&quot;         
+ 5 rs12740374    -0.0329 0.006      0.103  0.0171   0.644 CELSR2     
+ 6 rs863750       0.0318 0.0051    -0.0484 0.0151   0.641 &quot;&quot;         
+ 7 rs4765127     -0.0329 0.0051     0.0426 0.0146   0.639 &quot;&quot;         
+ 8 rs3924313      0.0352 0.0052    -0.0402 0.0148   0.637 SCARB1     
+ 9 rs12979104     0.0407 0.0094    -0.0927 0.0257   0.633 KANK2      
+10 rs16842        0.0307 0.0055    -0.0514 0.0155   0.632 &quot;&quot;         
+# ... with 531 more rows</code></pre>
+<pre class="r"><code>distinct(a_hdl_cad,name,beta_hat_1,seb1,beta_hat_2,seb2,prob_z1,hgnc_symbol,distance_to_transcript) %&gt;% arrange(desc(prob_z1))</code></pre>
+<pre><code># A tibble: 541 x 8
+   name  beta_hat_1   seb1 beta_hat_2   seb2 prob_z1 distance_to_tra…
+   &lt;chr&gt;      &lt;dbl&gt;  &lt;dbl&gt;      &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;            &lt;int&gt;
+ 1 rs65…    -0.0854 0.0091     0.120  0.0258   0.843             3466
+ 2 rs29…    -0.0426 0.0049     0.0545 0.0140   0.667            12552
+ 3 rs16…     0.0719 0.0071    -0.0471 0.0200   0.662            10754
+ 4 rs44…    -0.0983 0.0212     0.1    0.0429   0.653             2585
+ 5 rs12…    -0.0329 0.006      0.103  0.0171   0.644              782
+ 6 rs86…     0.0318 0.0051    -0.0484 0.0151   0.641            46953
+ 7 rs47…    -0.0329 0.0051     0.0426 0.0146   0.639             1676
+ 8 rs39…     0.0352 0.0052    -0.0402 0.0148   0.637            20088
+ 9 rs12…     0.0407 0.0094    -0.0927 0.0257   0.633             7842
+10 rs16…     0.0307 0.0055    -0.0514 0.0155   0.632             7024
+# ... with 531 more rows, and 1 more variable: hgnc_symbol &lt;chr&gt;</code></pre>
+<pre class="r"><code>distinct(a_hdl_cad,name,beta_hat_1,seb1,beta_hat_2,seb2,prob_z1,hgnc_symbol,distance_to_transcript,name_1006) %&gt;% arrange(desc(prob_z1)) %&gt;% mutate(nak=str_detect(name_1006,&#39;sodium&#39;)|str_detect(name_1006,&#39;potassium&#39;)) %&gt;% group_by(name) %&gt;% summarise(nak=any(nak)) %&gt;% ungroup() %&gt;% rename(snp=name,Has_Sodium_Potassium_GO_Term=nak) %&gt;% inner_join(hdl_cad) %&gt;% ggplot(aes(x=beta_hat_1/seb1,y=beta_hat_2/seb2))+geom_point()+geom_smooth(method=&quot;lm&quot;)+facet_wrap(~Has_Sodium_Potassium_GO_Term,labeller = label_both)+ylab(&quot;Z-score_CAD&quot;)+xlab(&quot;Z-score_HDL&quot;)</code></pre>
+<pre><code>Joining, by = &quot;snp&quot;</code></pre>
+<p><img src="figure/SharedSNPAnalysis.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>gene_annotations &lt;- group_by(gene_df,hgnc_symbol) %&gt;% summarise(Has_Sodium_Potassium_GO_Term=any(str_detect(name_1006,&#39;sodium&#39;)|str_detect(name_1006,&#39;potassium&#39;)),
+                                                                Has_Glomerulus_GO_Term=any(str_detect(name_1006,&#39;glomerulus&#39;)),
+                                                                Has_Kidney_GO_Term=any(str_detect(name_1006,&#39;kidney&#39;)))</code></pre>
+<pre class="r"><code>kidney_k_na_df &lt;- distinct(a_hdl_cad,name,beta_hat_1,seb1,beta_hat_2,seb2,prob_z1,hgnc_symbol,distance_to_transcript,name_1006) %&gt;% arrange(desc(prob_z1)) %&gt;%
+  mutate(nak=str_detect(name_1006,&#39;sodium&#39;)|str_detect(name_1006,&#39;potassium&#39;),glom=str_detect(name_1006,&#39;glomerulus&#39;)) %&gt;%
+  group_by(name) %&gt;% 
+  summarise(nak=any(nak),glom=any(glom)) %&gt;%
+  ungroup() %&gt;%
+  rename(snp=name,
+         Has_Sodium_Potassium_GO_Term=nak,
+         Has_Glomerulus_GO_Term=glom) %&gt;%
+  inner_join(hdl_cad) %&gt;% 
+  mutate(z_hdl=beta_hat_1/seb1,z_cad=beta_hat_2/seb2)</code></pre>
+<pre><code>Joining, by = &quot;snp&quot;</code></pre>
+<pre class="r"><code>kidney_df &lt;- distinct(a_hdl_cad,name,beta_hat_1,seb1,beta_hat_2,seb2,prob_z1,hgnc_symbol,distance_to_transcript,name_1006) %&gt;% arrange(desc(prob_z1)) %&gt;%
+  mutate(nak=str_detect(name_1006,&#39;kidney&#39;)|str_detect(name_1006,&#39;kidney&#39;)) %&gt;% 
+  group_by(name) %&gt;%
+  summarise(nak=any(nak)) %&gt;% 
+  ungroup() %&gt;%
+  rename(snp=name,Has_Kidney_GO_Term=nak) %&gt;% right_join(hdl_cad) %&gt;% mutate(Has_Kidney_GO_Term=ifelse(is.na(Has_Kidney_GO_Term),FALSE,Has_Kidney_GO_Term)) %&gt;%
+  mutate(z_hdl=beta_hat_1/seb1,z_cad=beta_hat_2/seb2)</code></pre>
+<pre><code>Joining, by = &quot;snp&quot;</code></pre>
+<pre class="r"><code>kidney_df %&gt;% ggplot(aes(x=beta_hat_1/seb1,y=beta_hat_2/seb2)) +
+  geom_point() +
+  geom_smooth(method=&quot;lm&quot;) +
+  facet_wrap(~Has_Kidney_GO_Term,labeller = label_both) +
+  ylab(&quot;Z-score_CAD&quot;) +
+  xlab(&quot;Z-score_HDL&quot;)</code></pre>
+<p><img src="figure/SharedSNPAnalysis.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>nak_genes &lt;- distinct(a_hdl_cad,name,beta_hat_1,seb1,beta_hat_2,seb2,prob_z1,hgnc_symbol,distance_to_transcript,name_1006) %&gt;% arrange(desc(prob_z1)) %&gt;% 
+  mutate(nak=str_detect(name_1006,&#39;sodium&#39;)|str_detect(name_1006,&#39;potassium&#39;)) %&gt;%
+  group_by(hgnc_symbol) %&gt;% 
+  summarise(nak=any(nak)) %&gt;%
+  ungroup()</code></pre>
+<pre class="r"><code>distinct(a_hdl_cad,name,beta_hat_1,seb1,beta_hat_2,seb2,prob_z1,hgnc_symbol) %&gt;%
+  group_by(hgnc_symbol) %&gt;%
+  summarise(mean_pz=mean(prob_z1),n_s=n(),min_pz=min(prob_z1),max_pz=max(prob_z1)) %&gt;% 
+  arrange(desc(max_pz),desc(n_s)) %&gt;%
+  filter(n_s&gt;1,hgnc_symbol!=&quot;&quot;)</code></pre>
+<pre><code># A tibble: 42 x 5
+   hgnc_symbol mean_pz   n_s min_pz max_pz
+   &lt;chr&gt;         &lt;dbl&gt; &lt;int&gt;  &lt;dbl&gt;  &lt;dbl&gt;
+ 1 SLC12A3       0.492     4 0.375   0.662
+ 2 SCARB1        0.395     5 0.197   0.637
+ 3 C5orf67       0.469     3 0.359   0.618
+ 4 LIPC          0.352     7 0.0523  0.604
+ 5 GALNT2        0.477     2 0.364   0.589
+ 6 LIPG          0.516     2 0.450   0.582
+ 7 APOB          0.558     2 0.543   0.572
+ 8 DNAH10        0.521     2 0.490   0.552
+ 9 AFF1          0.451     2 0.363   0.538
+10 CMIP          0.452     2 0.385   0.520
+# ... with 32 more rows</code></pre>
+<pre class="r"><code>distinct(a_hdl_cad,name,beta_hat_1,seb1,beta_hat_2,seb2,prob_z1,hgnc_symbol) %&gt;%
+  group_by(hgnc_symbol) %&gt;%
+  summarise(mean_pz=mean(prob_z1),n_s=n(),min_pz=min(prob_z1),max_px=max(prob_z1)) %&gt;% 
+  arrange(desc(n_s),desc(mean_pz)) %&gt;% 
+  filter(n_s&gt;1)</code></pre>
+<pre><code># A tibble: 43 x 5
+   hgnc_symbol mean_pz   n_s min_pz max_px
+   &lt;chr&gt;         &lt;dbl&gt; &lt;int&gt;  &lt;dbl&gt;  &lt;dbl&gt;
+ 1 &quot;&quot;            0.380    84 0.101   0.667
+ 2 ALDH1A2       0.225    11 0.0542  0.376
+ 3 NLRC5         0.342     9 0.166   0.519
+ 4 ABCA1         0.218     9 0.0887  0.381
+ 5 LIPC          0.352     7 0.0523  0.604
+ 6 SCARB1        0.395     5 0.197   0.637
+ 7 MYO5B         0.267     5 0.155   0.420
+ 8 SLC12A3       0.492     4 0.375   0.662
+ 9 C5orf67       0.469     3 0.359   0.618
+10 CSGALNACT1    0.394     3 0.363   0.445
+# ... with 33 more rows</code></pre>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.5.1 (2018-07-02)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Manjaro Linux
+
+Matrix products: default
+BLAS/LAPACK: /opt/intel/compilers_and_libraries_2018.1.163/linux/mkl/lib/intel64_lin/libmkl_gf_lp64.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] bindrcpp_0.2.2  forcats_0.3.0   stringr_1.3.1   dplyr_0.7.6    
+ [5] purrr_0.2.5     readr_1.1.1     tidyr_0.8.1     tibble_1.4.2   
+ [9] ggplot2_3.0.0   tidyverse_1.2.1
+
+loaded via a namespace (and not attached):
+ [1] Biobase_2.40.0       httr_1.3.1           bit64_0.9-7         
+ [4] jsonlite_1.5         R.utils_2.6.0        modelr_0.1.2        
+ [7] assertthat_0.2.0     stats4_3.5.1         blob_1.1.1          
+[10] cellranger_1.1.0     yaml_2.2.0           progress_1.2.0      
+[13] pillar_1.3.0         RSQLite_2.1.1        backports_1.1.2     
+[16] lattice_0.20-35      glue_1.3.0           digest_0.6.16       
+[19] rvest_0.3.2          colorspace_1.3-2     htmltools_0.3.6     
+[22] R.oo_1.22.0          plyr_1.8.4           XML_3.98-1.16       
+[25] pkgconfig_2.0.2      broom_0.5.0          biomaRt_2.36.1      
+[28] haven_1.1.2          scales_1.0.0         whisker_0.3-2       
+[31] git2r_0.23.0         IRanges_2.14.11      withr_2.1.2         
+[34] BiocGenerics_0.26.0  lazyeval_0.2.1       cli_1.0.0           
+[37] magrittr_1.5         crayon_1.3.4         readxl_1.1.0        
+[40] memoise_1.1.0        evaluate_0.11        R.methodsS3_1.7.1   
+[43] fansi_0.3.0          nlme_3.1-137         xml2_1.2.0          
+[46] tools_3.5.1          RMariaDB_1.0.6       prettyunits_1.0.2   
+[49] hms_0.4.2            S4Vectors_0.18.3     munsell_0.5.0       
+[52] AnnotationDbi_1.42.1 compiler_3.5.1       rlang_0.2.2         
+[55] grid_3.5.1           RCurl_1.95-4.11      rstudioapi_0.7      
+[58] bitops_1.0-6         labeling_0.3         rmarkdown_1.10      
+[61] gtable_0.2.0         DBI_1.0.0            curl_3.2            
+[64] R6_2.2.2             lubridate_1.7.4      knitr_1.20          
+[67] utf8_1.1.4           bit_1.1-14           bindr_0.1.1         
+[70] workflowr_1.1.1      rprojroot_1.3-2      stringi_1.2.4       
+[73] parallel_3.5.1       Rcpp_0.12.18         dbplyr_1.2.2        
+[76] tidyselect_0.2.4    </code></pre>
+</div>
+</div>
+
+<hr>
+<p>
+    
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+<hr>
+<p>
+  This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a>
+  analysis was created with
+  <a href="https://github.com/jdblischak/workflowr">workflowr</a> 1.1.1
+</p>
+<hr>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

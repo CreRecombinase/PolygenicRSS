@@ -1,0 +1,52 @@
+---
+title: "RSSp vs Vanilla LDSC"
+author: "Nicholas Knoblauch"
+date: 2018-04-04
+output: workflowr::wflow_html
+---
+
+
+
+
+
+
+```{r}
+rsspf <- "../output/RSSp_snakemake/sim_chr5_genred2_genred2_T_omni_gwas_RSSp_res_AllPVE_1_F_F.txt.gz"
+rssp_res <- read_delim(rsspf,delim="\t")
+ldscf <- "../output/RSSp_snakemake/ldsc_res/sim_chr5_genred2_T_hapmap_gwas_ldsc_res_AllPVE.txt.gz"
+ldsc_res <- read_delim(ldscf,delim="\t") %>% select(fgeneid,pve=Total_Observed_scale_h2,bias=Intercept) %>% mutate(fgeneid=as.character(fgeneid),bias=bias-1) 
+```
+
+
+
+```{r}
+ggplot(rssp_res,aes(x=tpve,y=pve))+geom_point()
+```
+
+
+
+```{r}
+library(EigenH5)
+uhf <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_genome_gwas_uh/chr5_bd_AllPVE_sim.h5"
+evdf <- "/run/media/nwknoblauch/Data/EVD_H5/chr5_bd_T_hapmap.h5"
+tparam_df <- read_df_h5(uhf,"SimulationInfo")
+uhm <- read_matrix_h5(uhf,"/","uh")
+all_objs <- paste0("L2/",get_objs_h5(evdf,"L2"))
+l <- do.call(c,map(all_objs,~read_vector_h5(evdf,.x,"L2")))
+N <- unique(tparam_df$n)
+p <- unique(tparam_df$p)
+tl <- (l*N)/p
+ldsc_mm <- array_branch(uhm^2,2) %>% map_df(function(x){
+  tx <- x-1
+  tlm <- lm(tx~tl+0)
+  data_frame(pve=coef(tlm))
+})
+ldsc_mm <- mutate(ldsc_mm,fgeneid=as.character(1:n())) %>% inner_join(tparam_df)
+ggplot(ldsc_mm,aes(x=tpve,y=pve))+geom_point()+geom_abline(slope=1,intercept=0)
+```
+```{r}
+
+```
+
+
+

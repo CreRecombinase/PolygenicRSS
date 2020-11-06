@@ -1,0 +1,168 @@
+---
+title: "Shared SNP Analysis"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+# Packages you'll need
+1. `tidyverse` 
+2. `biomaRt`from Bioconductor (don't actually load it using `library` because it overrides `dplyr`'s `select` etc.)
+3. `dbplyr` & `RMariaDB` (for connecting to UCSC genome browser)
+4. `DT` 
+5. `ReactomePA` from Bioconductor for pathway enrichment (may have to `sudo apt-get install libudunits2-dev`)
+6. `clusterProfiler` for GO and KEGG enrichment
+
+```{r}
+library(tidyverse)
+library(DT)
+#library(biomaRt)
+```
+
+
+# Outline 
+
+Briefly, the workflow is:
+1) read in data
+2) map SNPs to coordinates using the UCSC genome browser (also obtain functional consequence of variants)
+3) map SNPs to genes using `biomaRt`
+
+
+## Read in the data
+
+```{r,message=F,warning=F}
+height_cad_f <- "~/Downloads/giant_height__cardiogram_cad_data.tsv"
+hdl_cad_f <- "~/Downloads/gls_hdl__cardiogram_cad_data.tsv"
+height_cad <- read_delim(height_cad_f,delim="\t")
+hdl_cad <- read_delim(hdl_cad_f,delim="\t")
+all_rsid <- rbind(select(hdl_cad,snp),select(height_cad,snp)) %>% distinct(snp) %>% rename(name=snp)
+nrow(height_cad)
+nrow(hdl_cad)
+```
+
+First we'll connect to the UCSC genome browser database, and filter on `rsid`.
+```{r}
+#mysql --user=genome --host=genome-mysql.cse.ucsc.edu -A -N -D hg19 -e 'SELECT chrom, chromStart, chromEnd, name FROM snp144Common where name=\'rs10931091\''
+
+con <- RMariaDB::dbConnect(RMariaDB::MariaDB(),host="genome-mysql.cse.ucsc.edu",username="genome",dbname="hg19")
+variant_df <- tbl(con,"snp147")
+anno_df <- filter(variant_df,name %in% all_rsid$name) %>% 
+  collect() %>% mutate(chrom=str_replace(chrom,pattern = "chr",replacement = ""))
+RMariaDB::dbDisconnect(con)
+```
+
+
+
+Next we'll plug our rsid's into `ensembl` to get associated genes 
+
+```{r}
+snpmart = biomaRt::useMart(biomart = "ENSEMBL_MART_SNP", dataset="hsapiens_snp")
+mart_anno_df <- biomaRt::getBM(attributes = c('refsnp_id','allele','chrom_start','chrom_strand','clinical_significance','associated_gene','distance_to_transcript','polyphen_score','sift_score','ensembl_gene_stable_id','consequence_type_tv','consequence_allele_string'), 
+      filters = c('snp_filter'), 
+      values = list(anno_df$name), 
+      mart = snpmart)
+mart_anno_df <- rename(mart_anno_df,name=refsnp_id)
+
+full_anno_df <- left_join(anno_df,mart_anno_df) %>% select_if(~length(unique(.x))>1)
+```
+
+
+Next we merge our annotations back into our data, and take a quick look at the distribution of functional categories of the variants, first for height and then for 
+
+```{r}
+a_height_cad <- rename(height_cad,name=snp) %>% left_join(full_anno_df) %>% distinct(name,.keep_all=T) %>% mutate(funcl=str_split(func,pattern=",")) %>% unnest(funcl)
+a_hdl_cad <- rename(hdl_cad,name=snp) %>% left_join(full_anno_df) %>% distinct(name,.keep_all=T) %>% mutate(funcl=str_split(func,pattern=",")) %>% unnest(funcl)
+a_height_cad %>% ggplot(aes(x=funcl,y=prob_z1))+geom_boxplot()+geom_hline(aes(yintercept=median(prob_z1)))+ggtitle("Height->CAD")+xlab("Function")
+```
+
+
+```{r}
+a_hdl_cad %>% ggplot(aes(x=funcl,y=prob_z1))+geom_boxplot()+geom_hline(aes(yintercept=median(prob_z1)))+ggtitle("HDL->CAD")+xlab("Function")
+```
+
+
+
+
+Now for each SNP-associated gene we'll pull out its GO terms
+```{r}
+ensembl = biomaRt::useMart("ensembl",dataset="hsapiens_gene_ensembl")
+gene_df = biomaRt::getBM(attributes = c('ensembl_gene_id', 'go_id','hgnc_symbol','description','family','name_1006','namespace_1003','entrezgene'), 
+              filters = 'ensembl_gene_id', 
+              values = unique(full_anno_df$ensembl_gene_stable_id), 
+              mart = ensembl)
+
+```
+```{r}
+a_hdl_cad <- rename(a_hdl_cad,ensembl_gene_id=ensembl_gene_stable_id) %>% inner_join(gene_df) 
+a_hdl_cad <- a_hdl_cad %>% arrange(desc(prob_z1))
+```
+
+
+What genes do top signals come from?
+
+```{r}
+distinct(a_hdl_cad,name,beta_hat_1,seb1,beta_hat_2,seb2,prob_z1,hgnc_symbol) %>% arrange(desc(prob_z1)) %>% datatable()
+```
+
+
+## Enrichment/Pathway analysis
+
+To start, we'll summarise the evidence for each gene by it's max and min `prob_z1`
+```{r}
+lz_df <- distinct(a_hdl_cad,entrezgene,prob_z1) %>% group_by(entrezgene) %>% summarise(max_z1=max(prob_z1),min_z1=min(prob_z1)) %>% arrange(desc(max_z1)) %>% filter(!is.na(entrezgene))
+```
+
+
+### GO Molecular Function Enrichment
+
+
+Let's start with the full set of `HDL->CAD` genes
+
+```{r}
+ego <- clusterProfiler::enrichGO(gene          = lz_df$entrezgene,
+                
+                OrgDb         = org.Hs.eg.db,
+                pAdjustMethod = "BH",
+                pvalueCutoff  = 0.05,
+
+        readable      = TRUE)
+as_data_frame(ego) %>% DT::datatable()
+```
+
+Now let's restrict ourselves to genes where the max(`prob_z1` is greater than 0.5)
+```{r}
+filter(lz_df,max_z1>0.5) %>% pull(entrezgene) %>% clusterProfiler::enrichGO(
+                OrgDb         = org.Hs.eg.db,
+                pAdjustMethod = "BH",
+                pvalueCutoff  = 0.05,
+        readable      = TRUE) %>%  as_data_frame() %>% DT::datatable()
+```
+
+### ReactomeDB Pathway Enrichment
+
+Again, starting with the full set of genes:
+
+```{r}
+library(ReactomePA)
+hdl_cad_genes <- as.character(unique(a_hdl_cad$entrezgene))
+x <- ReactomePA::enrichPathway(gene=hdl_cad_genes,pvalueCutoff=0.05, readable=T,pAdjustMethod = "fdr")
+x_df <- as_data_frame(x)
+x_df %>% DT::datatable()
+```
+
+Restricting to genes where the max(`prob_z1` is greater than 0.5)
+
+```{r}
+x <- filter(lz_df,max_z1>0.5) %>% pull(entrezgene) %>% ReactomePA::enrichPathway(pvalueCutoff=0.05, readable=T,pAdjustMethod = "fdr")
+
+as_data_frame(x) %>% DT::datatable()
+
+```
+
+Restricting to genes where the min(`prob_z1`) is greater than 0.5 gives us 1 result
+
+```{r}
+x <- filter(lz_df,min_z1>0.5) %>% pull(entrezgene) %>% ReactomePA::enrichPathway(pvalueCutoff=0.05, readable=T,pAdjustMethod = "fdr")
+as_data_frame(x) %>% DT::datatable()
+```

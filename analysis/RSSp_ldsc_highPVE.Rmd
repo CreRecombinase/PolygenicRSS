@@ -2,29 +2,12 @@
 title: "RSSp vs ldsc (High PVE)"
 author: "Nicholas Knoblauch"
 date: 2017-11-08
-output: html_document
+output: workflowr::wflow_html
 ---
 
-<!-- The file analysis/chunks.R contains chunks that define default settings
-shared across the workflowr files. -->
-```{r read-chunk, include=FALSE, cache=FALSE}
-knitr::read_chunk("chunks.R")
-```
 
-<!-- Update knitr chunk options -->
-```{r knitr-opts-chunk, include=FALSE}
-```
 
-<!-- Insert the date the file was last updated -->
-```{r last-updated, echo=FALSE, results='asis'}
-```
 
-<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
- package git2r is installed -->
-```{r code-version, echo=FALSE, results='asis'}
-```
-
-<!-- Add your analysis here -->
 
 
 
@@ -98,9 +81,6 @@ Loci for this simulation were chosen by taking the intersection of:
 
 This ended up being `844501` SNPs in total.
 
-<!-- ```{r} -->
-<!-- select(comp_est_df,True_PVE=tpve,True_Confound=tbias) %>% distinct(True_PVE,True_Confound) %>% mutate(Relative_Confounding=True_Confound/True_PVE) %>% arrange(True_PVE,True_Confound) -->
-<!-- ``` -->
 
 ## Methods
 
@@ -215,11 +195,7 @@ filter(comp_est_df,method!="RSSp_NoConfound") %>% mutate(t_rel_confounding=round
 ```
 
 
-## Session information
 
-<!-- Insert the session information into the document -->
-```{r session-info}
-```
 
 
 

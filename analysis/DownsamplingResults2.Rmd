@@ -10,6 +10,7 @@ output: workflowr::wflow_html
 ```{r,echo=F,message=F,warnings=F}
 library(EigenH5)
 library(tidyverse)
+
 ```
 
 
@@ -22,15 +23,16 @@ library(tidyverse)
 res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",full.names = T,pattern="SNP")
 res_d_ldsc <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake/ldsc_res/",pattern="cd",full.names = T)
 
-res_df_rssp <- map_df(res_d_rssp,~quietly(read_delim)(.x,delim = "\t")$result %>% mutate(chrom=as.character(chrom),method="RSSp")) %>% filter(!is.na(simulation),!is.na(useLDshrink)) %>% filter(scenario == "RepPVE", dataset == "cd", panel_dataset == "cd",chrom=="1-22",simulation=="gwas",!is.na(chrom),!is.na(AF)) %>% select(-ends_with("bound"),-sigu,-lnZ,-bias,-tbias,-optim,-useGradient,-log_params,-message,-convergence)
-res_df_ldsc <- map_df(res_d_ldsc,~quietly(read_delim)(.x,delim = "\t")$result %>% mutate(Intercept=as.character(Intercept),chrom=as.character(chrom),method=ifelse(useIntercept,"LDSC_Intercept","LDSC_noIntercept"))) %>% filter(scenario == "RepPVE", dataset == "cd", panel_dataset == "cd",chrom=="1-22",simulation=="gwas",!is.na(chrom),!is.na(AF))%>% select(-Lambda_GC,-Mean_Chi_2,-Total_time_elapsed,-Intercept)
+res_df_rssp <- map_df(res_d_rssp,~quietly(read_delim)(.x,delim = "\t")$result %>% mutate(chrom=as.character(chrom),method="RSSp",useLDetect=as.character(useLDetect))) %>% filter(!is.na(simulation),!is.na(useLDshrink)) %>% filter(scenario == "RepPVE", dataset == "cd", panel_dataset == "cd",chrom=="1-22",simulation=="gwas",!is.na(chrom),!is.na(AF)) %>% select(-ends_with("bound"),-sigu,-lnZ,-bias,-tbias,-optim,-useGradient,-log_params,-message,-convergence)
+
+res_df_ldsc <- map_df(res_d_ldsc,~quietly(read_delim)(.x,delim = "\t")$result %>% mutate(Intercept=as.character(Intercept),chrom=as.character(chrom),useLDetect=as.character(useLDetect),method=ifelse(useIntercept,"LDSC_Intercept","LDSC_noIntercept"))) %>% filter(scenario == "RepPVE", dataset == "cd", panel_dataset == "cd",chrom=="1-22",simulation=="gwas",!is.na(chrom),!is.na(AF))%>% select(-Lambda_GC,-Mean_Chi_2,-Total_time_elapsed,-Intercept)
 res_df <- bind_rows(res_df_rssp,res_df_ldsc)
 # rss_res <- filter(res_df) %>% select(fgeneid,tpve,pve,simulation,useLDshrink,N,AF,SNPCT) %>% 
 #   mutate(RSSp_error=tpve-pve,RSSp=pve) %>% select(-pve)
 #,!is.na(chrom),!is.na(AF),simulation=="gwas",chrom=="1-22")
  # select_if(function(x){!all(is.na(x))})
 
-sum_df <- res_df %>%  group_by_at(vars(-pve,-fgeneid)) %>% summarise(mean_pve=mean(pve),sd_pve=sd(pve),error_pve=mean((pve-tpve)^2)) %>% ungroup()
+sum_df <- res_df %>%  group_by_at(vars(-pve,-fgeneid)) %>% summarise(mean_pve=mean(pve),sd_pve=sd(pve),error_pve=mean((pve-tpve)^2),error_sd=sd(pve-tpve)) %>% ungroup() %>% mutate(error_rmse=sqrt(error_pve))
 tparam_df <- distinct(res_df,fgeneid,tsigu,tpve,p,n,AF,SNPCT,N)
 # rssp_cols <- colnames(res_df)
 
@@ -38,7 +40,18 @@ tparam_df <- distinct(res_df,fgeneid,tsigu,tpve,p,n,AF,SNPCT,N)
 
 
 ```{r,echo=F,message = F,warnings = F}
-filter(sum_df,SNPCT==0,AF!=0.2,!useLDshrink) %>% ggplot(aes(x = tpve, y = mean_pve,col=method)) +
+filter(sum_df,AF==0.1,SNPCT==0,N==0,!useLDshrink,method!="LDSC_Intercept") %>% mutate(Method=gsub("(_.+)","",method)) %>%  ggplot(aes(x = tpve, y = error_rmse,fill=Method,col=Method)) + geom_errorbar(aes(ymin=error_rmse-error_sd/2,ymax=error_rmse+error_sd/2),position=position_dodge())+
+  geom_col(position=position_dodge()) +
+  ggtitle("Root Mean Squared Error of PVE Estimates","10 replicates per PVE value (p=217874,n=4686)") +
+  xlab("PVE") + 
+  ylab("RMSE(PVE)")+scale_x_continuous(breaks=c(0.1,0.3,0.5))
+```
+
+
+
+
+```{r,echo=F,message = F,warnings = F}
+filter(sum_df,AF==0.1,SNPCT==0,N==0,!useLDshrink,method!="LDSC_Intercept") %>% ggplot(aes(x = tpve, y = mean_pve,col=method)) +
   geom_point() + geom_errorbar(aes(ymin=mean_pve-sd_pve/2,ymax=mean_pve+sd_pve/2))+
   geom_abline(slope = 1, intercept = 0) +
   facet_grid( n~AF,labeller = "label_both") +

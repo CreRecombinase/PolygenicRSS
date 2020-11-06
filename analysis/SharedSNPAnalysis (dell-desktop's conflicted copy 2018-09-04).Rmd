@@ -1,0 +1,197 @@
+---
+title: "Shared SNP Analysis"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+#library(biomaRt)
+```
+
+
+## Read in the data
+
+```{r}
+height_cad_f <- "~/Downloads/giant_height__cardiogram_cad_data.tsv"
+hdl_cad_f <- "~/Downloads/gls_hdl__cardiogram_cad_data.tsv"
+height_cad <- read_delim(height_cad_f,delim="\t")
+hdl_cad <- read_delim(hdl_cad_f,delim="\t")
+
+all_rsid <- rbind(select(hdl_cad,snp),select(height_cad,snp)) %>% distinct(snp) %>% rename(name=snp)
+```
+
+## Connect to the UCSC genome browser database
+
+
+```{r}
+#mysql --user=genome --host=genome-mysql.cse.ucsc.edu -A -N -D hg19 -e 'SELECT chrom, chromStart, chromEnd, name FROM snp144Common where name=\'rs10931091\''
+
+con <- dbConnect(RMariaDB::MariaDB(),host="genome-mysql.cse.ucsc.edu",username="genome",dbname="hg19")
+variant_df <- tbl(con,"snp147")
+```
+
+```{r}
+anno_df <- filter(variant_df,name %in% all_rsid$name) %>% collect()
+anno_df <- mutate(anno_df,chrom=str_replace(chrom,pattern = "chr",replacement = ""))
+```
+
+
+
+
+## Pull coordinates from SNPs
+
+```{r}
+snpmart = biomaRt::useMart(biomart = "ENSEMBL_MART_SNP", dataset="hsapiens_snp")
+mart_anno_df <- biomaRt::getBM(attributes = c('refsnp_id','allele','chrom_start','chrom_strand','clinical_significance','associated_gene','distance_to_transcript','polyphen_score','sift_score','ensembl_gene_stable_id','consequence_type_tv','consequence_allele_string'), 
+      filters = c('snp_filter'), 
+      values = list(anno_df$name), 
+      mart = snpmart)
+mart_anno_df <- rename(mart_anno_df,name=refsnp_id)
+```
+
+
+```{r}
+full_anno_df <- left_join(anno_df,mart_anno_df) %>% select_if(~length(unique(.x))>1)
+```
+
+
+```{r}
+a_height_cad <- rename(height_cad,name=snp) %>% left_join(full_anno_df) %>% distinct(name,.keep_all=T) %>% mutate(funcl=str_split(func,pattern=",")) %>% unnest(funcl)
+a_hdl_cad <- rename(hdl_cad,name=snp) %>% left_join(full_anno_df) %>% distinct(name,.keep_all=T) %>% mutate(funcl=str_split(func,pattern=",")) %>% unnest(funcl)
+```
+
+```{r}
+a_height_cad %>% ggplot(aes(x=funcl,y=prob_z1))+geom_boxplot()+geom_hline(aes(yintercept=median(prob_z1)))+ggtitle("Height->CAD")+xlab("Function")
+```
+
+
+```{r}
+a_hdl_cad %>% ggplot(aes(x=funcl,y=prob_z1))+geom_boxplot()+geom_hline(aes(yintercept=median(prob_z1)))+ggtitle("HDL->CAD")+xlab("Function")
+```
+
+## Gene Annotation
+```{r}
+ensembl = biomaRt::useMart("ensembl",dataset="hsapiens_gene_ensembl")
+gene_df = biomaRt::getBM(attributes = c('ensembl_gene_id', 'go_id','hgnc_symbol','description','family','name_1006','namespace_1003'), 
+              filters = 'ensembl_gene_id', 
+              values = unique(full_anno_df$ensembl_gene_stable_id), 
+              mart = ensembl)
+
+```
+```{r}
+a_hdl_cad <- rename(a_hdl_cad,ensembl_gene_id=ensembl_gene_stable_id) %>% inner_join(gene_df) 
+a_hdl_cad <- a_hdl_cad %>% arrange(desc(prob_z1))
+
+# go_ct <- group_by(a_hdl_cad,namespace_1003,name_1006,go_id) %>% summarise(n_genes=n_distinct(hgnc_symbol),n_tot=n(),mean_prob=mean(unique(prob_z1))) %>% ungroup() %>% arrange(desc(n_genes),desc(n_tot))
+# 
+# filter(go_ct,namespace_1003=='biological_process',n_genes>10) %>% inner_join(a_hdl_cad) %>% ggplot(aes(x=mean_prob,y=prob_z1,group=mean_prob))+geom_boxplot()
+
+```
+
+
+# What genes do top signals come from?
+```{r}
+distinct(a_hdl_cad,name,beta_hat_1,seb1,beta_hat_2,seb2,prob_z1,hgnc_symbol) %>% arrange(desc(prob_z1))
+```
+
+```{r}
+distinct(a_hdl_cad,name,beta_hat_1,seb1,beta_hat_2,seb2,prob_z1,hgnc_symbol,distance_to_transcript) %>% arrange(desc(prob_z1))
+```
+
+```{r}
+distinct(a_hdl_cad,name,beta_hat_1,seb1,beta_hat_2,seb2,prob_z1,hgnc_symbol,distance_to_transcript,name_1006) %>% arrange(desc(prob_z1)) %>% mutate(nak=str_detect(name_1006,'sodium')|str_detect(name_1006,'potassium')) %>% group_by(name) %>% summarise(nak=any(nak)) %>% ungroup() %>% rename(snp=name,Has_Sodium_Potassium_GO_Term=nak) %>% inner_join(hdl_cad) %>% ggplot(aes(x=beta_hat_1/seb1,y=beta_hat_2/seb2))+geom_point()+geom_smooth(method="lm")+facet_wrap(~Has_Sodium_Potassium_GO_Term,labeller = label_both)+ylab("Z-score_CAD")+xlab("Z-score_HDL")
+```
+
+
+```{r}
+gene_annotations <- group_by(gene_df,hgnc_symbol) %>% summarise(Has_Sodium_Potassium_GO_Term=any(str_detect(name_1006,'sodium')|str_detect(name_1006,'potassium')),
+                                                                Has_Glomerulus_GO_Term=any(str_detect(name_1006,'glomerulus')),
+                                                                Has_Kidney_GO_Term=any(str_detect(name_1006,'kidney')))
+```
+
+
+
+
+
+
+```{r}
+kidney_k_na_df <- distinct(a_hdl_cad,name,beta_hat_1,seb1,beta_hat_2,seb2,prob_z1,hgnc_symbol,distance_to_transcript,name_1006) %>% arrange(desc(prob_z1)) %>%
+  mutate(nak=str_detect(name_1006,'sodium')|str_detect(name_1006,'potassium'),glom=str_detect(name_1006,'glomerulus')) %>%
+  group_by(name) %>% 
+  summarise(nak=any(nak),glom=any(glom)) %>%
+  ungroup() %>%
+  rename(snp=name,
+         Has_Sodium_Potassium_GO_Term=nak,
+         Has_Glomerulus_GO_Term=glom) %>%
+  inner_join(hdl_cad) %>% 
+  mutate(z_hdl=beta_hat_1/seb1,z_cad=beta_hat_2/seb2)
+```
+
+```{r}
+kidney_df <- distinct(a_hdl_cad,name,beta_hat_1,seb1,beta_hat_2,seb2,prob_z1,hgnc_symbol,distance_to_transcript,name_1006) %>% arrange(desc(prob_z1)) %>%
+  mutate(nak=str_detect(name_1006,'kidney')|str_detect(name_1006,'kidney')) %>% 
+  group_by(name) %>%
+  summarise(nak=any(nak)) %>% 
+  ungroup() %>%
+  rename(snp=name,Has_Kidney_GO_Term=nak) %>% right_join(hdl_cad) %>% mutate(Has_Kidney_GO_Term=ifelse(is.na(Has_Kidney_GO_Term),FALSE,Has_Kidney_GO_Term)) %>%
+  mutate(z_hdl=beta_hat_1/seb1,z_cad=beta_hat_2/seb2)
+```
+
+```{r}
+kidney_df %>% ggplot(aes(x=beta_hat_1/seb1,y=beta_hat_2/seb2)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  facet_wrap(~Has_Kidney_GO_Term,labeller = label_both) +
+  ylab("Z-score_CAD") +
+  xlab("Z-score_HDL")
+```
+
+
+
+```{r}
+lm_alt <- lm(z_cad~z_hdl+Has_Sodium_Potassium_GO_Term,data=k_na_df)
+lm_int <- lm(z_cad~z_hdl*Has_Sodium_Potassium_GO_Term,data=k_na_df)
+summary(lm_int)
+#filter(k_na_df,!Has_Sodium_Potassium_GO_Term) %>% lm(z_cad~z_hdl,data=.) %>% summary()
+```
+
+
+```{r}
+lm_int_kidney <- lm(z_cad~z_hdl*Has_Kidney_GO_Term,data=kidney_df)
+```
+
+
+
+
+```{r}
+filter(k_na_df,Has_Sodium_Potassium_GO_Term) %>% lm(z_cad~z_hdl,data=.) %>% summary()
+```
+
+
+```{r}
+nak_genes <- distinct(a_hdl_cad,name,beta_hat_1,seb1,beta_hat_2,seb2,prob_z1,hgnc_symbol,distance_to_transcript,name_1006) %>% arrange(desc(prob_z1)) %>% 
+  mutate(nak=str_detect(name_1006,'sodium')|str_detect(name_1006,'potassium')) %>%
+  group_by(hgnc_symbol) %>% 
+  summarise(nak=any(nak)) %>%
+  ungroup()
+```
+
+
+```{r}
+distinct(a_hdl_cad,name,beta_hat_1,seb1,beta_hat_2,seb2,prob_z1,hgnc_symbol) %>%
+  group_by(hgnc_symbol) %>%
+  summarise(mean_pz=mean(prob_z1),n_s=n(),min_pz=min(prob_z1),max_pz=max(prob_z1)) %>% 
+  arrange(desc(max_pz),desc(n_s)) %>%
+  filter(n_s>1,hgnc_symbol!="")
+```
+
+```{r}
+distinct(a_hdl_cad,name,beta_hat_1,seb1,beta_hat_2,seb2,prob_z1,hgnc_symbol) %>%
+  group_by(hgnc_symbol) %>%
+  summarise(mean_pz=mean(prob_z1),n_s=n(),min_pz=min(prob_z1),max_px=max(prob_z1)) %>% 
+  arrange(desc(n_s),desc(mean_pz)) %>% 
+  filter(n_s>1)
+```
+
+
+

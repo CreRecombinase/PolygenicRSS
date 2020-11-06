@@ -1,0 +1,29 @@
+---
+title: "eQTL pipelines"
+output: html_notebook
+---
+
+# Comparing eQTL pipelines
+
+
+Does my eQTL pipeline give results similar to the framingham eQTL pipeline?
+
+
+```{r}
+library(tidyverse)
+res_df <- readRDS("../code/snakemake_files/eqtl_check.RDS") 
+
+semi_join(res_df,slice(distinct(res_df,Transcript_Cluster_ID),1:5)) %>% ggplot(aes(x=Fx,y=beta_hat,col=factor(Transcript_Cluster_ID)))+geom_point()+geom_smooth(method="lm")+geom_abline(slope=1,intercept=0)
+```
+
+```{r}
+lm_df <- group_by(res_df,Transcript_Cluster_ID) %>% summarise(n_snp=n()) %>% inner_join(res_df) %>%  filter(n_snp>3) %>% group_by(Transcript_Cluster_ID) %>% do(mod=lm(beta_hat~Fx,data=.)) %>% do(data.frame(
+  var = names(coef(.$mod)),
+  coef(summary(.$mod)),
+  Transcript_Cluster_ID=.$Transcript_Cluster_ID)
+) %>% ungroup()
+#summary(lm(beta_hat~Fx,data=res_df))
+
+filter(lm_df,var=="Fx") %>% ggplot(aes(x=Estimate))+geom_histogram()
+```
+

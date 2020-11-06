@@ -28,6 +28,8 @@ output: workflowr::wflow_html
 * [Visualizing RSSp vs LDSc](ConfoundingAdj.html)
 * [Heritability results from Framingham Data](Exp_Heritability.html)
 * [LDSC vs RSSp vs individual-level-data on UK biobank GWAS](ukb_pve.html)
+* [LDSC vs RSSp vs individual-level-data on UK biobank simulated GWAS](ukb_sim.html)
+
 
 
 

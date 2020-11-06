@@ -1,0 +1,58 @@
+---
+title: "RSSp Confounding"
+author: "Nicholas Knoblauch"
+date: "2018-11-14"
+output: workflowr::wflow_html
+---
+
+
+```{r}
+library(fs)
+library(RSSp)
+library(tidyverse)
+library(EigenH5)
+data_files <- dir_ls("~/Desktop/ukb/",recursive = T)
+sumstat_files <- dir_ls("~/Desktop/ukbSumStat/",recursive = T)
+```
+
+```{r}
+ls_h5(data_files[1])
+trait_df <- read_df_h5(data_files[1],datapath = "TraitInfo") %>% mutate(trait_index=1:n())
+trait_df <- map_df(sumstat_files,
+                   ~read_tsv(.x,
+                   col_types=cols(
+  max_N = col_integer(),
+  median_N = col_integer(),
+  mean_N = col_number(),
+  var_N = col_integer(),
+  consortia = col_character(),
+  trait = col_character()))
+) %>%  inner_join(trait_df,by="trait") %>% arrange(trait_index)
+```
+
+```{r}
+index <- 32
+filenames <- data_files
+D_vec <- flatten_dbl(map(filenames,read_vector_h5,datapath="/quh_df/D"))
+
+quh_vec <- flatten_dbl(map(filenames,~c(read_matrix_h5(.x,datapath="/quh_df/quh",subset_cols=index))))
+```
+
+```{r}
+
+tsamp <- filter(trait_df,trait_index==as.character(index)) %>% pull(median_N)
+t_est_1 <- RSSp_estimate(quh = quh_vec,D = D_vec,sample_size = tsamp,nterms = 1,useGradient = F)
+
+p <- sum(D_vec)
+est_Ds <- sqrt(D_vec^2*t_est_1$sigu^2+D_vec)
+
+tibble(quh=quh_vec,est_D=est_Ds) %>% mutate(norm_quh=quh/est_D) %>% 
+  ggplot(aes(sample=norm_quh))+
+  stat_qq()+
+  stat_qq_line()
+
+```
+
+
+
+

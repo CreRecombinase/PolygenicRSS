@@ -1,0 +1,107 @@
+---
+title: "Getting up and running with LDetect"
+author: "Nicholas Knoblauch"
+date: 2017-08-15
+output: workflowr::wflow_html
+---
+
+
+
+
+#Using LDetect
+
+Tutorial from [here][https://bitbucket.org/nygcresearch/ldetect]
+
+## Datasets
+
+Using genetic maps from [here][https://github.com/joepickrell/1000-genomes-genetic-maps] and reference panel from [here][ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20110521/]
+
+
+#Step 1- Partitioning the chromosome 
+```{bash}
+cd ~/Downloads/ldetect/ldetect/examples
+
+/home/nwknoblauch/tensorflow/bin/python3 P00_00_partition_chromosome.py example_data/chr2.interpolated_genetic_map.gz 379 example_data/cov_matrix/scripts/chr2_partitions_ex
+```
+
+# Step 2: Calculate the covariance matrix
+
+```{bash}
+
+cd ~/Downloads/ldetect/ldetect/examples
+
+tabix -h ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20110521/ALL.chr2.phase1_release_v3.20101123.snps_indels_svs.genotypes.vcf.gz 2:39967768-40067768 | /home/nwknoblauch/tensorflow/bin/python3 P00_01_calc_covariance.py 
+
+```
+
+
+```{bash}
+
+cd ~/Downloads/ldetect/ldetect/examples
+
+tabix -h ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20110521/ALL.chr2.phase1_release_v3.20101123.snps_indels_svs.genotypes.vcf.gz 2:39967768-40067768 | /home/nwknoblauch/tensorflow/bin/python3 P00_01_calc_covariance.py example_data/chr2.interpolated_genetic_map.gz example_data/eurinds.txt 11418 1e-7 example_data/cov_matrix/chr2/chr2.39967768.40067768.gz
+
+```
+
+
+
+```{r}
+library(tidyverse)
+library(SNPRelate)
+
+
+dataf <- "~/Downloads/ldetect/ldetect/examples/example_data/cov_matrix/chr2/chr2.39967768.40067768.gz"
+mdata <- read_delim(dataf,col_names = c("snpid_1",
+                                        "snpid_2",
+                                        "position_1",
+                                        "position_2",
+                                        "genetic_position_1",
+                                        "genetic_position_2",
+                                        "empirical_covariance",
+                                        "shrinkage_covariance"),delim=" ")
+
+dsnps <- distinct(mdata,snpid_1)
+
+shrink_covmat <- arrange(mdata,position_1,position_2) %>% select(snpid_1,snpid_2,shrinkage_covariance) %>% acast(snpid_1~snpid_2,fill=0)
+cp_shrink_covmat <- t(shrink_covmat)
+head(which((cp_shrink_covmat[lower.tri(cp_shrink_covmat,diag=F)]*shrink_covmat[lower.tri(shrink_covmat,diag=F)])!=0))
+sym_shrink_covmat <- shrink_covmat
+sym_shrink_covmat[upper.tri(sym_shrink_covmat,diag=T)] <- 0
+sym_shrink_covmat[lower.tri(sym_shrink_covmat,diag=F)] <- cp_shrink_covmat[lower.tri(cp_shrink_covmat,diag=F)]+shrink_covmat[upper.tri(shrink_covmat,diag=F)]
+sym_shrink_covmat<- sym_shrink_covmat+t(sym_shrink_covmat)
+diag(sym_shrink_covmat) <- diag(shrink_covmat)
+# sym_shrink_covmat <- sym_shrink_covmat[rownames(test_R),colnames(test_R)]
+sym_cor <- cov2cor(sym_shrink_covmat)
+
+
+asnp_df <- bind_rows(select(mdata,rsid=snpid_1),select(mdata,rsid=snpid_2)) %>% distinct
+
+library(LDshrink)
+sub_vcff <- "~/Downloads/ldetect/ldetect/examples/sub_vcf.vcf"
+sub_gdsf <- "/home/nwknoblauch/Downloads/ldetect/ldetect/examples/sub_vcf.gds"
+SNPRelate::snpgdsVCF2GDS(vcf.fn = sub_vcff,out.fn = sub_gdsf)
+gdsd <- SNPRelate::snpgdsOpen(sub_gdsf)
+snp_info <- data_frame(rsid=read.gdsn(index.gdsn(gdsd,"snp.rs.id")),pos=read.gdsn(index.gdsn(gdsd,"snp.position"))) %>% mutate(snpid=1:n())
+mapd <- read_delim("~/Downloads/ldetect/ldetect/examples/example_data/chr2.interpolated_genetic_map.gz",delim=" ",col_names = c("rsid","pos","map"))
+nmap <- inner_join(mapd,snp_info)
+genomat <- snpgdsGetGeno(gdsd)
+genomat[] <- as.numeric(genomat)
+theta <- calc_theta(379)
+test_R <- LDshrink::calcLD(hmata=genomat,mapa=nmap$map,m=379,Ne = 11418,cutoff = 1e-7)
+rownames(test_R) <- nmap$rsid
+colnames(test_R) <- nmap$rsid
+nbdf <- inner_join(nmap,asnp_df)
+sub_R <- test_R[nbdf$rsid,nbdf$rsid]
+ld_R <- sym_cor[nbdf$rsid,nbdf$rsid]
+
+hapmatf <- "~/Downloads/ldetect/ldetect/examples/haps.txt"
+hapdf <- read_delim(hapmatf,delim=",",col_names = F)
+sum(colnmaes())
+
+
+```
+
+
+
+
+

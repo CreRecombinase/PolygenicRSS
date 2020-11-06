@@ -2,27 +2,11 @@
 title: "Investigating Inflation in Large Sample Simulations"
 author: "Nicholas Knoblauch"
 date: 2018-02-14
-output: html_document
+output: workflowr::wflow_html
 ---
 
-<!-- The file analysis/chunks.R contains chunks that define default settings
-shared across the workflowr files. -->
-```{r read-chunk, include=FALSE, cache=FALSE}
-knitr::read_chunk("chunks.R")
-```
 
-<!-- Update knitr chunk options -->
-```{r knitr-opts-chunk, include=FALSE}
-```
 
-<!-- Insert the date the file was last updated -->
-```{r last-updated, echo=FALSE, results='asis'}
-```
-
-<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
- package git2r is installed -->
-```{r code-version, echo=FALSE, results='asis'}
-```
 
 
 
@@ -56,6 +40,18 @@ gctaf <- "../output/RSSp_snakemake/gcta_h2_est/RA-CAD_seq_wtcc_NoConfoundSmaller
 gcta_res <- read_delim(gctaf,delim="\t")  %>%
     filter(Source=="V(G)")%>% mutate(Source="gcta_pve",Variance=as.numeric(Variance)) %>% select(-SE) %>%spread(Source,Variance) %>% inner_join(tparam_df)
 ```
+
+
+```{r}
+gwas_names <- c("T1D & T2D")
+nres_f <- "../output/RSSp_snakemake/sim_chr1-22_T1D-T2D_T1D-T2D_F_gwas_RSSp_res_XiangSmallPVE_1_F.txt.gz"
+nres_t <- "../output/RSSp_snakemake/sim_chr1-22_T1D-T2D_T1D-T2D_T_gwas_RSSp_res_XiangSmallPVE_1_F.txt.gz"
+
+nres_df <- read_delim(nres_f,delim="\t")
+
+```
+
+
 
 
 The simulation parameters were as follows
@@ -109,16 +105,27 @@ tparam_df <- read_df_h5(quhf,"SimulationInfo")
 tparam_df <- group_by(tparam_df,tpve) %>% mutate(pve_replicate=1:n()) %>% ungroup()
 
 D <- read_vector_h5(quhf,"/","D")
-quh_df <- read_matrix_h5(quhf,"/","quh")^2 %>% magrittr::set_colnames(tparam_df$fgeneid) %>% as_data_frame %>%mutate(eigen_id=1:n(),D=D) %>%gather("fgeneid","v",-eigen_id,-D) %>% inner_join(tparam_df)%>% mutate(simulation="gwas")
+quh_df <- read_matrix_h5(quhf,"/","quh") %>% magrittr::set_colnames(tparam_df$fgeneid) %>% as_data_frame %>%mutate(eigen_id=1:n(),D=D) %>%gather("fgeneid","v",-eigen_id,-D) %>% inner_join(tparam_df)%>% mutate(simulation="gwas")
 
 D_direct <- read_vector_h5(quhf_direct,"/","D")
-quh_df <- bind_rows(quh_df,read_matrix_h5(quhf_direct,"/","quh")^2 %>% magrittr::set_colnames(tparam_df$fgeneid) %>% as_data_frame %>%mutate(eigen_id=1:n(),D=D_direct) %>%gather("fgeneid","v",-eigen_id,-D) %>% inner_join(tparam_df) %>% mutate(simulation="direct")) 
+quh_df <- bind_rows(quh_df,read_matrix_h5(quhf_direct,"/","quh") %>% magrittr::set_colnames(tparam_df$fgeneid) %>% as_data_frame %>%mutate(eigen_id=1:n(),D=D_direct) %>%gather("fgeneid","v",-eigen_id,-D) %>% inner_join(tparam_df) %>% mutate(simulation="direct")) 
 
 ```
 To start, here's a look at what a plot of $\hat{v}^2$ vs $\lambda$ looks like.
 
+```{r}
+tquh <- filter(quh_df,tpve==max(tpve)|tpve==min(tpve))  %>%rename(true_pve=tpve) %>% mutate(true_pve=round(true_pve,4)) %>%filter(pve_replicate==pve_replicate[1]) 
+tquh %>% ggplot(aes(x=D,y=v))+geom_point()+ggtitle("V vs eigenvalues")+xlab(bquote(lambda))+ylab(bquote(v))+facet_grid(true_pve~simulation,labeller = "label_both")
 
-```{r v_lambda}
+```
+
+```{r}
+tquh %>% ggplot(aes(x=v,..density..))+geom_histogram(bins=100)+ggtitle("V")+ylab(bquote(hat(v)))+facet_grid(true_pve~simulation,labeller = "label_both")
+```
+
+
+
+```{r vsq_lambda}
 filter(quh_df,tpve==max(tpve)|tpve==min(tpve))  %>%rename(true_pve=tpve) %>% mutate(true_pve=round(true_pve,4)) %>%filter(pve_replicate==pve_replicate[1])%>% ggplot(aes(x=D,y=v))+geom_point()+ggtitle("V^2 vs eigenvalues")+xlab(bquote(lambda))+ylab(bquote(v^2))+facet_grid(true_pve~simulation,labeller = "label_both")
 
 ```
@@ -151,6 +158,40 @@ res_df %>% rename(perc_rank=pvv) %>% mutate(perc_rank=round(perc_rank,3)) %>%  g
 
 
 ```{r read_lm}
+library(tidyverse)
+library(sgd)
+# aresff <- dir("~/Dropbox/scratch/RSSp_genome_direct_quh_chunk",full.names=T)
+aresff <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_genome_gwas_quh_chunk/chr1-22_BD-CAD-CD-HT-RA-T1D-T2D_BD-CAD-CD-HT-RA-T1D-T2D_T_hapmap_XiangSmallPVE_1_F.h5"
+tparam_df <- read_df_h5(aresff,"SimulationInfo")
+quhm <- read_matrix_h5(aresff,"/","quh")
+D <- read_vector_h5(aresff,"/","D")
+Dsq <- D^2
+p_n <- unique(tparam_df$p/tparam_df$n)
+arl <- array_branch(quhm^2,2) %>% map2(transpose(tparam_df),function(x,y){
+  td <- data_frame(nv = x - D, Dsq = Dsq)
+  tr <- sgd(nv~Dsq,data=td,model="glm")
+  return(tr)
+  })
+```
+
+```{r}
+ar_df <- mutate(tparam_df,est=map_dbl(arl,"coefficients"),pve=p_n*est)
+ggplot(ar_df,aes(x=tpve,y=pve))+geom_point()+geom_abline(slope=1,intercept=0)+geom_smooth(method="lm")
+```
+
+
+
+```{r}
+library(sgd)
+arl <- split(ar_df,ar_df$fgeneid)
+trl <- arl[[1]]
+trl <- mutate(trl,v=q^2,Dsq=D^2,tv=v-D)
+tlm <- lm(v~I(D^2)+offset(D)+0,data = trl)
+ntlm <- lm(tv~Dsq+0,data=trl)
+sgdr <-  sgd(tv ~ Dsq + 0,data=trl,model="m")
+
+  # as_data_frame(.y) %>% mutate(quh=.x,D=D))
+
 # aresff <- dir("~/Desktop/scratch/polyg_scratch",full.names = T,recursive = T,pattern="Smaller_[0-9].[0-9]+.h5")
 # meth <- gsub(".+genome_([a-z]+)_quh.+","\\1",aresff)
 # pvv <- as.numeric(gsub(".+Smaller_([0-9].[0-9]+).h5","\\1",aresff))
@@ -180,8 +221,4 @@ group_by(nres_df,perc_rank) %>% filter(n_distinct(simulation)==2) %>%ungroup()  
 filter(nres_df) %>% ggplot(aes(x=perc_rank,y=abs(pve-tpve),col=simulation))+geom_point()+geom_smooth(method="lm")+ggtitle("Regression-based RMSE of PVE")+ylab(bquote(RMSE(PVE)))+xlab("Proportion of total rank")
 ```
 
-## Session information
 
-<!-- Insert the session information into the document -->
-```{r session-info}
-```

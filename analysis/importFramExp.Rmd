@@ -1,0 +1,74 @@
+---
+title: "Importing Framingham Expression Data from dbGaP"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(EigenH5)
+off_c1_expf <- snakemake@input[["off_exp_c1"]] #"~/Desktop/dbGaP/files/phe000002.v6.FHS_SABRe_project3.expression-data-matrixfmt.c1/FinalFile_Gene_OFF_2446_Adjusted_c1.txt.gz"
+off_c2_expf <- snakemake@input[["off_exp_c2"]] #"~/Desktop/dbGaP/files/phe000002.v6.FHS_SABRe_project3.expression-data-matrixfmt.c2/FinalFile_Gene_OFF_2446_Adjusted_c2.txt.gz"
+gen3_c1_expf <- snakemake@input[["gen3_exp_c1"]]# "~/Desktop/dbGaP/files/phe000002.v6.FHS_SABRe_project3.expression-data-matrixfmt.c1/Final_Gene_GENIII_3180_c1.txt.gz"
+gen3_c2_expf <- snakemake@input[["gen3_exp_c2"]]#~/Desktop/dbGaP/files/phe000002.v6.FHS_SABRe_project3.expression-data-matrixfmt.c2/Final_Gene_GENIII_3180_c2.txt.gz"
+exp_if <- snakemake@input[["expif"]] #"~/Desktop/dbGaP/files/phe000002.v6.FHS_SABRe_project3.sample-info.MULTI/phe000002.v6_release_manifest.txt"
+snp_if <- snakemake@input[["snpif"]] # ~/Desktop/dbGaP/files/phg000679.v1.FHS_SHARe_Imputed_1000G.sample-info.MULTI/
+exp_infof <- snakemake@input[["expinfof"]]
+expf <- snakemake@output[["h5f"]]
+explf <- snakemake@output[["sample_list"]]
+
+off_c1 <- read_delim(off_c1_expf,delim="\t",comment="#")
+off_c2 <- read_delim(off_c2_expf,delim="\t",comment="#")
+
+sample_off <-  rbind(data_frame(FileName=c(colnames(off_c1)[-1]),grp="c1",data="OFF"),
+                     data_frame(FileName=colnames(off_c2)[-1],grp="c2",data="OFF"))
+
+gen3_c1 <- read_delim(gen3_c1_expf,delim="\t",comment="#") 
+gen3_c2 <- read_delim(gen3_c2_expf,delim="\t",comment="#")
+
+sample_gen3 <- rbind(data_frame(FileName=c(colnames(gen3_c1)[-1]),grp="c1",data="GENIII"),
+                     data_frame(FileName=colnames(gen3_c2)[-1],grp="c2",data="GENIII"))
+
+
+sample_exp <- rbind(sample_gen3,sample_off)
+
+sample_df_snp <- read_delim(snp_if,delim="\t",comment = '#')
+sample_df_exp <- read_delim(exp_if,delim="\t",comment="#")
+
+share_df_exp <- select(sample_df_exp,SubjectID,FileName) %>% inner_join(select(sample_df_snp,SubjectID))
+
+subset_exp <- inner_join(sample_exp,share_df_exp) %>% mutate(sample_id=1:n())
+
+
+all_exp <- cbind(cbind(gen3_c1,
+                 select(gen3_c2,-transcript_cluster_id)),
+                 cbind(select(off_c1,-transcript_cluster_id),
+                       select(off_c2,-transcript_cluster_id)))[,c("transcript_cluster_id",subset_exp$FileName)]
+
+exp_info_df <- read_delim(exp_infof,delim=",") 
+exp_info_df <- exp_info_df %>% select(fgeneid=transcript_cluster_id,chr=seqname,start,stop) %>% mutate(chr=gsub("chr","",chr))
+
+n_all_exp <- inner_join(exp_info_df,rename(all_exp,fgeneid=transcript_cluster_id))
+#all.equal(n_exp_info_df$fgeneid,all_exp$transcript_cluster_id)
+
+select(n_all_exp,fgeneid,chr,start,stop) %>% mutate(trait_id=1:n()) %>% write_df_h5(expf,"Traitinfo")
+select(n_all_exp,-fgeneid,-chr,-start,-stop) %>% data.matrix() %>% write_matrix_h5(filename = expf,"ymat/trait")
+write_df_h5(subset_exp,expf,"SampleInfo")
+write_delim(subset_exp,explf,delim="\t")
+
+
+```
+
+
+
+
+```{r}
+eqtl_df <- read_df_h5("/home/nwknoblauch/Desktop/gardner_scratch/eqtl-gene-annot_sub.h5","eQTLinfo",subset_cols=c("beta_hat","chr","pos","transcript_cluster_id"))
+```
+```{r}
+covf <- "~/Desktop/gardner_scratch/mRNA_matrixeqtl_COV_P40.txt"
+cov_d <- read_delim(covf,delim=" ")
+
+cov_sample_df <- data_frame(SubjectID=colnames(cov_d)[-1])
+
+```
+

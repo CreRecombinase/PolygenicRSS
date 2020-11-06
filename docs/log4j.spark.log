@@ -1,0 +1,201 @@
+17/12/04 17:27:52 INFO SparkContext: Running Spark version 1.6.2
+17/12/04 17:27:52 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+17/12/04 17:27:53 INFO SecurityManager: Changing view acls to: nwknoblauch
+17/12/04 17:27:53 INFO SecurityManager: Changing modify acls to: nwknoblauch
+17/12/04 17:27:53 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users with view permissions: Set(nwknoblauch); users with modify permissions: Set(nwknoblauch)
+17/12/04 17:27:53 INFO Utils: Successfully started service 'sparkDriver' on port 32873.
+17/12/04 17:27:53 INFO Slf4jLogger: Slf4jLogger started
+17/12/04 17:27:53 INFO Remoting: Starting remoting
+17/12/04 17:27:53 INFO Remoting: Remoting started; listening on addresses :[akka.tcp://sparkDriverActorSystem@127.0.0.1:36539]
+17/12/04 17:27:53 INFO Utils: Successfully started service 'sparkDriverActorSystem' on port 36539.
+17/12/04 17:27:53 INFO SparkEnv: Registering MapOutputTracker
+17/12/04 17:27:53 INFO SparkEnv: Registering BlockManagerMaster
+17/12/04 17:27:53 INFO DiskBlockManager: Created local directory at /tmp/blockmgr-d898ccc2-0f37-4aeb-a507-2a911f752595
+17/12/04 17:27:53 INFO MemoryStore: MemoryStore started with capacity 511.1 MB
+17/12/04 17:27:53 INFO SparkEnv: Registering OutputCommitCoordinator
+17/12/04 17:27:54 INFO Utils: Successfully started service 'SparkUI' on port 4040.
+17/12/04 17:27:54 INFO SparkUI: Started SparkUI at http://127.0.0.1:4040
+17/12/04 17:27:54 INFO HttpFileServer: HTTP File server directory is /tmp/spark-fdb7c318-14c3-4ef3-865b-675f8bf409ac/httpd-956613dd-4eb7-496b-894a-8b4677c5ca62
+17/12/04 17:27:54 INFO HttpServer: Starting HTTP Server
+17/12/04 17:27:54 INFO Utils: Successfully started service 'HTTP file server' on port 42020.
+17/12/04 17:27:54 INFO SparkContext: Added JAR file:/home/nwknoblauch/R/x86_64-pc-linux-gnu-library/3.4/sparklyr/java/spark-csv_2.11-1.3.0.jar at http://127.0.0.1:42020/jars/spark-csv_2.11-1.3.0.jar with timestamp 1512430074126
+17/12/04 17:27:54 INFO SparkContext: Added JAR file:/home/nwknoblauch/R/x86_64-pc-linux-gnu-library/3.4/sparklyr/java/commons-csv-1.1.jar at http://127.0.0.1:42020/jars/commons-csv-1.1.jar with timestamp 1512430074127
+17/12/04 17:27:54 INFO SparkContext: Added JAR file:/home/nwknoblauch/R/x86_64-pc-linux-gnu-library/3.4/sparklyr/java/univocity-parsers-1.5.1.jar at http://127.0.0.1:42020/jars/univocity-parsers-1.5.1.jar with timestamp 1512430074127
+17/12/04 17:27:54 INFO SparkContext: Added JAR file:/home/nwknoblauch/R/x86_64-pc-linux-gnu-library/3.4/sparklyr/java/sparklyr-1.6-2.10.jar at http://127.0.0.1:42020/jars/sparklyr-1.6-2.10.jar with timestamp 1512430074128
+17/12/04 17:27:54 INFO Executor: Starting executor ID driver on host localhost
+17/12/04 17:27:54 INFO Utils: Successfully started service 'org.apache.spark.network.netty.NettyBlockTransferService' on port 33889.
+17/12/04 17:27:54 INFO NettyBlockTransferService: Server created on 33889
+17/12/04 17:27:54 INFO BlockManagerMaster: Trying to register BlockManager
+17/12/04 17:27:54 INFO BlockManagerMasterEndpoint: Registering block manager localhost:33889 with 511.1 MB RAM, BlockManagerId(driver, localhost, 33889)
+17/12/04 17:27:54 INFO BlockManagerMaster: Registered BlockManager
+17/12/04 17:27:55 INFO HiveContext: Initializing execution hive, version 1.2.1
+17/12/04 17:27:55 INFO ClientWrapper: Inspected Hadoop version: 2.6.0
+17/12/04 17:27:55 INFO ClientWrapper: Loaded org.apache.hadoop.hive.shims.Hadoop23Shims for Hadoop version 2.6.0
+17/12/04 17:27:56 INFO HiveMetaStore: 0: Opening raw store with implemenation class:org.apache.hadoop.hive.metastore.ObjectStore
+17/12/04 17:27:56 INFO ObjectStore: ObjectStore, initialize called
+17/12/04 17:27:56 INFO Persistence: Property hive.metastore.integral.jdo.pushdown unknown - will be ignored
+17/12/04 17:27:56 INFO Persistence: Property datanucleus.cache.level2 unknown - will be ignored
+17/12/04 17:27:56 WARN Connection: BoneCP specified but not present in CLASSPATH (or one of dependencies)
+17/12/04 17:27:56 WARN Connection: BoneCP specified but not present in CLASSPATH (or one of dependencies)
+17/12/04 17:27:57 INFO ObjectStore: Setting MetaStore object pin classes with hive.metastore.cache.pinobjtypes="Table,StorageDescriptor,SerDeInfo,Partition,Database,Type,FieldSchema,Order"
+17/12/04 17:27:57 INFO Datastore: The class "org.apache.hadoop.hive.metastore.model.MFieldSchema" is tagged as "embedded-only" so does not have its own datastore table.
+17/12/04 17:27:57 INFO Datastore: The class "org.apache.hadoop.hive.metastore.model.MOrder" is tagged as "embedded-only" so does not have its own datastore table.
+17/12/04 17:27:58 INFO Datastore: The class "org.apache.hadoop.hive.metastore.model.MFieldSchema" is tagged as "embedded-only" so does not have its own datastore table.
+17/12/04 17:27:58 INFO Datastore: The class "org.apache.hadoop.hive.metastore.model.MOrder" is tagged as "embedded-only" so does not have its own datastore table.
+17/12/04 17:27:58 INFO MetaStoreDirectSql: Using direct SQL, underlying DB is DERBY
+17/12/04 17:27:58 INFO ObjectStore: Initialized ObjectStore
+17/12/04 17:27:58 WARN ObjectStore: Version information not found in metastore. hive.metastore.schema.verification is not enabled so recording the schema version 1.2.0
+17/12/04 17:27:58 WARN ObjectStore: Failed to get database default, returning NoSuchObjectException
+17/12/04 17:27:59 INFO HiveMetaStore: Added admin role in metastore
+17/12/04 17:27:59 INFO HiveMetaStore: Added public role in metastore
+17/12/04 17:27:59 INFO HiveMetaStore: No user is added in admin role, since config is empty
+17/12/04 17:27:59 INFO HiveMetaStore: 0: get_all_databases
+17/12/04 17:27:59 INFO audit: ugi=nwknoblauch	ip=unknown-ip-addr	cmd=get_all_databases	
+17/12/04 17:27:59 INFO HiveMetaStore: 0: get_functions: db=default pat=*
+17/12/04 17:27:59 INFO audit: ugi=nwknoblauch	ip=unknown-ip-addr	cmd=get_functions: db=default pat=*	
+17/12/04 17:27:59 INFO Datastore: The class "org.apache.hadoop.hive.metastore.model.MResourceUri" is tagged as "embedded-only" so does not have its own datastore table.
+17/12/04 17:27:59 INFO SessionState: Created local directory: /tmp/e6387626-d4af-4c9d-a1a0-d818f9528129_resources
+17/12/04 17:27:59 INFO SessionState: Created HDFS directory: /tmp/hive/nwknoblauch/e6387626-d4af-4c9d-a1a0-d818f9528129
+17/12/04 17:27:59 INFO SessionState: Created local directory: /tmp/nwknoblauch/e6387626-d4af-4c9d-a1a0-d818f9528129
+17/12/04 17:27:59 INFO SessionState: Created HDFS directory: /tmp/hive/nwknoblauch/e6387626-d4af-4c9d-a1a0-d818f9528129/_tmp_space.db
+17/12/04 17:27:59 INFO HiveContext: default warehouse location is /user/hive/warehouse
+17/12/04 17:27:59 INFO HiveContext: Initializing HiveMetastoreConnection version 1.2.1 using Spark classes.
+17/12/04 17:27:59 INFO ClientWrapper: Inspected Hadoop version: 2.6.0
+17/12/04 17:27:59 INFO ClientWrapper: Loaded org.apache.hadoop.hive.shims.Hadoop23Shims for Hadoop version 2.6.0
+17/12/04 17:27:59 INFO HiveMetaStore: 0: Opening raw store with implemenation class:org.apache.hadoop.hive.metastore.ObjectStore
+17/12/04 17:27:59 INFO ObjectStore: ObjectStore, initialize called
+17/12/04 17:27:59 INFO Persistence: Property hive.metastore.integral.jdo.pushdown unknown - will be ignored
+17/12/04 17:27:59 INFO Persistence: Property datanucleus.cache.level2 unknown - will be ignored
+17/12/04 17:27:59 WARN Connection: BoneCP specified but not present in CLASSPATH (or one of dependencies)
+17/12/04 17:28:00 WARN Connection: BoneCP specified but not present in CLASSPATH (or one of dependencies)
+17/12/04 17:28:00 INFO ObjectStore: Setting MetaStore object pin classes with hive.metastore.cache.pinobjtypes="Table,StorageDescriptor,SerDeInfo,Partition,Database,Type,FieldSchema,Order"
+17/12/04 17:28:01 INFO Datastore: The class "org.apache.hadoop.hive.metastore.model.MFieldSchema" is tagged as "embedded-only" so does not have its own datastore table.
+17/12/04 17:28:01 INFO Datastore: The class "org.apache.hadoop.hive.metastore.model.MOrder" is tagged as "embedded-only" so does not have its own datastore table.
+17/12/04 17:28:01 INFO Datastore: The class "org.apache.hadoop.hive.metastore.model.MFieldSchema" is tagged as "embedded-only" so does not have its own datastore table.
+17/12/04 17:28:01 INFO Datastore: The class "org.apache.hadoop.hive.metastore.model.MOrder" is tagged as "embedded-only" so does not have its own datastore table.
+17/12/04 17:28:01 INFO MetaStoreDirectSql: Using direct SQL, underlying DB is DERBY
+17/12/04 17:28:01 INFO ObjectStore: Initialized ObjectStore
+17/12/04 17:28:01 WARN ObjectStore: Version information not found in metastore. hive.metastore.schema.verification is not enabled so recording the schema version 1.2.0
+17/12/04 17:28:01 WARN ObjectStore: Failed to get database default, returning NoSuchObjectException
+17/12/04 17:28:01 INFO HiveMetaStore: Added admin role in metastore
+17/12/04 17:28:01 INFO HiveMetaStore: Added public role in metastore
+17/12/04 17:28:01 INFO HiveMetaStore: No user is added in admin role, since config is empty
+17/12/04 17:28:02 INFO HiveMetaStore: 0: get_all_databases
+17/12/04 17:28:02 INFO audit: ugi=nwknoblauch	ip=unknown-ip-addr	cmd=get_all_databases	
+17/12/04 17:28:02 INFO HiveMetaStore: 0: get_functions: db=default pat=*
+17/12/04 17:28:02 INFO audit: ugi=nwknoblauch	ip=unknown-ip-addr	cmd=get_functions: db=default pat=*	
+17/12/04 17:28:02 INFO Datastore: The class "org.apache.hadoop.hive.metastore.model.MResourceUri" is tagged as "embedded-only" so does not have its own datastore table.
+17/12/04 17:28:02 INFO SessionState: Created local directory: /tmp/803ec571-39b9-4b88-9d43-9421d1731ee5_resources
+17/12/04 17:28:02 INFO SessionState: Created HDFS directory: /tmp/hive/nwknoblauch/803ec571-39b9-4b88-9d43-9421d1731ee5
+17/12/04 17:28:02 INFO SessionState: Created local directory: /tmp/nwknoblauch/803ec571-39b9-4b88-9d43-9421d1731ee5
+17/12/04 17:28:02 INFO SessionState: Created HDFS directory: /tmp/hive/nwknoblauch/803ec571-39b9-4b88-9d43-9421d1731ee5/_tmp_space.db
+17/12/04 17:28:04 INFO HiveMetaStore: 0: get_tables: db=default pat=.*
+17/12/04 17:28:04 INFO audit: ugi=nwknoblauch	ip=unknown-ip-addr	cmd=get_tables: db=default pat=.*	
+17/12/04 17:28:04 INFO SparkContext: Starting job: collect at utils.scala:196
+17/12/04 17:28:04 INFO DAGScheduler: Got job 0 (collect at utils.scala:196) with 1 output partitions
+17/12/04 17:28:04 INFO DAGScheduler: Final stage: ResultStage 0 (collect at utils.scala:196)
+17/12/04 17:28:04 INFO DAGScheduler: Parents of final stage: List()
+17/12/04 17:28:04 INFO DAGScheduler: Missing parents: List()
+17/12/04 17:28:04 INFO DAGScheduler: Submitting ResultStage 0 (MapPartitionsRDD[1] at collect at utils.scala:196), which has no missing parents
+17/12/04 17:28:05 INFO MemoryStore: Block broadcast_0 stored as values in memory (estimated size 1968.0 B, free 1968.0 B)
+17/12/04 17:28:05 INFO MemoryStore: Block broadcast_0_piece0 stored as bytes in memory (estimated size 1230.0 B, free 3.1 KB)
+17/12/04 17:28:05 INFO BlockManagerInfo: Added broadcast_0_piece0 in memory on localhost:33889 (size: 1230.0 B, free: 511.1 MB)
+17/12/04 17:28:05 INFO SparkContext: Created broadcast 0 from broadcast at DAGScheduler.scala:1006
+17/12/04 17:28:05 INFO DAGScheduler: Submitting 1 missing tasks from ResultStage 0 (MapPartitionsRDD[1] at collect at utils.scala:196)
+17/12/04 17:28:05 INFO TaskSchedulerImpl: Adding task set 0.0 with 1 tasks
+17/12/04 17:28:05 INFO TaskSetManager: Starting task 0.0 in stage 0.0 (TID 0, localhost, partition 0,PROCESS_LOCAL, 2348 bytes)
+17/12/04 17:28:05 INFO Executor: Running task 0.0 in stage 0.0 (TID 0)
+17/12/04 17:28:05 INFO Executor: Fetching http://127.0.0.1:42020/jars/commons-csv-1.1.jar with timestamp 1512430074127
+17/12/04 17:28:05 INFO Utils: Fetching http://127.0.0.1:42020/jars/commons-csv-1.1.jar to /tmp/spark-fdb7c318-14c3-4ef3-865b-675f8bf409ac/userFiles-af64ec2f-60ca-41eb-9c4d-00e71677ad2c/fetchFileTemp3812652570771920778.tmp
+17/12/04 17:28:05 INFO Executor: Adding file:/tmp/spark-fdb7c318-14c3-4ef3-865b-675f8bf409ac/userFiles-af64ec2f-60ca-41eb-9c4d-00e71677ad2c/commons-csv-1.1.jar to class loader
+17/12/04 17:28:05 INFO Executor: Fetching http://127.0.0.1:42020/jars/univocity-parsers-1.5.1.jar with timestamp 1512430074127
+17/12/04 17:28:05 INFO Utils: Fetching http://127.0.0.1:42020/jars/univocity-parsers-1.5.1.jar to /tmp/spark-fdb7c318-14c3-4ef3-865b-675f8bf409ac/userFiles-af64ec2f-60ca-41eb-9c4d-00e71677ad2c/fetchFileTemp6772722477913650407.tmp
+17/12/04 17:28:05 INFO Executor: Adding file:/tmp/spark-fdb7c318-14c3-4ef3-865b-675f8bf409ac/userFiles-af64ec2f-60ca-41eb-9c4d-00e71677ad2c/univocity-parsers-1.5.1.jar to class loader
+17/12/04 17:28:05 INFO Executor: Fetching http://127.0.0.1:42020/jars/spark-csv_2.11-1.3.0.jar with timestamp 1512430074126
+17/12/04 17:28:05 INFO Utils: Fetching http://127.0.0.1:42020/jars/spark-csv_2.11-1.3.0.jar to /tmp/spark-fdb7c318-14c3-4ef3-865b-675f8bf409ac/userFiles-af64ec2f-60ca-41eb-9c4d-00e71677ad2c/fetchFileTemp4596630029203579520.tmp
+17/12/04 17:28:05 INFO Executor: Adding file:/tmp/spark-fdb7c318-14c3-4ef3-865b-675f8bf409ac/userFiles-af64ec2f-60ca-41eb-9c4d-00e71677ad2c/spark-csv_2.11-1.3.0.jar to class loader
+17/12/04 17:28:05 INFO Executor: Fetching http://127.0.0.1:42020/jars/sparklyr-1.6-2.10.jar with timestamp 1512430074128
+17/12/04 17:28:05 INFO Utils: Fetching http://127.0.0.1:42020/jars/sparklyr-1.6-2.10.jar to /tmp/spark-fdb7c318-14c3-4ef3-865b-675f8bf409ac/userFiles-af64ec2f-60ca-41eb-9c4d-00e71677ad2c/fetchFileTemp2258305605388919820.tmp
+17/12/04 17:28:05 INFO Executor: Adding file:/tmp/spark-fdb7c318-14c3-4ef3-865b-675f8bf409ac/userFiles-af64ec2f-60ca-41eb-9c4d-00e71677ad2c/sparklyr-1.6-2.10.jar to class loader
+17/12/04 17:28:05 INFO Executor: Finished task 0.0 in stage 0.0 (TID 0). 940 bytes result sent to driver
+17/12/04 17:28:05 INFO TaskSetManager: Finished task 0.0 in stage 0.0 (TID 0) in 150 ms on localhost (1/1)
+17/12/04 17:28:05 INFO TaskSchedulerImpl: Removed TaskSet 0.0, whose tasks have all completed, from pool 
+17/12/04 17:28:05 INFO DAGScheduler: ResultStage 0 (collect at utils.scala:196) finished in 0.164 s
+17/12/04 17:28:05 INFO DAGScheduler: Job 0 finished: collect at utils.scala:196, took 0.293636 s
+17/12/04 17:28:05 INFO HiveMetaStore: 0: get_tables: db=default pat=.*
+17/12/04 17:28:05 INFO audit: ugi=nwknoblauch	ip=unknown-ip-addr	cmd=get_tables: db=default pat=.*	
+17/12/04 17:28:05 INFO SparkContext: Starting job: collect at utils.scala:196
+17/12/04 17:28:05 INFO DAGScheduler: Got job 1 (collect at utils.scala:196) with 1 output partitions
+17/12/04 17:28:05 INFO DAGScheduler: Final stage: ResultStage 1 (collect at utils.scala:196)
+17/12/04 17:28:05 INFO DAGScheduler: Parents of final stage: List()
+17/12/04 17:28:05 INFO DAGScheduler: Missing parents: List()
+17/12/04 17:28:05 INFO DAGScheduler: Submitting ResultStage 1 (MapPartitionsRDD[3] at collect at utils.scala:196), which has no missing parents
+17/12/04 17:28:05 INFO MemoryStore: Block broadcast_1 stored as values in memory (estimated size 1968.0 B, free 5.0 KB)
+17/12/04 17:28:05 INFO MemoryStore: Block broadcast_1_piece0 stored as bytes in memory (estimated size 1224.0 B, free 6.2 KB)
+17/12/04 17:28:05 INFO BlockManagerInfo: Added broadcast_1_piece0 in memory on localhost:33889 (size: 1224.0 B, free: 511.1 MB)
+17/12/04 17:28:05 INFO SparkContext: Created broadcast 1 from broadcast at DAGScheduler.scala:1006
+17/12/04 17:28:05 INFO DAGScheduler: Submitting 1 missing tasks from ResultStage 1 (MapPartitionsRDD[3] at collect at utils.scala:196)
+17/12/04 17:28:05 INFO TaskSchedulerImpl: Adding task set 1.0 with 1 tasks
+17/12/04 17:28:05 INFO TaskSetManager: Starting task 0.0 in stage 1.0 (TID 1, localhost, partition 0,PROCESS_LOCAL, 2348 bytes)
+17/12/04 17:28:05 INFO Executor: Running task 0.0 in stage 1.0 (TID 1)
+17/12/04 17:28:05 INFO Executor: Finished task 0.0 in stage 1.0 (TID 1). 940 bytes result sent to driver
+17/12/04 17:28:05 INFO TaskSetManager: Finished task 0.0 in stage 1.0 (TID 1) in 5 ms on localhost (1/1)
+17/12/04 17:28:05 INFO TaskSchedulerImpl: Removed TaskSet 1.0, whose tasks have all completed, from pool 
+17/12/04 17:28:05 INFO DAGScheduler: ResultStage 1 (collect at utils.scala:196) finished in 0.005 s
+17/12/04 17:28:05 INFO DAGScheduler: Job 1 finished: collect at utils.scala:196, took 0.012007 s
+17/12/04 17:28:05 INFO HiveMetaStore: 0: get_tables: db=default pat=.*
+17/12/04 17:28:05 INFO audit: ugi=nwknoblauch	ip=unknown-ip-addr	cmd=get_tables: db=default pat=.*	
+17/12/04 17:28:05 INFO SparkContext: Starting job: collect at utils.scala:196
+17/12/04 17:28:05 INFO DAGScheduler: Got job 2 (collect at utils.scala:196) with 1 output partitions
+17/12/04 17:28:05 INFO DAGScheduler: Final stage: ResultStage 2 (collect at utils.scala:196)
+17/12/04 17:28:05 INFO DAGScheduler: Parents of final stage: List()
+17/12/04 17:28:05 INFO DAGScheduler: Missing parents: List()
+17/12/04 17:28:05 INFO DAGScheduler: Submitting ResultStage 2 (MapPartitionsRDD[5] at collect at utils.scala:196), which has no missing parents
+17/12/04 17:28:05 INFO MemoryStore: Block broadcast_2 stored as values in memory (estimated size 1968.0 B, free 8.2 KB)
+17/12/04 17:28:05 INFO MemoryStore: Block broadcast_2_piece0 stored as bytes in memory (estimated size 1223.0 B, free 9.4 KB)
+17/12/04 17:28:05 INFO BlockManagerInfo: Added broadcast_2_piece0 in memory on localhost:33889 (size: 1223.0 B, free: 511.1 MB)
+17/12/04 17:28:05 INFO SparkContext: Created broadcast 2 from broadcast at DAGScheduler.scala:1006
+17/12/04 17:28:05 INFO DAGScheduler: Submitting 1 missing tasks from ResultStage 2 (MapPartitionsRDD[5] at collect at utils.scala:196)
+17/12/04 17:28:05 INFO TaskSchedulerImpl: Adding task set 2.0 with 1 tasks
+17/12/04 17:28:05 INFO TaskSetManager: Starting task 0.0 in stage 2.0 (TID 2, localhost, partition 0,PROCESS_LOCAL, 2348 bytes)
+17/12/04 17:28:05 INFO Executor: Running task 0.0 in stage 2.0 (TID 2)
+17/12/04 17:28:05 INFO Executor: Finished task 0.0 in stage 2.0 (TID 2). 940 bytes result sent to driver
+17/12/04 17:28:05 INFO TaskSetManager: Finished task 0.0 in stage 2.0 (TID 2) in 3 ms on localhost (1/1)
+17/12/04 17:28:05 INFO DAGScheduler: ResultStage 2 (collect at utils.scala:196) finished in 0.003 s
+17/12/04 17:28:05 INFO TaskSchedulerImpl: Removed TaskSet 2.0, whose tasks have all completed, from pool 
+17/12/04 17:28:05 INFO DAGScheduler: Job 2 finished: collect at utils.scala:196, took 0.009882 s
+17/12/04 17:28:05 INFO HiveMetaStore: 0: get_tables: db=default pat=.*
+17/12/04 17:28:05 INFO audit: ugi=nwknoblauch	ip=unknown-ip-addr	cmd=get_tables: db=default pat=.*	
+17/12/04 17:28:05 INFO SparkContext: Starting job: collect at utils.scala:196
+17/12/04 17:28:05 INFO DAGScheduler: Got job 3 (collect at utils.scala:196) with 1 output partitions
+17/12/04 17:28:05 INFO DAGScheduler: Final stage: ResultStage 3 (collect at utils.scala:196)
+17/12/04 17:28:05 INFO DAGScheduler: Parents of final stage: List()
+17/12/04 17:28:05 INFO DAGScheduler: Missing parents: List()
+17/12/04 17:28:05 INFO DAGScheduler: Submitting ResultStage 3 (MapPartitionsRDD[7] at collect at utils.scala:196), which has no missing parents
+17/12/04 17:28:05 INFO MemoryStore: Block broadcast_3 stored as values in memory (estimated size 1968.0 B, free 11.3 KB)
+17/12/04 17:28:05 INFO MemoryStore: Block broadcast_3_piece0 stored as bytes in memory (estimated size 1224.0 B, free 12.5 KB)
+17/12/04 17:28:05 INFO BlockManagerInfo: Added broadcast_3_piece0 in memory on localhost:33889 (size: 1224.0 B, free: 511.1 MB)
+17/12/04 17:28:05 INFO SparkContext: Created broadcast 3 from broadcast at DAGScheduler.scala:1006
+17/12/04 17:28:05 INFO DAGScheduler: Submitting 1 missing tasks from ResultStage 3 (MapPartitionsRDD[7] at collect at utils.scala:196)
+17/12/04 17:28:05 INFO TaskSchedulerImpl: Adding task set 3.0 with 1 tasks
+17/12/04 17:28:05 INFO TaskSetManager: Starting task 0.0 in stage 3.0 (TID 3, localhost, partition 0,PROCESS_LOCAL, 2348 bytes)
+17/12/04 17:28:05 INFO Executor: Running task 0.0 in stage 3.0 (TID 3)
+17/12/04 17:28:05 INFO Executor: Finished task 0.0 in stage 3.0 (TID 3). 940 bytes result sent to driver
+17/12/04 17:28:05 INFO TaskSetManager: Finished task 0.0 in stage 3.0 (TID 3) in 6 ms on localhost (1/1)
+17/12/04 17:28:05 INFO DAGScheduler: ResultStage 3 (collect at utils.scala:196) finished in 0.007 s
+17/12/04 17:28:05 INFO TaskSchedulerImpl: Removed TaskSet 3.0, whose tasks have all completed, from pool 
+17/12/04 17:28:05 INFO DAGScheduler: Job 3 finished: collect at utils.scala:196, took 0.013203 s
+17/12/04 17:49:02 INFO SparkContext: Invoking stop() from shutdown hook
+17/12/04 17:49:02 INFO SparkUI: Stopped Spark web UI at http://127.0.0.1:4040
+17/12/04 17:49:02 INFO MapOutputTrackerMasterEndpoint: MapOutputTrackerMasterEndpoint stopped!
+17/12/04 17:49:02 INFO MemoryStore: MemoryStore cleared
+17/12/04 17:49:02 INFO BlockManager: BlockManager stopped
+17/12/04 17:49:02 INFO BlockManagerMaster: BlockManagerMaster stopped
+17/12/04 17:49:02 INFO OutputCommitCoordinator$OutputCommitCoordinatorEndpoint: OutputCommitCoordinator stopped!
+17/12/04 17:49:02 INFO RemoteActorRefProvider$RemotingTerminator: Shutting down remote daemon.
+17/12/04 17:49:02 INFO SparkContext: Successfully stopped SparkContext
+17/12/04 17:49:02 INFO ShutdownHookManager: Shutdown hook called
+17/12/04 17:49:02 INFO RemoteActorRefProvider$RemotingTerminator: Remote daemon shut down; proceeding with flushing remote transports.
+17/12/04 17:49:02 INFO ShutdownHookManager: Deleting directory /tmp/spark-6a8fcfa7-3f39-4451-90e8-d3323277e54c
+17/12/04 17:49:02 INFO ShutdownHookManager: Deleting directory /tmp/spark-fdb7c318-14c3-4ef3-865b-675f8bf409ac/httpd-956613dd-4eb7-496b-894a-8b4677c5ca62
+17/12/04 17:49:02 INFO ShutdownHookManager: Deleting directory /tmp/spark-fdb7c318-14c3-4ef3-865b-675f8bf409ac

@@ -1,0 +1,472 @@
+---
+title: "UK Biobank in-sample simulations"
+author: "Nicholas Knoblauch"
+date: "2020-04-15"
+output: workflowr::wflow_html
+---
+
+
+# Simulation 
+
+## Samples
+First, I randomly selected 12,000 samples from the UK biobank.  I computed a GRM from these 12000, and created a list of 11309 unrelated individuals (GRM cutoff 0.05).  I then sampled without replacement to obtain 10000 individuals for my GWAS simulation.  
+
+## Causal Variants/Simulating Phenotype 
+I used GCTA to simulate broadly polygenic traits from 1,077,146 variants that roughly corresponds to the Hapmap3 SNP list.  It should be noted that I did _not_ check to ensure that these variants varied in my subsample.  I assume that GCTA drops causal variants that do not vary in the sample.  These variants are the variants that the Neale lab used for LD score regression on UK biobank traits.
+
+GCTA uses the additive genetic model:
+
+$$y_j = \sum_i(w_{i,j}u_i) + e_j$$
+where $w_{i,j} = (x_{i,j} - 2p_i) / \sqrt{2p_i(1 - p_i)}$, (which is undefined for $p_i=0$ and $p_i=1$). $e_j$ is the residual effect generated from a normal distribution with a mean of 0 and variance of $\text{Var}(\sum_i(w_{i,j}u_i))(1 / h^2 - 1)$.
+
+I simulated traits with heritabilities of 0.2, 0.1 and 0.5.  For each heritability value ,GCTA simulates _one_ vector of "true" effects, and then simulates 10 replicates from the "true" effect.  
+
+## GWAS 
+
+I used the `plink2` glm function to fit the gwas, and used 10 principle components (also obtained from `plink2`) as covariates, and a 5 percent MAF threshold.
+
+## GCTA
+
+I estimated individual-level heritability using GCTA's GREML, again using 10 PCs as continuous covariates.
+
+## LDSC
+
+I estimated LD scores from the 10000 samples, then estimated heritability (with and without an intercept) using those LD scores and the summary statistics. 
+
+## RSSp
+
+I ran RSSp on the gwas summary stats using the 10000 samples as the reference LD panel.
+
+
+```{r,echo=F,message=F,warning=F}
+suppressMessages(library(plotly))
+suppressMessages(library(tidyverse))
+library(fs)
+library(forcats)
+library(unglue)
+library(magrittr)
+library(vroom)
+library(ldmap)
+library(EigenH5)
+parse_ldsc <- function(h2lf){
+    h2_dat <- suppressMessages(scan(h2lf,what=character(), sep = "\n",quiet=TRUE))
+    h2_rowi <- grep("Total Observed scale", h2_dat)
+    h2_row <- h2_dat[h2_rowi]
+    h2_data <- h2_dat[h2_rowi:length(h2_dat)]
+    h2_data <- h2_data[grep("^[^:]+:[^:]+$", h2_data)]
+    h2_datd <- purrr::transpose(strsplit(h2_data, split=":"))
+    names(h2_datd) <- c("Variable", "Value")
+    h2_datdf <- tidyr::unnest(as_data_frame(h2_datd)) %>%
+        dplyr::mutate(Variable=chartr(" ^", "__", Variable), Value = trimws(Value)) %>%
+      tidyr::separate(Value, c("Est", "SD"), sep = "[ s\\(\\)]+", remove = T, fill = "right", convert = T)
+    return(as.numeric(h2_datdf$Est[1]))
+    #%>% replace_na(list(Intercept=1.0,Intercept_sd=0.0))
+}
+parse_rssp <- function(x){
+  readRDS(x) %>% pull(pve)
+}
+parse_gcta <- function(x){
+  tdf <- read_tsv(x)
+  select(tdf,-SE) %>% mutate(row=1) %>% tidyr::spread(Source,Variance) %>%
+    rename(h2=`V(G)/Vp`) %>% mutate(h2_sd=tdf$SE[4]) %>% pull(h2)
+}
+parse_file <- function(path,model,...){
+  if(str_detect(model,"RSSP")){
+    parse_rssp(path)
+  }else{
+    if(str_detect(model,"GCTA")){
+      parse_gcta(path)
+    }else{
+      parse_ldsc(path)
+    }
+  }
+}
+```
+
+
+
+```{r}
+polym_results <- as.character(fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/",recurse = TRUE,glob = "*polym*"))
+
+#rss_df <- map_df(poly_results,readRDS)
+```
+
+
+```{r}
+polym_df <- bind_rows(
+  unglue(polym_results,"/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb_{ind}/polym_{rep}_10_{true_h2}_10000.{ext}")) %>% 
+  mutate(path=polym_results) %>% filter(ext!="log") %>% 
+  mutate(method=case_when(ext=="int.log" ~ "LDSC_INT",
+                         ext=="noint.log"~"LDSC_NOINT",
+                         ext=="shrink.RDS"~"RSSP",
+                         ext=="noshrink.RDS"~"RSSP_NOSHRINK",
+                         ext=="hsq"~"GCTA"))
+results_df <- mutate(polym_df,
+         h2=map2_dbl(path,method,~quietly(parse_file)(.x,.y)$result),
+         true_h2=as.numeric(true_h2)) %>% 
+  as_tibble()
+         
+```
+
+```{r}
+ggplot(results_df,aes(x=true_h2,y=abs(h2-true_h2),group=interaction(method,true_h2),fill=method))+geom_boxplot()+facet_wrap(~ind)
+```
+
+
+#Comparing EVD
+
+```{r}
+ld_files <- fs::dir_ls("/run/media/nwknoblauch/Backup412/polyg/ld_shrink_polym/")
+ld_df <- bind_rows(unglue::unglue(ld_files,"/run/media/nwknoblauch/Backup412/polyg/ld_shrink_polym/{im}_10000_chr{chrom}_{scatteritem}.h5")) %>%  mutate(file=ld_files)
+
+ld_df <- mutate(ld_df,regions=map(file,EigenH5::ls_h5))
+
+bld_df <- unnest(ld_df,cols=regions)
+
+cld_df <- spread(bld_df,key="im",value="file")
+
+
+library(furrr)
+library(progressr)
+library(EigenH5)
+plan(multisession,workers=8)
+with_progress({
+    p <- progressor(steps = nrow(cld_df))
+  
+  corvec <- future_pmap(cld_df,function(regions,ind,panel,...){
+    p()
+    d_panel <- read_vector_h5(panel,paste0(regions,"/D"))
+    d_ind <- read_vector_h5(ind,paste0(regions,"/D"))
+    if(length(d_panel)!=length(d_ind)){
+      panel_rsid <- read_vector_h5v(panel,paste0(regions,"/rsid"))
+      ind_rsid <- read_vector_h5v(ind,paste0(regions,"/rsid"))
+      return(list(ind=ind,panel=panel,regions=regions,panel_rsid=panel_rsid,ind_rsid=ind_rsid))
+    }
+    cor(d_panel,d_ind)
+  })
+
+})
+```
+
+
+
+
+```{r}
+
+
+quh_f <- ld_files <- fs::dir_ls("/run/media/nwknoblauch/Backup412/polyg/rssp_input/")
+quh_dff <- ld_files <- fs::dir_ls("/run/media/nwknoblauch/Backup412/polyg/rssp_input/")
+
+quh_df <- bind_rows(unglue::unglue(ld_files,"/run/media/nwknoblauch/Backup412/polyg/rssp_input/{shr}_{im}_chr{chrom}_polym_{trait}_10_{h2}_10000.qs")) %>%  mutate(file=quh_f)
+
+
+
+read_ldi_h5 <- function(ldmr,ind="ind"){
+  ldf <- filter(bld_df,regions==ldmr,im==ind) %>% pull(file)
+  snp_df <- read_df_h5(ldf,ldmr,subcols=c("rsid","snp_struct"))
+  D <- read_vector_h5(ldf,paste0(ldmr,"/D"))
+  Q <- read_matrix_h5(ldf,paste0(ldmr,"/Q"))
+  return(list(Q=Q,D=D,snp_df=snp_df))
+}
+
+
+read_gwas_sub <- function(trait,h2,ldmr){
+  output_h5 <- "/run/media/nwknoblauch/Backup412/polyg/polym.h5"
+  param_v <- read_vector_h5(output_h5,"params")
+  param_df <- unglue::unglue(param_v,"polym_{h2}_{trait}_10_10000") %>% bind_rows() %>% mutate(offset=(1:n())-1)
+  
+  subset_df <- semi_join(param_df,tibble(trait=trait,h2=h2))
+  offset_df <- read_df_h5(output_h5,"ldmap_region_offset")
+  sub_offset_df <- slice(offset_df,which(as.character(ldetect_EUR[offset_df$value])==ldmr))
+  s_gwas_df <- read_df_h5(output_h5,"/",subcols=c("rsid","snp_struct"),offset=sub_offset_df$offset,datasize=sub_offset_df$datasize)
+  if(nrow(subset_df)>1){
+    stopifnot(unique(diff(subset_df$offset))==1)
+  }
+  s_gwas_df <- s_gwas_df %>% mutate(Z=read_matrix_h5(output_h5,"Z",offset=c(sub_offset_df$offset,min(subset_df$offset)),datasize=c(sub_offset_df$datasize,nrow(subset_df))))
+  return(s_gwas_df)
+}
+
+
+
+quh_dff <- spread(quh_df,key="im",value=file)
+cquh_df <- filter(quh_dff,chrom!="4") %>% as_tibble()
+input_l <- group_by(quh_dff,trait,h2) %>% nest(filevec=c(chrom,ind,panel)) %>% group_split()
+
+til <- sample(input_l,1)
+filevec <- til[[1]]$filevec[[1]]
+trait <- til[[1]]$trait
+h2 <- til[[1]]$h2
+run_rssp_pv <- function(filevec,trait,h2){
+  panel_rsspi <- map_df(filevec$panel,~mutate(qs::qread(.x),id=1:n()))
+  ind_rsspi <- map_df(filevec$ind,~mutate(qs::qread(.x),id=1:n()))
+  true_sigu <- RSSp::calc_sigu(as.numeric(h2),p_n = sum(panel_rsspi$D)/10000)
+#  results <- RSSp::RSSp_estimate(rsspi$quh,rsspi$D,sample_size=10000)
+  panel_rsspi <- mutate(panel_rsspi,dn=dnorm(quh,mean=0,sd=sqrt(D^2*true_sigu^2+D),log=TRUE))
+  ind_rsspi <- mutate(ind_rsspi,dn=dnorm(quh,mean=0,sd=sqrt(D^2*true_sigu^2+D),log = TRUE))
+  panel_lik <- group_by(panel_rsspi,ldmr) %>% summarise(lik_tot=sum(dn),n=n())
+  ind_lik <- group_by(ind_rsspi,ldmr) %>% summarise(lik_tot=sum(dn),n=n())
+  ldmr <- filter(ind_lik,is.na(lik_tot)) %>% slice(1) %>% pull(ldmr)
+  comp_lik <- inner_join(panel_lik,ind_lik,by=c("ldmr","n"),suffix=c("_panel","_ind"))
+}
+
+
+all_ldmr <- unique(panel_rsspi$ldmr)
+h2 <- rep("0.1",10)
+trait <- as.character(1:10)
+library(progressr)
+with_progress({
+  p <- progressor(steps = length(all_ldmr))
+  rssp_df <- map_dfr(all_ldmr,function(tldmr){
+    p()
+    t_ind_L <- read_ldi_h5(ldmr = tldmr)  
+    ld_snp_df <- mutate(t_ind_L$snp_df,snp_pos=clear_alleles(snp_struct)) %>% mutate(ld_id=1:n())
+    gwas_df <- read_gwas_sub(trait,h2,tldmr) %>% mutate(snp_pos=clear_alleles(snp_struct))
+    ld_gwas_df <- left_join(ld_snp_df,gwas_df,by=c("snp_pos"),suffix=c("_ld","_gwas")) %>% 
+      mutate(ams=if_else(allele_match(snp_struct_ld,snp_struct_gwas)=="perfect_match",1,-1))  %>% 
+      mutate(Z=ams*Z)
+    
+    if(sum(is.na(ld_gwas_df$Z))>0){
+      ld_gwas_df$Z[is.na(ld_gwas_df$Z)] <- sample(ld_gwas_df$Z[!is.na(ld_gwas_df$Z)],sum(is.na(ld_gwas_df$Z)),replace=F)
+      stopifnot(sum(is.na(ld_gwas_df$Z))==0)
+    }
+    
+    stopifnot(all.equal(ld_gwas_df$ld_id,seq_len(nrow(ld_gwas_df))))
+    stopifnot(sum(is.na(ld_gwas_df$Z))==0)
+    ret_gwas_df <- tibble(ldmr=tldmr,D=t_ind_L$D) %>% mutate(quh=RSSp::convert_quh(t_ind_L$Q,uhat = ld_gwas_df$Z))
+    qs::qsave(ret_gwas_df,fs::path("~/tmp/",tldmr,ext = ".qs"))
+    return(ret_gwas_df)
+  })
+})
+
+
+
+
+
+
+apply_rssp <- function(quh,D){
+  apply(quh,2,function(x){
+    RSSp::RSSp_estimate(quh = x,D = D,sample_size=10000)$pve
+  })
+}
+
+
+
+
+
+
+tld <- sample_n(cld_df,1)
+tcheck_dff <- filter(quh_dff,trait=="2",h2=="0.1",chrom==chromosomes(as_ldmap_region(as.character(tld$regions))))
+
+sub_df <- tibble(rsid=read_vector_h5(tld$ind,paste0(tld$regions,"/rsid")))
+check_df <- tibble(rsid=read_vector_h5(tld$panel,paste0(tld$regions,"/rsid")))
+all.equal(check_df,sub_df)
+sub_gwas_df <- left_join(sub_df,gwas_df)
+
+Q_ind <- read_matrix_h5(tld$ind,paste0(tld$regions,"/Q"))
+Q_panel <- read_matrix_h5(tld$panel,paste0(tld$regions,"/Q"))
+
+
+quh_ind <- RSSp::convert_quh(sub_gwas_df$BETA/sub_gwas_df$SE,Q = Q_ind)
+quh_panel <- RSSp::convert_quh(sub_gwas_df$BETA/sub_gwas_df$SE,Q = Q_panel)
+
+check_ind <- qs::qread(tcheck_dff$ind) %>% filter(ldmr==as.character(tld$regions))
+check_panel <- qs::qread(tcheck_dff$panel) %>% filter(ldmr==as.character(tld$regions))
+sub_df <- check_l$
+ld_df_id <- 
+
+  sumstat_dbd <- "/run/media/nwknoblauch/Backup412/polyg/rssp_ss/polym_2_10_0.1_10000.sumstats"
+  con  <-  dbConnect(duckdb::duckdb(), dbdir=sumstat_dbd,read_only=TRUE)
+
+  sumstat_df <- tbl(con,"gwas")
+
+```
+
+
+
+
+```{r}
+ggplot(results_df,aes(x=true_h2,y=abs(h2-true_h2),group=interaction(method,true_h2),fill=method))+geom_boxplot()+facet_wrap(~ind)
+```
+
+
+
+
+
+
+```{r,echo=F,message=F,warning=F}
+ldsc_intf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb_ind/", glob="*.int.log")
+ldsc_intf <- ldsc_intf[str_detect(fs::path_file(ldsc_intf),"^onec",negate=TRUE)]
+
+ldsc_nointf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb_ind/", glob="*.noint.log")
+ldsc_nointf <- ldsc_nointf[str_detect(fs::path_file(ldsc_nointf),"^onec",negate=TRUE)]
+
+rsspf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb_ind/", glob="*shrink.RDS")
+rsspf <- rsspf[str_detect(fs::path_file(rsspf),"^onec",negate=TRUE)]
+gctaf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb_ind/", glob="*hsq")
+
+parse_ldsc_h2log <- function(h2lf){
+    h2_dat <- suppressMessages(scan(h2lf,what=character(), sep = "\n"))
+    h2_rowi <- grep("Total Observed scale", h2_dat)
+    h2_row <- h2_dat[h2_rowi]
+    h2_data <- h2_dat[h2_rowi:length(h2_dat)]
+    h2_data <- h2_data[grep("^[^:]+:[^:]+$", h2_data)]
+    h2_datd <- purrr::transpose(strsplit(h2_data, split=":"))
+    names(h2_datd) <- c("Variable", "Value")
+    h2_datdf <- tidyr::unnest(as_data_frame(h2_datd)) %>%
+        dplyr::mutate(Variable=chartr(" ^", "__", Variable), Value = trimws(Value)) %>%
+      tidyr::separate(Value, c("Est", "SD"), sep = "[ s\\(\\)]+", remove = T, fill = "right", convert = T)
+    tibble(h2=as.numeric(h2_datdf$Est[1]),h2_sd=as.numeric(h2_datdf$SD[1]),Lambda_GC=as.numeric(h2_datdf$Est[2]),Mean_Chi_2=as.numeric(h2_datdf$Est[3]),Intercept=as.numeric(h2_datdf$Est[4]),Intercept_sd=as.numeric(h2_datdf$SD[4])) %>% replace_na(list(Intercept=1.0,Intercept_sd=0.0))
+}
+
+parse_logf <- function(x){
+    nx <- str_remove(x,"\\.[^0-9]+$")
+  ret <- as.numeric(stringr::str_split_fixed(fs::path_file(nx),pattern="_",n=4))
+  tibble::tibble(rep=ret[1],rep_total=ret[2],num_pcs=ret[3],true_h2=ret[4])
+}
+
+parse_gcta <- function(x){
+  tdf <- read_tsv(x)
+  select(tdf,-SE) %>% mutate(row=1) %>% tidyr::spread(Source,Variance) %>%
+    rename(h2=`V(G)/Vp`) %>% mutate(h2_sd=tdf$SE[4]) %>% select(h2,h2_sd,Pval,n)
+}
+
+
+ldsc_df_noint <- map_df(ldsc_nointf,~bind_cols(parse_ldsc_h2log(.x),parse_logf(.x)))
+ldsc_df_int <- map_df(ldsc_intf,~bind_cols(parse_ldsc_h2log(.x),parse_logf(.x)))
+
+gcta_df <- map_df(gctaf,~bind_cols(parse_gcta(.x),parse_logf(.x)))
+rssp_df <- map_df(rsspf,~bind_cols(readRDS(.x),parse_logf(.x)))
+
+check_df <- bind_rows(transmute(rssp_df,h2=pve,rep=rep,true_h2=true_h2,method="RSSp"),
+                      transmute(ldsc_df_int,h2=h2,rep=rep,true_h2=true_h2,method="LDSC_INT"),
+                      transmute(ldsc_df_noint,h2=h2,rep=rep,true_h2=true_h2,method="LDSC_NOINT"),
+                      transmute(gcta_df,h2=h2,rep=rep,true_h2=true_h2,method="GCTA"))
+```
+
+
+
+# Results
+
+## Estimate vs Ground Truth
+
+The line for each method is the best fit line through 0 (i.e methods should estimate heritability of 0 when true $h^2$ is 0)
+
+
+```{r,echo=F,message=F,warning=F}
+filter(results_df,method!="RSSP_NOSHRINK") %>% ggplot(aes(x=true_h2,y=h2,col=method))+geom_point()+geom_smooth(method="lm")+geom_abline(slope=1)+facet_wrap(~method)
+```
+
+## Error
+
+First, the overall results (collapsing across replicate and heritability estimate).  Here it looks like we just manage to edge out a lead over LDSC, though I think I need to increase the number of simulations to be sure. 
+
+
+```{r,echo=F,message=F,warning=F}
+filter(results_df,method!="RSSP_NOSHRINK") %>%
+    group_by(method,true_h2) %>%
+    summarise(RMSE=sqrt(mean((h2 - true_h2)^2))) %>%
+    ungroup() %>%
+    spread(method,RMSE) %>% 
+  mutate_at(c(rel_ldsc_int="LDSC_INT",
+              rel_ldsc_noint="LDSC_NOINT",
+              rel_rssp="RSSP"),
+            ~.x/pmin(GCTA,LDSC_INT,LDSC_NOINT,RSSP))
+```
+
+
+```{r,echo=F,message=F,warning=F}
+
+ggplot(check_df,aes(x=method,y=true_h2-h2,fill=method))+geom_point()+geom_boxplot()+theme(axis.text.x=element_text(angle = -90, hjust = 0))+geom_hline(yintercept = 0)
+
+
+```
+
+```{r,echo=F,message=F,warning=F}
+
+ggplot(check_df,aes(x=method,y=abs(true_h2-h2),fill=method))+geom_point()+geom_boxplot()+theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+
+```
+
+Next we stratify by heritability.  In this setting we seem to do somewhat worse than LDSC without an intercept in the intermediate heritability setting, which is weird.  Again, I think I need more simulations.
+
+```{r,echo=F,message=F,warning=F}
+
+
+
+ggplot(check_df,aes(x=method,y=abs(true_h2-h2),fill=method))+geom_boxplot()+facet_wrap(~true_h2,labeller="label_both")+xlab("Method")+theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+```
+
+
+
+# Out of Sample
+
+
+```{r,echo=F,message=F,warning=F}
+oldsc_intf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb_panel/", glob="*.int.log")
+oldsc_intf <- set_names(oldsc_intf,fs::path_ext_remove(fs::path_file(oldsc_intf)))
+oldsc_nointf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb_panel/", glob="*.noint.log")
+
+orsspf <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb_panel/", glob="*shrink.RDS")
+
+
+
+oldsc_df_noint <- map_df(oldsc_nointf,~bind_cols(parse_ldsc_h2log(.x),parse_logf(.x)))
+oldsc_df_int <- map_df(oldsc_intf,~bind_cols(parse_ldsc_h2log(.x),parse_logf(.x)),.id = "filename")
+orssp_df <- map_df(orsspf,~bind_cols(readRDS(.x),parse_logf(.x)))
+
+ocheck_df <- bind_rows(transmute(orssp_df,h2=pve,rep=rep,true_h2=true_h2,method="RSSp"),
+                      transmute(oldsc_df_int,h2=h2,rep=rep,true_h2=true_h2,method="LDSC_INT"),
+                      transmute(oldsc_df_noint,h2=h2,rep=rep,true_h2=true_h2,method="LDSC_NOINT"))
+```
+
+
+# Results
+
+## Estimate vs Ground Truth
+
+The line for each method is the best fit line through 0 (i.e methods should estimate heritability of 0 when true $h^2$ is 0)
+
+
+```{r,echo=F,message=F,warning=F}
+filter(ocheck_df,!is.na(h2),!is.na(true_h2)) %>% ggplot(aes(x=true_h2,y=h2,col=method))+geom_point()+geom_smooth(method="lm",formula=y~x)+facet_wrap(~method)+geom_abline(slope=1)
+```
+
+```{r}
+ocheck_df %>%
+    group_by(method,true_h2) %>%
+    summarise(RMSE=sqrt(mean((h2 - true_h2)^2))) %>%
+    ungroup() %>%
+    spread(method,RMSE)
+```
+
+
+## RMSE
+
+First, the overall results (collapsing across replicate and heritability estimate).  Here it looks like we just manage to edge out a lead over LDSC, though I think I need to increase the number of simulations to be sure. 
+
+```{r,echo=F,message=F,warning=F}
+
+ggplot(ocheck_df,aes(x=method,y=abs(true_h2-h2),fill=method))+geom_point()+geom_boxplot()+theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+
+```
+
+Next we stratify by heritability.  In this setting we seem to do somewhat worse than LDSC without an intercept in the intermediate heritability setting, which is weird.  Again, I think I need more simulations.
+
+```{r,echo=F,message=F,warning=F}
+
+
+
+ggplot(ocheck_df,aes(x=method,y=abs(true_h2-h2),fill=method))+geom_boxplot()+facet_wrap(~true_h2,labeller="label_both")+xlab("Method")+theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+```
+
+
+## Panel AF match
+
+```{r,echo=F,message=F,warning=F}
+
+
+```

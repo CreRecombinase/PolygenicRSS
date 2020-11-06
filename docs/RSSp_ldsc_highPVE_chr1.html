@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Nicholas Knoblauch" />
+
+<meta name="date" content="2017-11-08" />
+
+<title>RSSp vs ldsc (High PVE)</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">PolygenicRSS</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">RSSp vs ldsc (High PVE)</h1>
+<h4 class="author"><em>Nicholas Knoblauch</em></h4>
+<h4 class="date"><em>2017-11-08</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2017-11-30</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> d6420b6</p>
+<!-- Add your analysis here -->
+<div id="simulation" class="section level1">
+<h1>Simulation</h1>
+<div id="gwas-summary-stats" class="section level2">
+<h2>GWAS summary stats</h2>
+<p>The loci used in the simulation consisted of the 844500 SNPs that formed the intersection of</p>
+<p>Genotype data came from ~ 450 Europeans in 1kg (1 thousand genomes). <span class="math inline">\(\hat{\textbf{u}}\)</span> was simulated using the method <a href="simulation.html">outlined here</a>. <span class="math inline">\(PVE\)</span> took on 9 values between from <span class="math inline">\(0.09999\)</span> to <span class="math inline">\(0.9999\)</span>. Confounding was simulated as a proportion of total <span class="math inline">\(PVE\)</span>, and took on one of three values: <span class="math inline">\(0\)</span>,<span class="math inline">\(0.05\)</span>,<span class="math inline">\(0.1\)</span>. I will refer to confounding as a proportion of total <span class="math inline">\(PVE\)</span> as <em>relative confounding</em>. For example,if relative confounding is <span class="math inline">\(0.1\)</span>, then for <span class="math inline">\(PVE=0.9\)</span>,actual confounding would be <span class="math inline">\(0.09\)</span>; for <span class="math inline">\(PVE=0.1\)</span>, actual confounding would be <span class="math inline">\(0.01\)</span>. Each scenario was replicated 15 times.</p>
+<p>It should be noted that even at “high” pve, this is still a very hard simulation. when true <span class="math inline">\(PVE\)</span> is <code>0.999</code>, it’s highest value in the simulation, this corresponds to a per SNP variance (<span class="math inline">\(\sigma^2_\textbf{u}\)</span>) of <code>0.0006413561</code>(<code>6.413561e-04</code>). When true <span class="math inline">\(PVE\)</span> is <code>0.09999</code>, <span class="math inline">\(\sigma^2_\textbf{u}\)</span> is <code>0.00006413561</code>(<code>6.413561e-05</code>). This is a very small window.</p>
+</div>
+<div id="ld" class="section level2">
+<h2>LD</h2>
+<p><code>LDshrink</code> was used to estimate <span class="math inline">\(LD\)</span> for the same 450 individuals from 1kg. Haplotypes, rather than genotypes were used, and a genetic map was also used. Pre-published <code>ldetect</code> breakpoints were used so that the LD matrix could be approximated as block-diagional (blocks are not of equal size). Block diagonal approximation greatly improves the performance of eigenvalue decomposition, and greatly decreases storage requirements.</p>
+</div>
+<div id="loci" class="section level2">
+<h2>Loci</h2>
+<p>Loci for this simulation were chosen by taking the intersection of:</p>
+<ul>
+<li>Loci typed (or imputed) from the 1kg reference panel</li>
+<li>Loci for which there was a genetic map value</li>
+<li>Loci that fell within <code>ldetect</code> break points</li>
+<li>Loci included in the LD score regression example GWAS data</li>
+</ul>
+<p>This ended up being <code>844501</code> SNPs in total.</p>
+<!-- ```{r} -->
+<!-- select(comp_est_df,True_PVE=tpve,True_Confound=tbias) %>% distinct(True_PVE,True_Confound) %>% mutate(Relative_Confounding=True_Confound/True_PVE) %>% arrange(True_PVE,True_Confound) -->
+<!-- ``` -->
+</div>
+<div id="methods" class="section level2">
+<h2>Methods</h2>
+<ul>
+<li><code>RSSp</code> one parameter model. (No confounding parameter)</li>
+<li><code>RSSp</code> two paramter model.</li>
+<li>LD score regression (<code>LDSC</code>)</li>
+</ul>
+</div>
+<div id="comparison" class="section level2">
+<h2>Comparison</h2>
+<p>To be “fair” to LD score regression, I will show results with and without bounding <span class="math inline">\(PVE\)</span> between 0 and 1.</p>
+</div>
+<div id="bounded-ldsc" class="section level2">
+<h2>Bounded LDSC</h2>
+<p>The first result I want to highlight is just the relative performance of the three methods: <code>LDSC</code>, <code>RSSp</code> with a confounding parameter (<code>RSSp_Confound</code>), and <code>RSSp</code> without a confounding parameter (<code>RSSp_NoConfound</code>). “Performance” here means the RMSE of PVE <code>abs(pve-true_pve)</code> In these simulations there is no confounding. <strong>NB:</strong> Because <code>RSSp</code> bounds PVE between 0 and 1, <strong>I have bounded <code>LDSC</code> estimates between 0 and 1</strong> for the purpose of comparing RMSE between methods.</p>
+<p><img src="figure/RSSp_ldsc_highPVE_chr1.Rmd/rmse_pve_nc_b-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Next we see the simulation results that had a confounding parameter. Here I’ve split up the results using the variable <code>rel_confounding</code>, which is the level of true confounding divided by the true <span class="math inline">\(PVE\)</span>. <img src="figure/RSSp_ldsc_highPVE_chr1.Rmd/rmse_pve_c_b-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>The next several plots show the same data as the box plots, (RMSE of PVE across methods,levels of counfounding, and true PVE), but are rearranged in several different ways, to make particular comparisons easier. (e.g how does the <code>RSSp_Confound</code> method perform as confounding increases at a given <code>PVE</code>). If it looks like RMSE is less than 0 or greater than one, that is simply an artifact of the plotting</p>
+<p><img src="figure/RSSp_ldsc_highPVE_chr1.Rmd/joy_bias_pve_b-1.png" width="672" style="display: block; margin: auto;" /> <img src="figure/RSSp_ldsc_highPVE_chr1.Rmd/joy_pve_bias_b-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/RSSp_ldsc_highPVE_chr1.Rmd/joy_bias_pve_rmse_b-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/RSSp_ldsc_highPVE_chr1.Rmd/pve_tpve_bound_b-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="unbounded" class="section level2">
+<h2>Unbounded</h2>
+<p>For these plots, <code>LDSC</code> is not bound between 0 and 1</p>
+<p><img src="figure/RSSp_ldsc_highPVE_chr1.Rmd/rmse_pve_ub-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Next we see the simulation results that had a confounding parameter. Here I’ve split up the results using the variable <code>rel_confounding</code>, which is the level of true confounding divided by the true <span class="math inline">\(PVE\)</span>. <img src="figure/RSSp_ldsc_highPVE_chr1.Rmd/rmse_pve_c_ub-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>The next several plots show the same data as the box plots, (RMSE of PVE across methods,levels of counfounding, and true PVE), but are rearranged in several different ways, to make particular comparisons easier. (e.g how does the <code>RSSp_Confound</code> method perform as confounding increases at a given <code>PVE</code>). If it looks like RMSE is less than 0 or greater than one, that is simply an artifact of the plotting</p>
+<p><img src="figure/RSSp_ldsc_highPVE_chr1.Rmd/joy_bias_pve_ub-1.png" width="672" style="display: block; margin: auto;" /> <img src="figure/RSSp_ldsc_highPVE_chr1.Rmd/joy_pve_bias_ub-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/RSSp_ldsc_highPVE_chr1.Rmd/joy_bias_pve_rmse_ub-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/RSSp_ldsc_highPVE_chr1.Rmd/pve_tpve_unbound-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This plot shows estimates of <span class="math inline">\(PVE\)</span> vs the true value, In this plot I <em>have not</em> truncated <code>LDSC</code>’s PVE estimates to be between 0 and 1.</p>
+<p><img src="figure/RSSp_ldsc_highPVE_chr1.Rmd/pve_tpve_unbound_ub-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Focusing only on the high PVE setting, we see that both RSSp methods quickly jump to a PVE of 1 and stays there, while <code>LDSC</code> is wildly varying:</p>
+<p><img src="figure/RSSp_ldsc_highPVE_chr1.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/RSSp_ldsc_highPVE_chr1.Rmd/est_confound_method-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/RSSp_ldsc_highPVE_chr1.Rmd/rmse_confounding-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/RSSp_ldsc_highPVE_chr1.Rmd/est_pve_tpve_method-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre><code>R version 3.4.0 (2017-04-21)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 16.04.3 LTS
+
+Matrix products: default
+BLAS/LAPACK: /opt/intel/compilers_and_libraries_2018.0.128/linux/mkl/lib/intel64_lin/libmkl_intel_lp64.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] ggjoy_0.3.0     bindrcpp_0.2    RSSp_0.9        dplyr_0.7.2    
+ [5] purrr_0.2.3     readr_1.1.1     tidyr_0.6.3     tibble_1.3.3   
+ [9] ggplot2_2.2.1   tidyverse_1.1.1
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.12        cellranger_1.1.0    compiler_3.4.0     
+ [4] git2r_0.19.0        plyr_1.8.4          bindr_0.1          
+ [7] forcats_0.2.0       tools_3.4.0         digest_0.6.12      
+[10] lubridate_1.6.0     jsonlite_1.5        evaluate_0.10.1    
+[13] nlme_3.1-131        gtable_0.2.0        lattice_0.20-35    
+[16] pkgconfig_2.0.1     rlang_0.1.1         Matrix_1.2-10      
+[19] psych_1.7.5         yaml_2.1.14         parallel_3.4.0     
+[22] haven_1.1.0         xml2_1.1.1          httr_1.2.1         
+[25] stringr_1.2.0       knitr_1.16          hms_0.3            
+[28] rprojroot_1.2       grid_3.4.0          glue_1.1.1         
+[31] R6_2.2.2            readxl_1.0.0        foreign_0.8-69     
+[34] rmarkdown_1.6       modelr_0.1.1        reshape2_1.4.2     
+[37] magrittr_1.5        backports_1.1.0     scales_0.4.1       
+[40] htmltools_0.3.6     rvest_0.3.2         assertthat_0.2.0   
+[43] mnormt_1.5-5        colorspace_1.3-2    labeling_0.3       
+[46] stringi_1.1.5       lazyeval_0.2.0      munsell_0.4.3      
+[49] broom_0.4.2         RcppEigen_0.3.3.3.0</code></pre>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

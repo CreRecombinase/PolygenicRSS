@@ -1,0 +1,16 @@
+---
+title: "Polygenic Regression with Summary Statistics (RSSp"
+author: "Nicholas Knoblauch"
+date: 2017-12-07
+output: workflowr::wflow_html
+---
+
+
+
+
+
+# Introduction
+
+The purpose of this document is to summarize the 
+
+## The RSS model

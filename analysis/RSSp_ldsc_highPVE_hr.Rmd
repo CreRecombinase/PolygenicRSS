@@ -1,0 +1,269 @@
+---
+title: "RSSp vs ldsc (High PVE)"
+author: "Nicholas Knoblauch"
+date: 2017-11-08
+output: workflowr::wflow_html
+---
+
+
+
+
+
+
+```{r load_data,echo=F,message=F}
+library(tidyverse)
+library(RSSp)
+
+ldsc_gwas_resf <- "../output/RSSp_snakemake/sim_scz2_gwas_ldsc_res_NoConfound.txt.gz"
+rss_gwas_resf <-  "../output/RSSp_snakemake/sim_scz2_gwas_RSSp_res_ALL_NoConfound.txt.gz"
+orss_gwas_resf <- "../output/RSSp_snakemake/sim_scz2_gwas_RSSp_oracle_res_ALL_NoConfound.txt.gz"
+
+
+est_df <- read_delim(rss_gwas_resf,delim="\t") %>% 
+  filter(!log_params,shrinkage==min(shrinkage),pv==max(pv)) %>% 
+  select(-log_params) %>% 
+  mutate(fgeneid=as.character(fgeneid),rel_bias=round(tbias/tpve,2),
+         rel_pve_error=(abs(pve-tpve)/(pve+tpve)),method=paste0("RSSp_",method),
+         p_n=p/n)
+
+
+tparam_df<- distinct(est_df,fgeneid,tsigu,tbias,p_n,tpve)
+
+comp_est_df <-  select(est_df,fgeneid,sigu,bias,method,p_n,pve) 
+
+ldsc_est_df <- read_delim(ldsc_gwas_resf,delim="\t") %>% mutate(fgeneid=as.character(fgeneid)) %>% inner_join(tparam_df)
+comp_ldsc_est_df <- mutate(
+  ldsc_est_df,
+  sigu=sqrt(Total_Observed_scale_h2/p_n),
+  method="LDSC"
+  ) %>% select(
+    pve=Total_Observed_scale_h2,
+    fgeneid,
+    bias=Intercept,
+    sigu,
+    method,
+    p_n) %>% mutate(bias=bias-1)
+comp_est_df <- rbind(comp_est_df,comp_ldsc_est_df) %>% inner_join(tparam_df)
+comp_est_df <- mutate(
+  comp_est_df,
+  t_rel_bias=round(tbias/tpve,3),
+  est_rel_bias=bias/calc_pve(sigu,p_n),
+  perc_tsigu=ntile(tsigu,3)
+  )
+
+
+```
+
+# Simulation
+
+##GWAS summary stats
+
+
+
+
+The loci used in the simulation consisted of the  844500 SNPs that formed the intersection of 
+
+Genotype data came from ~ 450 Europeans in 1kg (1 thousand genomes).  $\hat{\textbf{u}}$ was simulated using the method [outlined here](simulation.html).  $PVE$ took on `r length(unique(comp_est_df$tpve))` values between `r range(comp_est_df$tpve)`. Confounding was simulated as a proportion of total $PVE$, and took on one of three values: `r round(unique(comp_est_df$tbias/comp_est_df$tpve))`.  I will refer to confounding as a proportion of total $PVE$ as _relative confounding_. For example,if relative confounding is $0.1$, then for $PVE=0.9$,actual confounding would be $0.09$; for $PVE=0.1$, actual confounding would be $0.01$.  Each scenario was replicated 15 times.
+
+It should be noted that even at "high" pve, this is still a very hard simulation. when true $PVE$ is `r max(comp_est_df$tpve)`, it's highest value in the simulation, this corresponds to a per SNP variance ($\sigma^2_\textbf{u}$) of `r max(comp_est_df$tsigu)`. When true $PVE$ is `r min(comp_est_df$tpve)`, $\sigma^2_\textbf{u}$ is `r min(comp_est_df$tsigu)^2`. This is a very small window.
+
+## LD
+
+`LDshrink` was used to estimate $LD$ for the same 450 individuals from 1kg.  Haplotypes, rather than genotypes were used, and a genetic map was also used.  Pre-published `ldetect` breakpoints were used so that the LD matrix could be approximated as block-diagional (blocks are not of equal size).  Block diagonal approximation greatly improves the performance of eigenvalue decomposition, and greatly decreases storage requirements.
+
+## Loci
+Loci for this simulation were chosen by taking the intersection of:
+
+* Loci typed (or imputed) from the 1kg reference panel
+* Loci for which there was a genetic map value
+* Loci that fell within `ldetect` break points
+* Loci included in the LD score regression example GWAS data
+
+This ended up being `844501` SNPs in total.
+
+
+## Methods
+
+* `RSSp` one parameter model. (No confounding parameter)
+* `RSSp` two paramter model. 
+* LD score regression (`LDSC`) 
+
+## Comparison 
+
+To be "fair" to LD score regression, I will show results with and without bounding $PVE$ between 0 and 1. 
+
+
+## Bounded LDSC
+
+
+The first result I want to highlight is just the relative performance of the three methods: `LDSC`, `RSSp` with a confounding parameter (`RSSp_Confound`), and `RSSp` without a confounding parameter (`RSSp_NoConfound`).  "Performance" here means the RMSE of PVE `abs(pve-true_pve)`  In these simulations there is no confounding. __NB:__ Because `RSSp` bounds PVE between 0 and 1, __I have bounded `LDSC` estimates between 0 and 1__ for the purpose of comparing RMSE between methods. 
+
+```{r make_bounded}
+bound_est <- mutate(comp_est_df,tgrp=paste0(tpve,method),rel_confounding=round(tbias/tpve,4),pve=ifelse(pve>1,1,pve)) %>% mutate(true_pve=round(tpve,3),pve=ifelse(pve<0,0,pve))
+tpvev <- unique(bound_est$tpve)
+nlabel_both <- partial(label_both,sep=":\n")
+```
+
+```{r make_unbounded}
+unbound_est <- mutate(comp_est_df,tgrp=paste0(tpve,method),rel_confounding=round(tbias/tpve,4)) %>% mutate(true_pve=round(tpve,3))
+```
+
+
+
+
+
+```{r rmse_pve_nc_b}
+
+bound_est %>% filter(tbias==0) %>%  ggplot(aes(x=tpve,y=abs(pve-true_pve),group=tgrp,fill=method))+
+  geom_boxplot()+
+  ylab(bquote(RMSE[PVE]))+xlab(bquote(PVE))+ggtitle("RMSE of PVE","No Confounding (LDSC bounded between 0 and 1)")
+```
+
+
+
+Next we see the simulation results that had a confounding parameter. Here I've split up the results using the variable `rel_confounding`, which is the level of true confounding divided by the true $PVE$. 
+```{r rmse_pve_c_b}
+bound_est %>%  ggplot(aes(x=tpve,y=abs(pve-true_pve),group=tgrp,fill=method))+
+  geom_boxplot()+facet_grid(rel_confounding~.,labeller = nlabel_both)+
+  ylab(bquote(RMSE[PVE]))+xlab(bquote(PVE))+ggtitle("RMSE of PVE","(LDSC bounded between 0 and 1)")
+```
+
+
+The next several plots show the same data as the box plots, (RMSE of PVE across methods,levels of counfounding, and true PVE), but are rearranged in several different ways, to make particular comparisons easier. (e.g how does the `RSSp_Confound` method perform as confounding increases at a given `PVE`).  If it looks like RMSE is less than 0 or greater than one, that is simply an artifact of the plotting
+
+```{r joy_bias_pve_b}
+library(ggjoy)
+bound_est%>% ggplot(aes(x=abs(pve-true_pve),y=method,fill=method))+geom_joy()+xlab(bquote(RMSE[PVE]))+facet_grid(true_pve~rel_confounding,labeller=partial(label_both,sep="\n"))
+```
+```{r joy_pve_bias_b}
+
+bound_est %>%  ggplot(aes(x=abs(pve-true_pve),y=factor(true_pve),fill=method))+geom_joy()+xlab(bquote(RMSE[PVE]))+facet_grid(method~rel_confounding,labeller=partial(label_both,sep=":\n"))+ylab(bquote(PVE))
+```
+
+
+
+```{r joy_bias_pve_rmse_b}
+bound_est %>%  ggplot(aes(x=abs(pve-true_pve),y=factor(rel_confounding),fill=method))+geom_joy()+xlab(bquote(RMSE[PVE]))+facet_grid(true_pve~method,labeller=partial(label_both,sep=":\n"))+ylab(bquote(frac(c,PVE)))
+```
+
+
+
+```{r pve_tpve_b}
+bound_est %>% ggplot(aes(x=tpve,y=pve,color=method))+
+  geom_point()+geom_smooth(method="lm")+
+  facet_grid(method~rel_confounding,labeller=nlabel_both)+
+  geom_abline(slope=1,intercept=0)+xlab(bquote(PVE))+ylab(bquote(hat(PVE)))+ggtitle("Estimated PVE vs True PVE","Bounding LDSC between 0 and 1")
+```
+
+```{r pve_tpve_box_b}
+
+bound_est %>% ggplot(aes(x=tpve,y=pve,fill=method,group=tgrp))+
+  geom_boxplot()+
+  facet_wrap(~rel_confounding,labeller=nlabel_both)+
+  geom_abline(slope=1,intercept=0)+xlab(bquote(PVE))+ylab(bquote(hat(PVE)))+ggtitle("Estimated PVE vs True PVE","Bounding LDSC between 0 and 1")
+```
+
+## Unbounded
+
+For these plots, `LDSC` is not bound between 0 and 1
+
+```{r rmse_pve_ub}
+unbound_est %>% filter(tbias==0) %>%  ggplot(aes(x=tpve,y=abs(pve-true_pve),group=tgrp,fill=method))+
+  geom_boxplot()+
+  ylab(bquote(RMSE[PVE]))+xlab(bquote(PVE))+ggtitle("RMSE of PVE","No Confounding")
+rm(bound_est)
+```
+
+
+Next we see the simulation results that had a confounding parameter. Here I've split up the results using the variable `rel_confounding`, which is the level of true confounding divided by the true $PVE$. 
+```{r rmse_pve_c_ub}
+unbound_est %>%  ggplot(aes(x=tpve,y=abs(pve-true_pve),group=tgrp,fill=method))+
+  geom_boxplot()+facet_grid(rel_confounding~.,labeller = nlabel_both)+
+  ylab(bquote(RMSE[PVE]))+xlab(bquote(PVE))+ggtitle("RMSE of PVE")
+```
+
+
+The next several plots show the same data as the box plots, (RMSE of PVE across methods,levels of counfounding, and true PVE), but are rearranged in several different ways, to make particular comparisons easier. (e.g how does the `RSSp_Confound` method perform as confounding increases at a given `PVE`).  If it looks like RMSE is less than 0 or greater than one, that is simply an artifact of the plotting
+
+```{r joy_bias_pve_ub}
+library(ggjoy)
+unbound_est%>% ggplot(aes(x=abs(pve-true_pve),y=method,fill=method))+geom_joy()+xlab(bquote(RMSE[PVE]))+facet_grid(true_pve~rel_confounding,labeller=partial(label_both,sep="\n"))
+```
+```{r joy_pve_bias_ub}
+
+unbound_est %>%  ggplot(aes(x=abs(pve-true_pve),y=factor(true_pve),fill=method))+geom_joy()+xlab(bquote(RMSE[PVE]))+facet_grid(method~rel_confounding,labeller=partial(label_both,sep=":\n"))+ylab(bquote(PVE))
+```
+
+
+
+```{r joy_bias_pve_rmse_ub}
+unbound_est %>%  ggplot(aes(x=abs(pve-true_pve),y=factor(rel_confounding),fill=method))+geom_joy()+xlab(bquote(RMSE[PVE]))+facet_grid(true_pve~method,labeller=partial(label_both,sep=":\n"))+ylab(bquote(frac(c,PVE)))
+```
+
+
+
+```{r pve_tpve_unbound}
+unbound_est %>% ggplot(aes(x=tpve,y=pve,color=method))+
+  geom_point()+geom_smooth(method="lm")+
+  facet_grid(method~rel_confounding,labeller=nlabel_both)+
+  geom_abline(slope=1,intercept=0)+xlab(bquote(PVE))+ylab(bquote(hat(PVE)))+ggtitle("Estimated PVE vs True PVE","Bounding LDSC between 0 and 1")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+This plot shows estimates of $PVE$ vs the true value, In this plot I _have not_ truncated `LDSC`'s PVE estimates to be between 0 and 1.  
+
+```{r pve_tpve_unbound_ub}
+unbound_est  %>% ggplot(aes(x=tpve,y=pve,color=method))+
+  geom_point()+geom_smooth(method="lm")+
+  facet_grid(method~rel_confounding,labeller=nlabel_both)+
+  geom_abline(slope=1,intercept=0)+xlab(bquote(PVE))+ylab(bquote(hat(PVE)))+ggtitle("Estimated PVE vs True PVE")
+```
+
+
+Focusing only on the high PVE setting, we see that both RSSp methods quickly jump to a PVE of 1 and stays there, while `LDSC` is wildly varying:
+
+```{r}
+unbound_est  %>% filter(tpve>0.5) %>% ggplot(aes(x=tpve,y=pve,color=method))+
+  geom_point()+geom_smooth(method="lm")+
+  facet_grid(method~rel_confounding,labeller=nlabel_both)+
+  geom_abline(slope=1,intercept=0)+xlab(bquote(PVE))+ylab(bquote(hat(PVE)))+ggtitle("Estimated PVE vs True PVE")
+```
+
+
+
+```{r est_confound_method}
+filter(comp_est_df,method!="RSSp_NoConfound") %>% mutate(t_rel_confounding=round(tbias/tpve,3),true_pve=round(tpve,2)) %>% ggplot(aes(x=tbias/tpve,y=bias/tpve))+
+  geom_point()+geom_smooth(method="lm")+
+  facet_wrap(~method,labeller=partial(label_both,sep=":\n"),scales = "free_y")+
+  geom_abline(slope=1,intercept=0)+xlab(bquote(frac(c,PVE)))+ylab(bquote(frac(hat(c),PVE)))+ggtitle("Estimated Relative Confounding")
+```
+
+
+
+```{r rmse_confounding}
+unbound_est %>% filter(method!="RSSp_NoConfound") %>% mutate(true_pve=round(tpve,3),pve=ifelse(pve<0,0,pve))  %>%  ggplot(aes(x=rel_confounding,y=abs(bias-tbias)/tpve,group=tgrp,fill=method))+
+  geom_boxplot()+
+  ylab(bquote(frac(RMSE(c),PVE)))+xlab(bquote(frac(c,PVE)))+ggtitle("RMSE of Confounding")
+```
+
+```{r est_pve_tpve_method}
+filter(comp_est_df,method!="RSSp_NoConfound") %>% mutate(t_rel_confounding=round(tbias/tpve,3),true_pve=round(tpve,2)) %>% ggplot(aes(x=tbias,y=bias))+
+  geom_point()+geom_smooth(method="lm")+
+  facet_wrap(~method,labeller=partial(label_both,sep=":\n"),scales = "free_y")+
+  geom_abline(slope=1,intercept=0)+xlab(bquote(c))+ylab(bquote(hat(c)))+ggtitle("Estimated Confounding vs True Confounding","Across all PVE")
+```
+
+
+
+
+

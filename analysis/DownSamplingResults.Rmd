@@ -1,0 +1,131 @@
+---
+title: "Effect of Downsampling"
+author: "Nicholas Knoblauch"
+date: 2018-04-12
+output: workflowr::wflow_html
+---
+
+
+```{r,echo=F,message=F,warnings=F}
+library(EigenH5)
+library(tidyverse)
+```
+
+
+# RSSp results
+
+```{r,echo=F,message=F,warnings=F}
+res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",full.names = T,pattern="SNP")
+# res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",pattern="ra",full.names = T)
+
+res_df <- map_df(res_d_rssp,~quietly(read_delim)(.x,delim = "\t")$result %>% mutate(chrom=as.character(chrom))) %>% filter(!is.na(simulation),!is.na(useLDshrink)) %>% filter(scenario == "FastPVE", dataset == "cd", paneldataset == "cd",!is.na(chrom),!is.na(AF),simulation=="gwas",chrom=="1")%>% select_if(function(x){!all(is.na(x))})
+tparam_df <- distinct(res_df,fgeneid,tsigu,tpve,p,n,AF,SNPCT,N)
+```
+
+```{r,echo=F,message = F,warnings = F}
+filter(res_df) %>% ggplot(aes(x = tpve, y = pve)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0) +
+  facet_grid( AF~n,labeller = label_both) +
+  ggtitle("RSSp") +
+  xlab("PVE") + 
+  ylab(bquote(hat(PVE)))
+```
+
+
+
+# LDSC results
+
+As mentioned above, LD score regression was run with a fixed intercept and with an estimated intercept.  Results for both are shown here. Interestingly, LD score regression has a very hard time with the direct simulations when the intercept is allowed to vary
+
+```{r,echo=F,message=F,warning=F}
+res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake/ldsc_res/",pattern="cd",full.names = T)
+res_df <- map_df(res_d_rssp,~read_delim(.x,delim="\t") %>% mutate(Intercept=as.character(Intercept)))%>%   filter(scenario=="FastPVE",chrom=="1")
+
+ldsc_res_ni <- filter(res_df,!useIntercept) %>% select(fgeneid,tpve,pve,simulation,useLDshrink) %>% 
+  mutate(LDSC_noIntercept_error=tpve-pve,LDSC_noIntercept=pve) %>% select(-pve)
+ldsc_res_wi <- filter(res_df,useIntercept) %>% select(fgeneid,tpve,pve,simulation,useLDshrink) %>%
+  mutate(LDSC_Intercept_error=tpve-pve,LDSC_Intercept=pve) %>% select(-pve)
+
+```
+
+
+```{r,echo=F,message=F,warnings=F}
+ggplot(res_df,aes(x=tpve,y=pve,col=useIntercept))+
+  geom_point()+
+  geom_smooth(method="lm",formula=y~x+0)+
+  geom_abline(slope=1,intercept=0)+
+ facet_grid( AF~SNPCT) +
+  ggtitle("LDSC",paste0("p=",unique(tparam_df$p),",N=",unique(tparam_df$n)))+
+  xlab("PVE")+ylab(bquote(hat(PVE)))
+
+```
+
+# RSSp vs LDSC
+
+Overall it looks like RSSp does at least as well, and in some cases better than LD score regression (both with and without and intercept).  Next steps are to try out of sample LD.
+
+
+```{r,echo=F,message=F,warnings=F}
+both_res <- inner_join(inner_join(ldsc_res_ni,rss_res),ldsc_res_wi)
+error_df <- select(both_res,fgeneid,tpve,simulation,useLDshrink,ends_with("error")) %>% 
+  gather("method","Error",ends_with("error"))
+est_df <- select(both_res,fgeneid,tpve,simulation,useLDshrink,RSSp,LDSC_Intercept,LDSC_noIntercept) %>% 
+  gather("method","Estimate",RSSp,LDSC_Intercept,LDSC_noIntercept)
+#nboth_res <- gather(both_res,"method","Estimate",LDSC_noIntercept,LDSC_Intercept,RSSp)
+ggplot(error_df,aes(x=method,y=abs(Error),col=method))+geom_boxplot()+facet_grid(useLDshrink~simulation,labeller = "label_both")+ylab("RMSE")+ggtitle("RMSE of the 3 methods")+xlab("Method")
+```
+```{r,echo=F,message=F,warnings=F}
+
+tpve_vals <- unique(est_df$tpve)
+mutate(est_df) %>% ggplot(aes(x=tpve,y=Estimate,group=interaction(tpve,method),col=method))+geom_boxplot(position = position_dodge(width = .04))+geom_abline(slope=1,intercept=0)+facet_grid(useLDshrink~.,labeller = "label_both")+ylab(bquote(hat(PVE)))+xlab("PVE")
+```
+
+```{r,echo=F,message=F,warnings=F}
+summary_table <- group_by(est_df,useLDshrink,method,tpve) %>% summarise(Mean=mean(Estimate),Mean_RMSE=mean(abs(Estimate-tpve))) %>% ungroup()
+new_summary <- gather(summary_table,"measurement","value",Mean,Mean_RMSE) %>% unite(m_mean,method,measurement) %>% spread(m_mean,value)
+filter(new_summary,!useLDshrink) %>% select(-useLDshrink) %>%rename(True_PVE=tpve) %>% knitr::kable(caption="Without LDshrink")
+```
+
+
+```{r,echo=F,message=F,warnings=F}
+filter(new_summary,useLDshrink) %>% select(-useLDshrink) %>%rename(True_PVE=tpve) %>% knitr::kable(caption="With LDshrink")
+```
+
+
+
+##  `Lambda_GC`
+
+What's the relationship between `Lambda_GC`  and $PVE$?
+
+
+```{r,echo=F,message=F,warnings=F }
+ggplot(res_df,aes(x=tpve,y=Lambda_GC))+geom_point()+facet_grid(useLDshrink~simulation,labeller="label_both")+xlab("PVE")
+```
+
+
+<!-- # Estimates when PVE is precisely 0 -->
+
+<!-- These (2) simulations were performed using the `RA` dataset -->
+
+<!-- ```{r} -->
+<!-- res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",pattern="ra",full.names = T) -->
+<!-- # res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",pattern="ra",full.names = T) -->
+
+
+<!-- res_df <- map_df(res_d_rssp,read_delim,delim="\t") %>% filter(scenario=="NoPVE")  -->
+<!-- tparam_df <- distinct(res_df,fgeneid,tsigu,tpve,p,n) -->
+<!-- ggplot(res_df,aes(x=tpve,y=pve))+geom_point()+geom_smooth(method="lm",formula=y~x+0)+facet_grid(useLDshrink~simulation,labeller = "label_both")+ggtitle("RSSp",paste0("p=",unique(tparam_df$p),",N=",unique(tparam_df$n)))+xlab("PVE")+ylab(bquote(hat(PVE))) -->
+<!-- # rss_res <- select(res_df,fgeneid,tpve,pve,simulation,useLDshrink) %>% mutate(RSSp=tpve-pve) %>% select(-pve) -->
+<!-- ``` -->
+
+
+
+
+<!-- ```{r} -->
+<!-- res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake/ldsc_res/",pattern="ra",full.names = T) -->
+<!-- res_df <- map_df(res_d_rssp,~read_delim(.x,delim="\t") %>% mutate(Intercept=as.character(Intercept))) %>% filter(scenario=="NoPVE")  %>% inner_join(tparam_df) -->
+<!-- ggplot(res_df,aes(x=tpve,y=pve))+geom_point()+geom_smooth(method="lm",formula=y~x+0)+facet_grid(useLDshrink~useIntercept,labeller = "label_both")+ggtitle("LDSC",paste0("p=",unique(tparam_df$p),",N=",unique(tparam_df$n)))+xlab("PVE")+ylab(bquote(hat(PVE))) -->
+
+<!-- ``` -->
+

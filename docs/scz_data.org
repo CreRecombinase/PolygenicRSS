@@ -1,0 +1,56 @@
+#+TITLE: ldsc vs RSSp
+#+AUTHOR: Nicholas Knoblauch
+#+EMAIL: nwknoblauch@uchicago.edu
+#+LANGUAGE: en
+
+
+* ldsc estimate
+
+
+#+BEGIN_SRC ipython :kernel ir
+library(tidyverse)
+ldsc_resf <- "~/Dropbox/PolygenicRSS/code/snakemake_files/sim_scz_true_ldsc_res.txt.gz"
+RSSp_resf <- "~/Dropbox/PolygenicRSS/code/snakemake_files/sim_scz_true_RSSp_res.txt.gz"
+ldsc_res <- read_delim(ldsc_resf,delim="\t")
+RSSp_res <- read_delim(RSSp_resf,delim="\t")
+
+both_res <- inner_join(ldsc_res,RSSp_res)
+
+#+END_SRC
+
+#+RESULTS:
+=#+BEGIN_EXAMPLE
+['In',
+   'Out',
+   '_',
+   '_8',
+   '__',
+   '___',
+   '__builtin__',
+   '__builtins__',
+   '__doc__',
+   '__loader__',
+   '__name__',
+   '__package__',
+   '__spec__',
+   '_dh',
+   '_i',
+   '_i1',
+   '_i2',
+   '_i3',
+   '_i4',
+   '_i5',
+   '_i6',
+   '_i7',
+   '_i8',
+   '_i9',
+   '_ih',
+   '_ii',
+   '_iii',
+   '_oh',
+   'exit',
+   'get_ipython',
+   'quit']
+#+END_EXAMPLE
+=#+end_example
+

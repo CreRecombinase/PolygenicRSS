@@ -35,17 +35,23 @@ library(tidyverse)
 
 RSSp still shows moderate inflation, but it's not nearly as bad as it was with the bug.
 ```{r,echo=F,message=F,warnings=F}
-res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",pattern="ra",full.names = T)
+res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",pattern="genred2",full.names = T)
 # res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",pattern="ra",full.names = T)
 
-res_df <- map_df(res_d_rssp,read_delim,delim="\t") %>% filter(!is.na(simulation),!is.na(useLDshrink))  %>% filter(scenario=="VeryLargePVE",!is.na(doSplit))
+res_df <- map_df(res_d_rssp,read_delim,delim = "\t") %>% filter(!is.na(simulation),!is.na(useLDshrink))  %>% filter(scenario == "RatherLargePVE", !is.na(doSplit), dataset == "genred2", paneldataset == "genred2") %>% filter(snpset =="chr2") %>% select_if(function(x){!all(is.na(x))})
 tparam_df <- distinct(res_df,fgeneid,tsigu,tpve,p,n)
-
 rss_res <- select(res_df,fgeneid,tpve,pve,simulation,useLDshrink) %>% mutate(RSSp_error=tpve-pve,RSSp=pve) %>% select(-pve)
 ```
 
-```{r,echo=F,message=F,warnings=F}
-ggplot(res_df,aes(x=tpve,y=pve))+geom_point()+geom_smooth(method="lm",formula=y~x+0)+geom_abline(slope=1,intercept=0)+facet_grid(useLDshrink~simulation,labeller = "label_both")+ggtitle("RSSp",paste0("p=",unique(tparam_df$p),",N=",unique(tparam_df$n)))+xlab("PVE")+ylab(bquote(hat(PVE)))
+```{r,echo=F,message = F,warnings = F}
+ggplot(res_df,aes(x = tpve, y = pve)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ x + 0) +
+  geom_abline(slope = 1, intercept = 0) +
+  facet_grid(useLDshrink ~ simulation, labeller  =  "label_both") +
+  ggtitle("RSSp", paste0("p = ", unique(tparam_df$p), ",N = ", unique(tparam_df$n))) +
+  xlab("PVE") + 
+  ylab(bquote(hat(PVE)))
 ```
 
 
@@ -70,7 +76,7 @@ As mentioned above, LD score regression was run with a fixed intercept and with 
 
 ```{r,echo=F,message=F,warning=F}
 res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake/ldsc_res/",pattern="ra",full.names = T)
-res_df <- map_df(res_d_rssp,~read_delim(.x,delim="\t") %>% mutate(Intercept=as.character(Intercept))) %>% filter(!is.na(simulation),!is.na(useLDshrink)) %>% inner_join(tparam_df)%>% filter(scenario=="VeryLargePVE",!is.na(doSplit))
+res_df <- map_df(res_d_rssp,~read_delim(.x,delim="\t") %>% mutate(Intercept=as.character(Intercept))) %>% filter(scenario=="RatherLargePVE",!is.na(doSplit),dataseta=="bd",datasetb=="ra") %>% inner_join(tparam_df)
 
 ldsc_res_ni <- filter(res_df,!useIntercept) %>% select(fgeneid,tpve,pve,simulation,useLDshrink) %>% 
   mutate(LDSC_noIntercept_error=tpve-pve,LDSC_noIntercept=pve) %>% select(-pve)

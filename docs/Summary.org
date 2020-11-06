@@ -1,0 +1,47 @@
+
+The purpose of this document is to summarise my findings in developing the polygenic model of RSS. I will begin with a  brief introduction of GWAS sumamry statistics and their uses. I'll then discuss the RSS
+model, it's application 
+
+* Outline
+** Introduction
+*** Background
+**** Heritability estimation
+**** Models of genetic architecture
+**** GWAS Summary Statistics
+** Existing Methods 
+*** GCTA
+*** LD score regression
+*** RSS
+**** RSS-BVSR
+**** RSS-BSLMM
+** Questions
+*** How does RSS compare to LD score regression?
+*** How does RSS compare to GCTA?
+*** Can a polygenic model be used in prediction?
+** RSSp
+
+*** Derivation of the method
+**** Prior
+**** Likelihood
+**** Marginalized Likelihood
+**** Posterior
+**** Variance
+
+*** LD Estimation
+**** LDshrink
+***** Wen and Stephens 
+***** LDetect
+
+*** Simulations
+
+**** Genotype
+
+**** Genetic architecture
+
+*** Results
+
+** Future Directions
+*** Multi-trait extension
+**** Matrix normal distribution
+
+

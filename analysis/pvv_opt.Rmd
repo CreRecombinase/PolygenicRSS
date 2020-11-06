@@ -1,0 +1,140 @@
+---
+title: "Truncation in RSSp"
+author: "Nicholas Knoblauch"
+date: 2018-04-12
+output: workflowr::wflow_html
+---
+
+# Trimming Low Eigenvalue eigenSNPs
+
+
+
+##Visualizing $\lambda$
+
+```{r,echo=F,message=F,warnings=F}
+library(EigenH5)
+library(tidyverse)
+library(RSSp)
+quhf <- data_frame(filenames=dir("/home/nwknoblauch/Dropbox/scratch/polyg_scratch/quh",full.names = T)) %>% mutate(fn=basename(filenames)) %>% filter(grepl("chr19-21AF",fn)) %>% filter(!grepl("h5.lck",fn))%>%
+  extract(fn,
+          into = c("simulation","chr","AF","dataset","panelset","useLDetect","geneticMap","scenario","useLDshrink","outofSampleLD"),
+          regex = "([a-z0-9]+)_chr([0-9-]+)AF([0-9.].+)_([a-z0-9]+)_([a-z0-9]+)_(T|F)_([a-z]+)_([a-z0-9A-Z]+)_(T|F)_(T|F).h5")
+
+```
+
+
+```{r}
+
+```
+
+
+
+```{r}
+estf <- "/home/nwknoblauch/Dropbox/PolygenicRSS/output/RSSp_snakemake/sim_chr2_bd_bd_T_omni_gwas_RSSp_res_RatherLargePVE_0.0_T_F_F.txt.gz"
+
+res_df <- read_delim(estf,delim="\t") %>% select(optim_pve=pve,tpve,fgeneid,tsigu) %>% mutate(fgeneid=as.character(fgeneid))
+tparam_df <- read_df_h5(quhf,"SimulationInfo")
+
+tparam_df <- group_by(tparam_df,tpve) %>% mutate(pve_replicate=1:n()) %>% ungroup()
+
+p_n <- unique(tparam_df$p/tparam_df$n)
+quhm <- read_matrix_h5(quhf,"/","quh")
+d <- read_vector_h5(quhf,"/","D")
+reg_id <- read_vector_h5(quhf,"SNPinfo","region_id")
+D_df <- data_frame(D=d,region_id=reg_id) %>% mutate(eigen_id=1:n()) %>% group_by(region_id) %>% mutate(rel_D=D/sum(D),cumsum_D=cumsum(rel_D)) %>% 
+  ungroup()
+#snp_df <- mutate(snp_df,D=D)
+
+tres_df <- map(transpose(res_df),as_data_frame)
+quh_df <- map2_df(tres_df,array_branch(quhm,2),~inner_join(.x,data_frame(quh=.y,fgeneid=.x$fgeneid[1],eigen_id=D_df$eigen_id),by="fgeneid"))
+
+quh_df <- inner_join(quh_df,D_df)
+quh_df <- group_by(quh_df,fgeneid,region_id) %>% 
+  arrange(desc(D)) %>%
+  arrange(fgeneid,region_id,cumsum_D) %>% ungroup()
+
+```
+
+
+```{r}
+tquh <- filter(quh_df,fgeneid=="1")  %>%rename(true_pve=tpve,v=quh) %>% mutate(true_pve=factor(round(true_pve,4))) %>%mutate(D=zapsmall(D),quantile=pnorm(v,mean=0,sd=sqrt(tsigu^2*D^2+D)))
+```
+```{r}
+filter(tquh,tsigu==max(tsigu)) %>% ggplot(aes(x=quantile,..density..))+geom_histogram(bins=1000)
+
+```
+
+
+
+```{r}
+ggplot(D_df,aes(x=D))+geom_histogram()
+
+```
+
+```{r}
+ggplot(D_df,aes(x=D))+geom_histogram(bins=100)
+
+```
+
+
+
+```{r,echo=F,message=F,warnings=F}
+pvv_est <- function(pvv,quh_df,tparam_df,p_n){
+   quh_df %>% dplyr::filter(rel_D>=pvv) %>% group_by(fgeneid) %>% do(RSSp_estimate(data_df = .,p_n = p_n)) %>% ungroup() %>% inner_join(tparam_df,by="fgeneid") %>% summarise(error=sum((pve-tpve)^2)) %>% pull(1)
+}
+
+
+pvv_map <- seq(0,.05,length.out = 35)
+error_map <- map_dbl(pvv_map,pvv_est,quh_df=quh_df,tparam_df=tparam_df,p_n=p_n)
+plot(pvv_map,error_map)
+
+optimise(pvv_est,interval=c(0,1),quh_df=quh_df,tparam_df=tparam_df,p_n=p_n)
+
+
+filter(quh_df,fgeneid=="1") %>% group_by(region_id) %>% filter(cumsum_D==min(cumsum_D)) %>% ungroup() %>% arrange(cumsum_D)
+# grid_df <- readRDS("out_res.RDS")
+# grid_df <- array_branch(quhm,2) %>% map2_df(tparam_df$fgeneid,~RSSp_estimate_grid(v_hat = .x,eigenvalues = D,p_n = p_n,grid_points = 100)%>% mutate(fgeneid=.y)) %>% inner_join(tparam_df)
+
+#saveRDS(grid_df,"out_res.RDS")
+
+#lnZ_good <- RSSp_estimate_grid(v_hat = quhm[,2],eigenvalues = D,p_n = p_n,grid_points = 50) %>% mutate(fgeneid="21") %>% inner_join(tparam_df)  
+
+ggplot(D_df,aes(x=rel_D))+geom_histogram()
+
+```
+
+
+```{r}
+ggplot(D_df,aes(x=D,y=cumsum_D))+geom_point()
+
+```
+
+
+
+## Likelihood curves
+
+For each simulation (`pve_replicate`), I calculated the log-likelihood for 100 values of $PVE$ evenly spaced between 0 and 1.  To aid visualization, I subtracted the mean and divided by the standard deviation for each simulation to obtain the **Normalized Log-Likelihood**.  The vertical colored bar corresponds to the MLE obtained by `optim`, and the black vertical bar corresponds to the true $PVE$ value. What you'll notice is that 1) the shape of the likelihood curves can vary greatly and 2) `optim` consistently finds the "bottom" of the curve, and (most importantly) 3) the "bottom" of the curve is sometimes quite far from the true PVE value. 
+
+
+```{r}
+grid_df <- group_by(grid_df,fgeneid) %>% mutate(rel_lnZ=(lnZ-mean(lnZ))/sd(lnZ)) %>% ungroup() %>% inner_join(res_df)
+#filter(grid_df,fgeneid %in% c("16","21")) %>% mutate(PVE_replicate=factor(pve_replicate)) %>% rename(True_PVE=tpve) %>% ggplot(aes(x=pve,y=rel_lnZ,col=PVE_replicate))+
+  # geom_point()+
+  # geom_vline(aes(xintercept = True_PVE),linetype=2)+xlab(bquote(PVE))+ylab("Normalized Log Likelihood")+ggtitle("'True' PVE is sometimes far from the minimum","True PVE along black dotted line")+
+  # facet_wrap(~True_PVE,scales = "free_y",labeller = "label_both")+
+  # geom_vline(aes(xintercept=optim_pve,col=PVE_replicate))
+```
+
+
+And here's the plot for several more simulations
+
+```{r}
+mutate(grid_df,PVE_replicate=factor(pve_replicate)) %>% ggplot(aes(x=pve,y=rel_lnZ,col=PVE_replicate))+
+  geom_point()
+# +
+#   geom_vline(aes(xintercept = tpve),linetype=2)+xlab(bquote(PVE))+ylab("Normalized Log Likelihood")+ggtitle("Normalized Log likelihood along with MLE","True PVE along black dotted line")+
+#   facet_wrap(~tpve,scales = "free_y")+
+#   geom_vline(aes(xintercept=optim_pve,col=PVE_replicate))
+```
+
+

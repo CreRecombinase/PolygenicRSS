@@ -1,0 +1,137 @@
+---
+title: "Normalization and RSS"
+output: html_notebook
+---
+
+
+```{r}
+library(ldshrink)
+library(SeqSupport)
+library(tidyverse)
+library(EigenH5)
+library(SeqSupport)
+data("reference_genotype")
+data("reference_genotype_snpinfo")
+
+#X <- scale(reference_genotype,center = T,scale = F)
+N <- nrow(reference_genotype)
+p <- ncol(reference_genotype)
+tparam_df <- gen_tparamdf_norm(pve=c(0.1,0.3,0.3,0.6),bias=0,nreps=200,n=N,p = p) %>% mutate(n=N,p=p,trait_id=1:n())
+tf <- tempfile()
+tf_b <- tempfile()
+EigenH5::write_matrix_h5(t(reference_genotype),filename = tf,"dosage")
+snp_df <- dplyr::mutate(reference_genotype_snpinfo,snp_id=1:n())
+EigenH5::write_df_h5(snp_df,tf,"SNPinfo")
+
+#SeqSupport::simulate_y_h5()
+my_y <- SeqSupport::gen_sim_phenotype_h5(snp_df,snp_h5file = tf,beta_h5file = tf_b,tparam_df = tparam_df,chunksize = 10)
+tf_y <- tempfile()
+write_matrix_h5(data = my_y,filename = tf_y,datapath = "trait/ymat")
+write_df_h5(tparam_df,tf_y,"TraitInfo")
+
+
+tf_uh <- tempfile()
+me <- map_eqtl_h5(snp_h5 = tf,exp_h5=tf_y,covar_h5=NULL,uh_h5=tf_uh,ncovar = 0)
+```
+
+```{r}
+se <- read_matrix_h5(tf_uh,"se")
+uh <- read_matrix_h5(tf_uh,"uh")
+bh <- uh*se
+data("reference_map")
+# C <- cov(reference_genotype)
+oR <- estimate_LD(reference_genotype,reference_map)
+R <- cor(reference_genotype)
+
+# B <- read_matrix_h5(tf_b,"Beta")
+# S <- read_vector_h5(tf_b,"S")
+# srsi <- diag(S)%*%R%*%diag(1/S)
+# srs <- diag(S)%*%R%*%diag(S)
+# bh_df <- as_data_frame(magrittr::set_colnames(bh,tparam_df$fgeneid)) %>% mutate(snp_id=1:n()) %>% tidyr::gather(key="trait",value="beta_hat",-snp_id)
+# srsib <- srsi%*%t(B)
+# ran_run <- apply(srsib,2,purrr::partial(mvtnorm::rmvnorm,n=1,sigma=srs))
+# 
+# ran_df <- as_data_frame(magrittr::set_colnames(ran_run,tparam_df$fgeneid)) %>% mutate(snp_id=1:n()) %>% tidyr::gather(key="trait",value="direct_beta",-snp_id)
+# 
+# bbh <- inner_join(ran_df,bh_df)
+```
+
+
+
+<!-- ```{r} -->
+<!-- library(rssr) -->
+<!-- rssr_res <- rssr::RSSr_estimate(R,bh[,1],se[,1]) -->
+
+<!-- evdR <- eigen(C) -->
+<!-- Q <- evdR$vectors -->
+<!-- D <- evdR$values -->
+
+<!-- quh <- crossprod(Q,uh) -->
+<!-- quhl <- array_branch(quh,2) -->
+<!-- rssp_est <- array_branch(quh,2) -->
+
+
+<!-- res_df_c <- map2_dfr(quhl,tparam_df$trait_id,~RSSp:::RSSp_estimate(quh=.x,D=D,p_n=p/N,trait_id=.y)) -->
+<!-- res_df_c <-  inner_join(res_df_c,mutate(tparam_df,trait_id=as.character(trait_id))) -->
+<!-- ggplot(res_df_c,aes(x=tpve,y=tpve-pve,group=tpve))+geom_boxplot() -->
+<!-- ``` -->
+
+
+
+```{r}
+evdR <- eigen(oR)
+Q <- evdR$vectors
+D <- evdR$values
+
+quh <- crossprod(Q,uh)
+quhl <- array_branch(quh,2)
+rssp_est <- array_branch(quh,2)
+res_df_o <- map2_dfr(quhl,tparam_df$trait_id,~RSSp:::RSSp_estimate(quh=.x,D=D,p_n=p/N,trait_id=.y))
+res_df_o <-  inner_join(res_df_o,mutate(tparam_df,trait_id=as.character(trait_id)))
+ggplot(res_df_o,aes(x=tpve,y=tpve-pve,group=tpve))+geom_boxplot()
+```
+
+```{r}
+ggplot(res_df_o,aes(x=tpve,y=tpve-alt_pve,group=tpve))+geom_boxplot()
+
+```
+
+
+
+```{r}
+evdR <- eigen(R)
+Q <- evdR$vectors
+D <- evdR$values
+
+quh <- crossprod(Q,uh)
+quhl <- array_branch(quh,2)
+rssp_est <- array_branch(quh,2)
+res_df_a <- map2_dfr(quhl,tparam_df$trait_id,~RSSp:::RSSp_estimate(quh=.x,D=D,p_n=p/N,trait_id=.y))
+res_df_a <-  inner_join(res_df_a,mutate(tparam_df,trait_id=as.character(trait_id)))
+ggplot(res_df_a,aes(x=tpve,y=pve,group=tpve))+geom_boxplot()+geom_abline(slope=1,intercept=0)
+```
+
+```{r}
+br_df <- bind_rows(mutate(res_df_a,useLDshrink=F),mutate(res_df_o,useLDshrink=T))
+ggplot(br_df,aes(x=tpve,y=pve,group=interaction(useLDshrink,tpve),col=useLDshrink))+geom_boxplot()+geom_abline(slope=1,intercept=0)
+br_df  <- inner_join(select(res_df_a,tpve,pv,res_df_o))
+```
+
+
+
+```{r}
+
+npve <- map2_dbl(quhl,res_df_a$sigu^2,~RSSp:::estimate_pve(dvec=D,quh=.x,cvec=.y,N=N))
+plot(npve,res_df_a$pve)
+```
+
+
+
+
+
+```{r}
+
+```
+
+
+

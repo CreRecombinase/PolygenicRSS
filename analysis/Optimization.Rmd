@@ -1,0 +1,57 @@
+---
+title: "Optimizing in MATLAB vs R"
+output: html_notebook
+---
+
+# Background
+
+In this notebook we'll explore differences between Xiang's and Nick's `RSSp` implementations
+
+## The data
+
+The data consists of 100 simulations and paired results from Xiang's RSSp-0 `MATLAB` code.  Each simulation consists of  10000 draws of `vhat` from $N(0,16)$, and  10000 draws of `dvec` from $\text{Unif}(0,1)$ 
+* `dvec` 100 length 10000 
+
+
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+library(RSSp)
+res_data <- readRDS("/home/nwknoblauch/Dropbox/projectile/RSSp/inst/rand_seed_312_k_1_rep_100.RDS")
+```
+
+```{r}
+qqplot(res_data$dvec[,1],runif(10000,max = 2),ylab = bquote(Unif(0,2)),xlab="dvec",main="qqplot of dvec")
+```
+```{r}
+  qqplot(res_data$vhat[,1],rnorm(10000,sd = 4),ylab = bquote(N(0,4^2)),xlab="vhat[,1]",main="qqplot of vhat")
+```
+
+## 
+
+```{r}
+nk_res <- map2_dfr(array_branch(res_data$vhat,margin = 2),
+         array_branch(res_data$dvec,margin = 2),~RSSp::RSSp_estimate(.x,.y,sample_size = 1000,pve_bounds = c(.Machine$double.eps,8000))) %>% select(loglik_nk=lnZ,pve_nk=pve,par_nk=sigu) %>% mutate(sim_id=1:n(),par_nk=par_nk^2)      
+
+# par_l <- transpose(list(quh=array_branch(res_data$vhat,margin = 2),
+#          dvec=array_branch(res_data$dvec,margin = 2),
+#      par=res_data$par))
+# pm_db <- map_dbl(par_l,~estimate_pve(cvec=.x$par,D=.x$dvec,quh = .x$quh,sample_size = 1000))
+
+xz_res <- tibble(pve_xz=c(res_data$pve),loglik_xz=c(res_data$obj),par_xz=c(res_data$par)) %>% mutate(sim_id=1:n(),loglik_xz=2*loglik_xz)
+
+b_res <- inner_join(xz_res,nk_res)
+```
+
+```{r}
+xrange <-range(c(b_res$pve_xz,b_res$pve_nk)) 
+ggplot(b_res,aes(x=pve_xz,y=pve_nk))+geom_point()+geom_abline(slope=1,intercept = 0)+xlim(xrange)+ylim(xrange)
+```
+
+```{r}
+xrange <-range(c(b_res$loglik_nk,b_res$loglik_xz)) 
+
+ggplot(b_res,aes(x=loglik_xz,y=loglik_nk))+geom_point()+geom_abline(slope=1,intercept = 0)+xlim(xrange)+ylim(xrange)
+```
+
+
+

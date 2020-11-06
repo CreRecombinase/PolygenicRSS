@@ -7,27 +7,154 @@ output: workflowr::wflow_html
 
 # Out of Sample LD
 
-For these simulations I'm using the wtccc `cd` genotypes for GWAS simulation and the `bd` genotypes as a reference panel.
+For these simulations I'm using the wtccc `cd` genotypes for GWAS simulation and the `bd` genotypes as a reference panel for the purposes of calculating LD.  
+
+##  Simulation details
+
+
 
 
 ```{r,echo=F,message=F,warnings=F}
 library(EigenH5)
 library(tidyverse)
-library(plotly)
 ```
 
 
 
 ```{r,echo=F,message = F,warnings = F}
-res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",full.names = T,pattern="SNP")
-res_d_ldsc <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake/ldsc_res/",pattern="cd",full.names = T)
+res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake", full.names = T, pattern = "SNP")
+res_d_ldsc <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake/ldsc_res/", pattern = "cd", full.names = T)
 
-res_df_rssp <- map_df(res_d_rssp,~quietly(read_delim)(.x,delim = "\t")$result %>% mutate(chrom=as.character(chrom),method="RSSp")) %>% filter(!is.na(simulation),!is.na(useLDshrink)) %>% filter(scenario == "RepPVE", dataset == "cd", panel_dataset == "bd",chrom=="1-22",simulation=="gwas",!is.na(chrom),!is.na(AF)) %>% select(-ends_with("bound"),-sigu,-lnZ,-bias,-tbias,-optim,-useGradient,-log_params,-message,-convergence)
-res_df_ldsc <- map_df(res_d_ldsc,~quietly(read_delim)(.x,delim = "\t")$result %>% mutate(Intercept=as.character(Intercept),chrom=as.character(chrom),method=ifelse(useIntercept,"LDSC_Intercept","LDSC_noIntercept"))) %>% filter(scenario == "RepPVE", dataset == "cd", panel_dataset == "bd",chrom=="1-22",simulation=="gwas",!is.na(chrom),!is.na(AF))%>% select(-Lambda_GC,-Mean_Chi_2,-Total_time_elapsed,-Intercept)
-res_df <- bind_rows(res_df_rssp,res_df_ldsc)
 
-sum_df <- res_df %>%  group_by_at(vars(-pve,-fgeneid)) %>% summarise(mean_pve=mean(pve),sd_pve=sd(pve),error_pve=mean((pve-tpve)^2)) %>% ungroup()
+
+res_df_rssp <- map_df(res_d_rssp, function(x){
+    quietly(read_tsv)(x)$result %>%
+                           mutate(chrom = as.character(chrom),
+                                  method = "RSSp",
+                                  useLDetect = as.character(useLDetect)) %>% as.data.frame() %>% as_tibble()
+}) %>%
+    filter(!is.na(simulation), !is.na(useLDshrink)) %>%
+    filter(scenario == "RepPVE",
+           dataset == "cd",
+           panel_dataset == "bd",
+           chrom == "1-22",
+           simulation == "gwas",
+           !is.na(chrom),
+           !is.na(AF)) %>%
+    select(-ends_with("bound"),
+           -sigu,
+           -lnZ,
+           -bias,
+           -tbias,
+           -optim,
+           -useGradient,
+           -log_params,
+           -message,
+           -convergence)
+
+res_df_ldsc <- map_df(res_d_ldsc,
+                      function(x) {
+                          quietly(read_delim)(x, delim = "\t")$result %>%
+                                                                 mutate(Intercept = as.character(Intercept),
+                                                                        chrom = as.character(chrom),
+                                                                        useLDetect = as.character(useLDetect),
+                                                                        method = ifelse(useIntercept, "LDSC_Intercept", "LDSC_noIntercept")) %>%
+                                                                 as.data.frame() %>%
+                                                                 as_tibble()
+                      }) %>%
+    filter(scenario == "RepPVE",
+           dataset == "cd",
+           panel_dataset == "bd",
+           chrom == "1-22",
+           simulation == "gwas",
+           !is.na(chrom),
+           !is.na(AF)) %>%
+    select(-Lambda_GC,
+           -Mean_Chi_2,
+           -Total_time_elapsed,
+           -Intercept)
+res_df <- bind_rows(res_df_rssp, res_df_ldsc)
+
+
+## ggplot(res_df,
+##        aes(x=tsigu,y=abs((pve-tpve)/tpve),group=interaction(tsigu,method),fill=method,col=method)) + geom_boxplot()
+
+sum_df <- res_df %>%
+    group_by_at(vars(-pve, -fgeneid)) %>%
+    summarise(mean_pve = mean(pve), sd_pve = sd(pve), error_pve = mean((pve - tpve)^2), error_sd = sd((pve - tpve) / tpve), rel_error_pve = mean(((pve - tpve) / tpve)^2)) %>%
+    ungroup() %>%
+    mutate(error_rmse = sqrt(error_pve))
 ```
+
+
+```{r,echo=F,message = F,warnings = F}
+mp <- filter(res_df,p==max(p)) %>% filter(n==max(n))
+filter(res_df,p==max(p)) %>% filter(n==max(n)) %>% mutate(pve_c=as.factor(tpve)) %>% 
+    ggplot(aes(x=tpve,y=pve,col=method,group=interaction(tpve,method)))+geom_boxplot(position=position_dodge(width=0.04))+geom_abline(slope=1)+geom_point(position=position_dodge(width=0.04))+
+    ggtitle("Out of sample LD", paste0("p = ", unique(mp$p), ",N = ", unique(mp$n))) +
+    xlab("PVE") + 
+    ylab(bquote(hat(PVE)))
+ggsave("../output/rssp_ldsc_oos.png")    
+
+```
+```{r,echo=F,message = F,warnings = F}
+filter(res_df,p==max(p)) %>% filter(n==max(n)) %>% filter() %>%
+    ggplot(aes(x=tpve,y=pve,col=method))+geom_point()+geom_abline(slope=1)+
+    ggtitle("LDSC", paste0("p = ", unique(mp$p), ",N = ", unique(mp$n))) +
+    xlab("PVE") + 
+    ylab(bquote(hat(PVE)))+geom_smooth(method="lm")+
+    facet_grid(method~.)
+```
+
+
+```{r,echo=F,message = F,warnings = F}
+filter(res_df,p==max(p)) %>% filter(n==max(n)) %>% filter(method=="RSSp") %>%
+    ggplot(aes(x=tpve,y=abs(pve-tpve)/tpve))+
+    geom_point()+geom_smooth(method="lm")+
+    ggtitle("RSSp", paste0("p = ", unique(mp$p), ",N = ", unique(mp$n))) +
+    xlab("PVE") + 
+    ylab("RMSE")
+
+```
+```{r,echo=F,message = F,warnings = F}
+filter(res_df,p==max(p)) %>%
+    filter(n==max(n)) %>%
+    ggplot(aes(x=tpve,y=abs(pve-tpve)/tpve,col=method))+
+    geom_point()+geom_smooth(method="lm")+
+    ggtitle("LDSC", paste0("p = ", unique(mp$p), ",N = ", unique(mp$n))) +
+    xlab("PVE") + 
+    ylab("RMSE")+
+    facet_grid(method~.)
+```
+
+
+
+
+
+```{r,echo=F,message = F,warnings = F}
+mtpve <- unique(sum_df$tpve)
+p <- filter(sum_df,SNPCT==0,
+            method=="RSSp",n==2000)  %>% mutate(Method=method,use_ldshrink=useLDshrink) %>% 
+  ggplot(aes(x = tpve, y = error_rmse,fill=use_ldshrink,col=use_ldshrink)) + facet_grid(AF~.,labeller = "label_both") +
+  geom_col(position=position_dodge())+ geom_errorbar(aes(ymin=error_rmse,ymax=error_rmse+error_sd/2),position=position_dodge())+
+  ggtitle("ldshrink improves RSSp PVE estimates","10 simulations per PVE value (N=2000)") +
+  xlab("PVE") + scale_x_continuous(breaks=mtpve)+
+  ylab("RMSE(PVE)")
+p
+```
+
+
+```{r,echo=F,message = F,warnings = F}
+p <- filter(sum_df,SNPCT==0,N!=2000,
+            method!="LDSC_Intercept",((useLDshrink & method=="RSSp") | (!useLDshrink & method !="RSSp")))  %>% mutate(Method=method) %>% 
+  ggplot(aes(x = tpve, y = error_rmse,fill=Method,col=Method)) + facet_grid(AF~n,labeller = "label_both") +
+  geom_col(position=position_dodge())+ geom_errorbar(aes(ymin=error_rmse,ymax=error_rmse+error_sd/2),position=position_dodge())+
+  ggtitle("Root Mean Squared Error of Out-of-Sample-LD-based PVE Estimates","10 replicates per PVE value") +
+  xlab("PVE") + 
+  ylab("RMSE(PVE)")
+p
+```
+
 
 
 ```{r,echo=F,message = F,warnings = F}
@@ -44,7 +171,7 @@ ggplotly(p)
 
 ```{r,echo=F,message = F,warnings = F}
 px <- filter(sum_df,SNPCT==0,N==0,AF!=0.2) %>% ggplot(aes(x = method, y = error_pve,fill=method)) +
-  geom_boxplot() + 
+  geom_boxplot() + geom_point()+
   facet_grid( AF~useLDshrink,labeller = "label_both",scales="free_y") +
   ggtitle("RSSp performance is vastly improved by LDshrink") +
   xlab("Method") + 
@@ -53,6 +180,21 @@ px <- filter(sum_df,SNPCT==0,N==0,AF!=0.2) %>% ggplot(aes(x = method, y = error_
 
 ggplotly(px)
 ```
+
+### How much Better is `RSSp` than `LDSC`?
+
+
+```{r,echo=F,message = F,warnings = F}
+
+filter(sum_df,N==0,SNPCT==0,AF!=0.2) %>% group_by(method,useLDshrink) %>% summarise(mean_error_pve=mean(rel_error_pve))%>% spread(method,mean_error_pve) %>% mutate(percent_improvement_Intercept=(LDSC_Intercept-RSSp)/LDSC_Intercept,percent_improvement_noIntercept=(LDSC_noIntercept-RSSp)/LDSC_noIntercept)
+
+```
+
+```{r}
+filter(sum_df,N==0,SNPCT==0,AF!=0.2,method=="RSSp") %>% group_by(useLDshrink) %>% summarise(mean_error_pve=mean(rel_error_pve))%>% mutate(useLDshrink=ifelse(useLDshrink,"LDshrink","noLDshrink"))%>% spread(useLDshrink,mean_error_pve)%>% mutate(percent_improvement=(noLDshrink-LDshrink)/noLDshrink)
+```
+
+
 
 ## Varying SNP count
 

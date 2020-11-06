@@ -1,0 +1,102 @@
+---
+title: "ukb_onec"
+author: "CreRecombinase"
+date: "2020-04-23"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+```{r}
+suppressMessages(library(plotly))
+suppressMessages(library(tidyverse))
+library(fs)
+library(forcats)
+library(magrittr)
+library(vroom)
+library(unglue)
+library(ldmap)
+library(EigenH5)
+parse_ldsc <- function(h2lf){
+    h2_dat <- suppressMessages(scan(h2lf,what=character(), sep = "\n",quiet=TRUE))
+    h2_rowi <- grep("Total Observed scale", h2_dat)
+    h2_row <- h2_dat[h2_rowi]
+    h2_data <- h2_dat[h2_rowi:length(h2_dat)]
+    h2_data <- h2_data[grep("^[^:]+:[^:]+$", h2_data)]
+    h2_datd <- purrr::transpose(strsplit(h2_data, split=":"))
+    names(h2_datd) <- c("Variable", "Value")
+    h2_datdf <- tidyr::unnest(as_data_frame(h2_datd)) %>%
+        dplyr::mutate(Variable=chartr(" ^", "__", Variable), Value = trimws(Value)) %>%
+      tidyr::separate(Value, c("Est", "SD"), sep = "[ s\\(\\)]+", remove = T, fill = "right", convert = T)
+    return(as.numeric(h2_datdf$Est[1]))
+    #%>% replace_na(list(Intercept=1.0,Intercept_sd=0.0))
+}
+parse_rssp <- function(x){
+  readRDS(x) %>% pull(pve)
+}
+parse_gcta <- function(x){
+  tdf <- read_tsv(x)
+  select(tdf,-SE) %>% mutate(row=1) %>% tidyr::spread(Source,Variance) %>%
+    rename(h2=`V(G)/Vp`) %>% mutate(h2_sd=tdf$SE[4]) %>% pull(h2)
+}
+parse_file <- function(path,model,...){
+  if(str_detect(model,"RSSP")){
+    parse_rssp(path)
+  }else{
+    if(str_detect(model,"GCTA")){
+      parse_gcta(path)
+    }else{
+      parse_ldsc(path)
+    }
+  }
+}
+```
+
+
+```{r}
+# glue_expand <- function(x,...){
+#   argl <- rlang::list2(...)
+#   arg_df <- purrr::cross_df(argl)
+#   dplyr::mutate(arg_df,path=glue::glue_data(arg_df,x))
+# }
+#poly_results <- fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/
+#results_df <- glue_expand("{pref}_{rep}_{nt}_10_{true_h2}_10000.{ext}",pref=c("onec"),rep=1:10,true_h2=c(1:8)/10,nt=10,ext=c("int.log","noint.log","shrink.RDS","noshrink.RDS")) %>% 
+#  mutate(path=fs::path("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb_ind/",path))
+#%>%
+onec_results <- as.character(fs::dir_ls("/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/",recurse = TRUE,glob = "*onec*"))
+
+onec_df <- bind_rows(
+  unglue(onec_results,"/home/nwknoblauch/Dropbox/PolygenicRSS/workflow/results/sim_ukb_ind/onec_{rep}_10_10_{true_h2}_10000.{ext}")) %>% 
+  mutate(path=onec_results) %>% filter(ext!="log") %>% 
+  mutate(model=case_when(ext=="int.log" ~ "LDSC_INT",
+                         ext=="noint.log"~"LDSC_NOINT",
+                         ext=="shrink.RDS"~"RSSP",
+                         ext=="noshrink.RDS"~"RSSP_NOSHRINK",
+                         ext=="hsq"~"GCTA"))
+results_df <- mutate(onec_df,
+         h2=map2_dbl(path,model,~quietly(parse_file)(.x,.y)$result),
+         true_h2=as.numeric(true_h2))
+         
+```
+
+
+
+
+```{r}
+filter(results_df) %>% 
+ggplot(aes(x=true_h2,y=h2,col=model))+geom_point()+geom_abline(slope=1,intercept=0)+geom_smooth(method="lm")+facet_wrap(~model)
+```
+
+
+
+```{r}
+
+ggplot(res_df,aes(x=true_h2,y=abs(h2-true_h2),group=interaction(true_h2,model),col=model)) +
+  geom_point() + geom_boxplot(position = position_dodge(width = .04))+scale_y_sqrt()
+```
+
+```{r}
+
+```
+

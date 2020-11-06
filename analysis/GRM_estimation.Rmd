@@ -1,0 +1,32 @@
+---
+title: "Assessing PVE using the GRM"
+author: "Nicholas Knoblauch"
+date: 2017-12-11
+output: workflowr::wflow_html
+---
+
+
+
+
+
+
+```{r}
+library(tidyverse)
+grm_resf <- "../output/RSSp_snakemake/grm_h2_est/scz2_seq_NoConfound_est.txt.gz"
+rssp_resf <- "../output/RSSp_snakemake/sim_scz2_direct_RSSp_res_ALL_NoConfound.txt.gz"
+grm_res <- read_delim(grm_resf,delim="\t")
+rssp_res <- read_delim(rssp_resf,delim="\t") %>% mutate(method="GRM")
+
+bg_res <- select(grm_res,pve_grm=minimum,fgeneid,tpve)
+bp_res <- select(rssp_res,pve_rssp=pve,fgeneid,tpve)
+b_res <- inner_join(bp_res,bg_res)
+
+ggplot(grm_res,aes(group=tpve,x=tpve,y=minimum))+geom_boxplot()
+
+```
+```{r}
+ggplot(b_res,aes(x=pve_grm,y=pve_rssp))+geom_point()
+```
+
+
+

@@ -52,17 +52,45 @@ ncomp_exp <- select(comp_exp,transcript_cluster_id=Transcript_ID,h2=`h2 (geneExp
 
 I compared heritability estimates of `RSSp` to the `1607` heritability estimates published in  [A Systematic Heritability Analysis of the Human Whole Blood Transcriptome](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4339826/)
 
-```{r}
-ncomp_exp%>% ggplot(aes(x=Fram_pve,y=RSSp_pve))+geom_point()+geom_smooth(method="lm")+ggtitle("Comparison of original Heritability estimates to RSSp","1607 genes")
-```
 
 ```{r}
-broom::tidy(summary(lm(RSSp_pve~Fram_pve,data=ncomp_exp)))
+load("~/Downloads/rss_results.RData")
+library(tidyverse)
+library(RSSp)
+library(EigenH5)
+# quhf <- "~/Desktop/gardner_scratch/"
+
+#sub_quh <- read_matrix_h5(quhf,"quh",subset_cols=1:10)
+
+
+quh_l <- array_branch(quh,1)
+quh_df <- data_frame(D=D,
+                     quh_l=quh_l)
+quh_df <- mutate(quh_df,tquh=map_dbl(quh_l,8))
+plot(quh[,1]^2-D,D^2)
+hist(quh[,1])
+hist(D)
+
+  quhm <- read_matrix_h5(filename_quh,"/","quh")^2 %>% magrittr::set_colnames(tfdf$fgeneid) %>%  apply(2,function(x,d_dec,d){by(x-d,d_dec,mean)},d=ld_df$D,d_dec=ld_df$D_dec)
+  
+ld_df <- data_frame(D=D,quh=quh[,1]) %>% mutate(D2_dec=ntile(D,100)) %>% group_by(D2_dec) %>% summarise(D2_mean=mean(D^2),q_mean=mean(quh),qs_mean=mean(quh^2),qsd_mean=mean(quh^2-D))  
+  
+
+
+ggplot(ld_df,aes(x=D2_mean,y=qsd_mean))+geom_point()
+  ld_df <- read_df_h5(filename_ld,"LDinfo") %>% group_by(region_id) %>% do(mutate(.,D=read_vector_h5(filename_ld,paste0("EVD/",as.character(.$region_id[1])),"D"))) %>% ungroup() %>% mutate(D_dec=ntile(D,20)) 
+
+
+
+filter(quh_df,D^2<1) %>% ggplot(aes(x=D^2,y=tquh^2-D))+geom_hex()+geom_smooth(method="lm")+geom_smooth(method="lm",formula=y~x+0)
+
+tquh <- (quh[,4]^2)[nD^2<1000]
+ntquh <- tquh-nD[nD^2<1000]
+snD <- nD[nD^2<1000]
+summary(lm(ntquh~I(snD^2)+0))
+lm(formula=I(quh^2)~D^2+I(D)+0,data=filter(quh_df,D^2<1))
+
 ```
-
-
-There is a correlation coefficient of `r cor(ncomp_exp$RSSp_pve,ncomp_exp$Fram_pve)` between the two results.
-
 
 
 

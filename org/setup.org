@@ -1,0 +1,197 @@
+#+AUTHOR: Nicholas Knoblauch
+#+EMAIL: nwknoblauch@uchicago.edu
+#+OPTIONS: num:nil toc:2
+#+HTML_DOCTYPE: html5
+#+HTML_HEAD: <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://gongzhitaao.org/orgcss/org.css"/>
+
+#+begin_src emacs-lisp :results silent :tangle no
+(setq org-babel-post-tangle-hook nil)
+#+end_src
+
+#+begin_src emacs-lisp :results silent :tangle no
+  (defun parent_plus (x)
+      (apply 'f-join (-take-last 2 (f-split x))))
+    (defun re-root (new_directory bfn)
+      (f-long (f-join new_directory (parent_plus bfn))))
+  (defun delete-copy (x y)
+    (copy-file x y "t"))
+      ;; (if (f-exists? y)
+      ;;   (f-delete y))
+      ;;   (f-copy x y))
+
+
+    (defun reroot-copy (new_directory buff-fn)
+      (let
+          ((new-root (re-root new_directory  buff-fn)))
+        (progn 
+          (message "Copying file: %s to %s" buff-fn new-root)
+          (delete-copy buff-fn new-root)
+          (message "Copied file: %s to %s" buff-fn new-root)
+          )
+        )
+      )
+
+    (add-hook 'org-babel-post-tangle-hook
+              (lambda ()
+                (reroot-copy "/ssh:rcc2|ssh:gardner:/scratch/t.cri.nknoblauch/polyg_scratch/" buffer-file-name)
+                ;; (reroot-copy "/ssh:helab|ssh:rcc2|ssh:gardner:/scratch/t.cri.nknoblauch/polyg_scratch/" buffer-file-name)
+                ;;   (reroot-copy "/ssh:rcc2:/project2/xinhe/software/ldsc/" buffer-file-name)
+                ))
+
+#+end_src
+
+#+begin_src emacs-lisp 
+(f-touch "../temp_file")
+(delete-copy "../temp_file" "../new_file")
+
+(re-root "/home/nwknoblauch/Dropbox/Repos/ptb_workflowr/workflow/ukb_snakefile"  "/ssh:gardner:/gpfs/data/xhe-lab/software/ldsc/")
+#+end_src
+
+#+RESULTS:
+: /ssh:gardner:/gpfs/data/xhe-lab/software/ldsc/workflow/ukb_snakefile
+
+#+begin_src emacs-lisp
+(defun parent_plus (x)
+  (apply 'f-join (-take-last 2 (f-split x))))
+(parent_plus "../workflow/config_base.yaml")
+  ;; (f-join (cdr (f-split "../workflow/config_base.yaml")))
+#+end_src
+
+#+RESULTS:
+: workflow/config_base.yaml
+
+#+begin_src emacs-lisp
+(f-delete "/ssh:gardner:/gpfs/data/xhe-lab/software/ldsc/workflow/config_base.yaml")
+#+end_src
+
+#+RESULTS:
+: t
+
+#+begin_src emacs-lisp
+(parent_plus "/ssh:gardner:/gpfs/data/xhe-lab/software/ldsc/")
+#+end_src
+
+#+RESULTS:
+: software/ldsc
+
+#+begin_src emacs-lisp
+(re-root "/ssh:gardner:/gpfs/data/xhe-lab/software/ldsc/" "/home/nwknoblauch/Dropbox/Repos/ptb_workflowr/scripts/summarise_gcta.R")
+#+end_src
+
+#+RESULTS:
+: /ssh:gardner:/gpfs/data/xhe-lab/software/ldsc/scripts/summarise_gcta.R
+
+
+
+#+BEGIN_SRC R
+  library(purrr)
+  library(dplyr)
+  h2_df <- cross_df(list(
+    h2=c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8),
+    nt=30,
+    trait=1:30,
+    ))
+  h2_df <- bind_rows(h2_df,
+                     cross_df(list(
+    h2=c(0.1,0.2,0.5),
+    nt=10,
+    trait=1:10)))
+
+  scratch_d <- fs::path("/scratch/t.cri.nknoblauch/intersect_snplist/ukb_subset")
+  scratch_d <- fs::path("/scratch/t.cri.nknoblauch/ptb_scratch")
+
+  h2dfd <- distinct(h2_df,h2,nt) %>% mutate(ina=NA) %>% inner_join(tibble(ext=c("log","par","phen"),ina=NA)) %>% select(-ina)
+
+  fs::file_move(
+  fs::path(scratch_d,glue::glue_data(
+                             h2dfd,"pheno/{h2}_{nt}_10000.{ext}")),
+  fs::path(scratch_d,glue::glue_data(
+                            h2dfd,"pheno/poly_{h2}_{nt}_10000.{ext}"))
+  )
+
+  tdd <- distinct(h2dfd,h2,nt)
+  fs::file_move(glue::glue_data(tdd,"gwas_covar_ss/{h2}_{nt}_10_10000"),
+                glue::glue_data(tdd,"gwas_covar_ss/poly_{h2}_{nt}_10_10000"))
+
+
+
+
+
+
+  panel_df <- cross_df(list(
+    ext = c("fam","bim","bed","log"),
+    i = c("ind","panel"),
+    chrom=seq_len(22)))
+
+  fs::file_move(
+  fs::path(scratch_d,glue::glue_data(panel_df,
+                                     "split_map/{i}_chr{chrom}.{ext}")),
+  fs::path(scratch_d,glue::glue_data(panel_df,
+                             "split_map/{i}_10000_chr{chrom}.{ext}"))
+  )
+
+
+
+
+
+  fs::file_move(
+  fs::path(scratch_d,glue::glue_data(
+                             cross_df(
+                               list(i=c("ind"),
+                                    chrom=seq_len(22)
+                                    )),"ld_noshrink/{i}_chr{chrom}.h5")),
+  fs::path(scratch_d,glue::glue_data(
+                             cross_df(
+                               list(i=c("ind"),
+                                    chrom=seq_len(22)
+                                    )),"ld_noshrink/{i}_10000_chr{chrom}.h5"))
+  )
+
+
+  fs::file_move(glue_data(h2_df,"ldsc_input/{trait}_{nt}_10_{h2}_10000.sumstats.gz"),
+                glue_data(h2_df,"ldsc_input/poly_{trait}_{nt}_10_{h2}_10000.sumstats.gz")
+                  )
+                
+
+  new_h2_df <- bind_rows(cross_df(list(
+    h2=c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8),
+    nt=30,
+    trait=1:30,
+    ext=c("noint.log","int.log","hsq","shrink.RDS")
+    )),
+    cross_df(list(
+    h2=c(0.1,0.2,0.5),
+    nt=10,
+    trait=1:10,
+    ext=c("noint.log","int.log","hsq","shrink.RDS")
+    )))
+
+  fs::file_move(
+  fs::path("/scratch/t.cri.nknoblauch/polyg_scratch/workflow/results",
+           glue::glue_data(new_h2_df,"sim_ukb_ind/{trait}_{nt}_10_{h2}.{ext}")),
+  fs::path("/scratch/t.cri.nknoblauch/polyg_scratch/workflow/results",
+           glue::glue_data(new_h2_df,"sim_ukb_ind/poly_{trait}_{nt}_10_{h2}_10000.{ext}"))
+  )
+
+
+  t_h2_df <- bind_rows(cross_df(list(
+    h2=c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8),
+    nt=30,
+    trait=1:30,
+    ext=c("noint.log","int.log","shrink.RDS")
+    )),
+    cross_df(list(
+    h2=c(0.1,0.2,0.5),
+    nt=10,
+    trait=1:10,
+    ext=c("noint.log","int.log","shrink.RDS")
+    )))
+
+  fs::file_move(
+  fs::path("/scratch/t.cri.nknoblauch/polyg_scratch/workflow/results",
+           glue::glue_data(t_h2_df,"sim_ukb_panel/{trait}_{nt}_10_{h2}.{ext}")),
+  fs::path("/scratch/t.cri.nknoblauch/polyg_scratch/workflow/results",
+           glue::glue_data(t_h2_df,"sim_ukb_panel/poly_{trait}_{nt}_10_{h2}_10000.{ext}"))
+  )
+#+END_SRC

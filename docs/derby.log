@@ -1,0 +1,13 @@
+----------------------------------------------------------------
+Mon Dec 04 17:28:00 CST 2017:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.10.1.1 - (1458268): instance a816c00e-0160-23db-8fea-00002e6186f8 
+on database directory memory:/home/nwknoblauch/Dropbox/PolygenicRSS/analysis/databaseName=metastore_db with class loader org.apache.spark.sql.hive.client.IsolatedClientLoader$$anon$1@7f3f5ff7 
+Loaded from file:/home/nwknoblauch/.cache/spark/spark-1.6.2-bin-hadoop2.6/lib/spark-assembly-1.6.2-hadoop2.6.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=1.8.0_151-b12
+user.dir=/home/nwknoblauch/Dropbox/PolygenicRSS/analysis
+os.name=Linux
+os.arch=amd64
+os.version=4.4.0-101-generic
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''

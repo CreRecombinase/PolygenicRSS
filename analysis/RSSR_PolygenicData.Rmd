@@ -1,0 +1,39 @@
+---
+title: "Sparse Model, Polygenic Data"
+author: "Nicholas Knoblauch"
+date: 2017-12-11
+output: workflowr::wflow_html
+---
+
+
+
+
+
+```{r}
+aldf  <- dir("~/Desktop/scratch/polyg_scratch/EVD_H5",pattern="scz2",full.names = T)[1]
+a_grps <- RcppEigenH5::list_groups_h5(aldf)
+nnz <- map(a_grps,function(x,fname){
+  R <- read_2d_mat_h5(fname,groupname = x,dataname = "R")
+  return(apply(R,2,function(y){sum(y==0)}))
+},fname=aldf)
+library(tidyverse)
+library(rssr)
+rssrd <- dir("~/Desktop/scratch/polyg_scratch/RSSr_sim_gwas_genome_est/",full.names = T) %>% map_df(read_delim,delim="\t") %>% mutate(pi=calc_pi(logodds))
+tp_df <- distinct(rssrd,fgeneid,tpve,tbias,tsigu)
+rssrd_mean <- group_by(rssrd,fgeneid,logodds,sigb,pi) %>% summarise(lnZ=sum(lnZ),pve_mean=mean(pve)) %>% ungroup() %>% group_by(fgeneid) %>% mutate(w=normalizeLogWeights(lnZ)) %>% summarise(logodds_mean=sum(logodds*w),sigb_mean=sum(sigb*w),pi_mean=sum(pi*w),pve_mean=sum(pve_mean*w)) %>% ungroup() %>% inner_join(tp_df)
+
+```
+
+
+
+```{r}
+rssrd_mean %>% ggplot(aes(x=tsigu,y=pi_mean*sigb_mean))+geom_point()+geom_smooth(method="lm")+geom_abline(slope=1,intercept=0)
+```
+
+```{r}
+rssrd_mean %>% ggplot(aes(x=logodds_mean,y=sigb_mean))+geom_point()+geom_smooth(method="lm")
+```
+
+
+
+

@@ -1,0 +1,144 @@
+---
+title: "Preliminary WTCC simulation results"
+author: "Nicholas Knoblauch"
+date: 2017-11-08
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+#Introduction
+
+## Description of dataset
+
+There are 7 genotype datasets, representing the cases from 7 WTCC traits. The size and number of SNPs is as follows:
+
+
+
+
+```{r load_data_gwas,echo=F,message=F,warning=F}
+library(tidyverse)
+library(RSSp)
+
+gwas_names <- c("bd","cad","cd","ht","ra","t1d","t2d")
+gwas_traits <- c("Bipolar Disorder",
+                 "Coronary Artery Disease",
+                 "Crohn's Disease",
+                 "Hypertension",
+                 "Rheumatoid Arthritis",
+                 "Type I Diabetes",
+                 "Type 2 Diabetes")
+all_res <- sprintf("../output/RSSp_snakemake/sim_%s_gwas_RSSp_res_wtcc_NoConfound.txt.gz",gwas_names)
+
+res_dff <- data_frame(resf=all_res,trait=gwas_names,trait_name=gwas_traits)
+
+res_df <- pmap_df(res_dff,function(resf,trait,trait_name){
+  read_delim(resf,delim="\t") %>% 
+  filter(!log_params) %>% 
+  select(-log_params) %>% 
+  mutate(fgeneid=as.character(fgeneid),rel_bias=round(tbias/tpve,2),
+         rel_pve_error=(abs(pve-tpve)/(pve+tpve)),method=paste0("RSSp_",method),
+         p_n=p/n,trait_id=trait,trait_name=trait_name) 
+})
+
+idk <- distinct(res_df,trait_id,trait_name,p,n)
+tparam_df <- distinct(res_df,fgeneid,tpve) %>% mutate(fgeneid=as.integer(fgeneid))
+idt <- distinct(res_df,fgeneid,.keep_all=T) %>% group_by(tpve) %>% summarise(n_replicates=n()) %>% rename(true_pve=tpve)
+```
+
+
+
+
+
+
+```{r overview, results = 'asis'}
+knitr::kable(idk,align="l")
+```
+
+# Description of simulation
+
+```{r overview_sim, results = 'asis'}
+knitr::kable(idt,align="l")
+```
+
+
+```{r plotting}
+
+
+ggplot(res_df,aes(x=tpve,y=pve))+geom_point()+facet_wrap(~trait_id)+xlim(0,1)+ylim(0,1)+geom_abline(slope=1,intercept=0)+geom_smooth(method="lm")
+
+trim_est_df <- select_if(res_df,function(x){length(unique(x))>1})
+# ggplot(est_df,aes(x=tpve,y=pve))+geom_point()+xlim(0,1)+ylim(0,1)+geom_abline(slope=1,intercept=0)+geom_smooth(method="lm")+facet_wrap(~message)
+t1dr <- filter(res_df,trait_id=="t1d") %>% mutate(fgeneid=as.integer(fgeneid))
+
+```
+#GCTA
+
+```{r}
+gctarf <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake/gcta_h2_est",full.names = T)
+gcta_df <- map_df(gctarf,function(x){
+  gn <- gsub(".+gcta_h2_est/(.+)_seq_wtcc.+","\\1",x)
+  read_delim(x,delim="\t") %>% 
+    mutate(trait_id=gn,fgeneid=as.character(fgeneid)) %>%
+    filter(Source=="V(G)")%>% mutate(Source="gcta_pve",Variance=as.numeric(Variance)) %>% select(-SE) %>%spread(Source,Variance)
+})
+nres_df <- inner_join(res_df,gcta_df)
+
+```
+```{r}
+nres_df %>%ggplot(aes(x=tpve,y=gcta_pve))+geom_point()+facet_wrap(~trait_id)+geom_smooth(method="lm")+geom_abline(slope=1,intercept=0)
+
+```
+```{r}
+comp_df <- select(nres_df,fgeneid,tpve,trait_id,RSSp=pve,GCTA=gcta_pve) %>% gather(method,pve,RSSp,GCTA)
+ggplot(comp_df,aes(x=tpve,y=pve,col=method))+geom_point()+facet_wrap(~trait_id)+geom_smooth(method="lm")+geom_abline(slope=1,intercept=0)
+
+```
+
+```{r}
+ggplot(comp_df,aes(x=method,y=pve,col=method))+geom_point()+facet_wrap(~trait_id)+geom_smooth(method="lm")+geom_abline(slope=1,intercept=0)
+ggplot(comp_df,aes(group=paste0(tpve,"_",method),x=tpve,y=pve-tpve,fill=method))+geom_boxplot()
+
+```
+
+<!-- # ```{r} -->
+<!-- # library(EigenH5) -->
+<!-- # quhf <- "/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_sim_gwas_genome/bd_sim_all_quh_wtcc_NoConfound.h5" -->
+<!-- # quhm <- EigenH5::read_mat_h5(quhf,"/","quh") -->
+<!-- # D <- read_vector_h5(quhf,"/","D") -->
+<!-- #  -->
+<!-- # lmms <- apply(quhm,2,function(x,d){ -->
+<!-- #   coef(lm(x^2~d^2+d+0)) -->
+<!-- # },d=D) -->
+<!-- # plot(lmms,est_df$sigu) -->
+<!-- # ``` -->
+```{r}
+
+library(SeqArray)
+vcff <- "/run/media/nwknoblauch/Data/wtcc_input/combined_19.vcf.gz"
+vcf_gdsf <- "/run/media/nwknoblauch/Data/wtcc_input/combined_19.gds"
+seqVCF2GDS(vcff,vcf_gdsf,storage.option = "LZ4_RA.fast")
+tgds <- seqOpen(snakemake@input[["input_gds"]])
+SeqSupport::gds2hdf5(tgds,snakemake@output[["outf"]])
+
+```
+

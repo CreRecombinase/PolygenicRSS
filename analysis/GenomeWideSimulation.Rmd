@@ -1,0 +1,157 @@
+---
+title: "Comparing RSS-p to ldsc"
+author: "Nicholas Knoblauch"
+date: 2017-08-07
+output: workflowr::wflow_html
+---
+
+
+
+
+
+
+```{r}
+library(LDshrink)
+library(RSSp)
+library(tidyverse)
+library(reshape2)
+library(SeqArray)
+library(RcppEigenH5)
+```
+
+
+
+
+```{r,eval=T,echo=F,warning=F,message=F}
+
+
+# tdata <- read_delim("/media/nwknoblauch/Data/1kg/ldsc_sim_gwas_16/sim_1.sumstats.gz",delim="\t")
+# N <- tdata$N[1]
+# p <- nrow(tdata)
+rss_gwas_resf <- "~/Dropbox/PolygenicRSS/code/snakemake_files/sim_sub_gwas_RSSp_res.txt.gz"
+rss_direct_resf <- "~/Dropbox/PolygenicRSS/code/snakemake_files/sim_bigsub_direct_RSSp_res.txt.gz"
+
+RSS_res_gwas <- read_delim(rss_gwas_resf,delim="\t") %>%  rename(pve_RSSp=pve,intercept_RSSp=a_hat,sigu_RSSp=sigu) %>% mutate(varu_RSSp=sigu_RSSp^2)
+
+filter(RSS_res_gwas,!log_params,tbias==0) %>% 
+  mutate(rel_bias=tbias/tpve) %>% 
+  ggplot(aes(x=tpve,y=pve_RSSp,col=method)) +  geom_abline(slope=1,intercept=0)+geom_point()+geom_jitter()+geom_smooth(method="lm")+
+  facet_wrap(~rel_bias,labeller = label_both)
+
+
+RSS_res_direct <- read_delim(rss_direct_resf,delim="\t") %>%  rename(pve_RSSp=pve,intercept_RSSp=a_hat,sigu_RSSp=sigu) %>% mutate(varu_RSSp=sigu_RSSp^2)
+
+filter(RSS_res_direct,!log_params,tbias==0) %>% 
+  mutate(rel_bias=tbias/tpve) %>% 
+  ggplot(aes(x=tpve,y=pve_RSSp,col=method)) +  geom_abline(slope=1,intercept=0)+geom_point()+geom_jitter()+geom_smooth(method="lm")+
+  facet_wrap(~rel_bias,labeller = label_both)
+
+```
+
+
+```{r}
+raw_datf <- "/media/nwknoblauch/Data/1kg/RSSp_sim_gwas_genome/scz_sim_all_quh.RDS"
+gdsf <- "/media/nwknoblauch/Data/1kg/gds/scz_seq_hapmap_geno.gds"
+gds <- seqOpen(gdsf)
+gd_df <- LDshrink::read_SNPinfo_gds(gds,region_id=T)
+
+raw_d <- readRDS(raw_datf)
+quh_mat <- raw_d$
+
+
+```
+
+
+
+```{r}
+rss_resf <- "~/Dropbox/PolygenicRSS/code/snakemake_files/sim_scz_direct_RSSp_res.txt.gz"
+dir_res <- readRDS("/media/nwknoblauch/Data/1kg/RSSp_sim_gwas_genome/scz_sim_all_quh.RDS")
+qqnorm(dir_res$quh_mat[,1])
+
+RSS_res_gwas <- read_delim(rss_resf,delim="\t") %>%  rename(pve_RSSp=pve,intercept_RSSp=a_hat,sigu_RSSp=sigu) %>% mutate(varu_RSSp=sigu_RSSp^2)
+
+filter(RSS_res_gwas,!log_params,tbias==0) %>% mutate(rel_bias=tbias/tpve) %>% ggplot(aes(x=tpve,y=pve_RSSp,col=method))+  geom_abline(slope=1,intercept=0)+geom_point()+geom_jitter()+geom_smooth(method="lm")+
+  facet_wrap(~rel_bias,labeller = label_both)
+
+
+
+```
+
+
+
+
+```{r}
+
+quh_dir <- dir("/media/nwknoblauch/Data/1kg/RSSp_genome_gwas_quh_chunk",full.names=T)
+grps <- gsub(pattern = ".+scz_([0-9]+)_sim.h5","\\1",quh_dir)
+tparam_df <- dir_res$tparam_df
+
+rss_chunks<- map2_dfr(quh_dir[1:10],grps[1:10],function(x,LDchunk,tparam_df,n){
+  D <- read_dvec(x,LDchunk,"D")
+  quhm <- read_2d_mat_h5(x,LDchunk,"quh")
+  return(cross(list(doConfound=c(T,F),log_params=c(T,F),useGradient=c(T))) %>%  invoke_map_dfr("RSSp_run_mat_quh",.,quh_mat_d=quhm,D=D,n=n) %>% inner_join(tparam_df) %>% mutate(LDchunk=LDchunk))
+  
+},tparam_df=tparam_df,n=tparam_df$n[1])
+filter(rss_chunks,tbias==0,!log_params,method=="Confound")%>% ggplot(aes(x=tpve,y=pve,col=factor(fgeneid)))+geom_point()
+
+
+
+
+
+```
+
+
+
+
+#Setup:
+
+As a larger test of RSSp, I've simulated GWAS data using 1000 genomes EUR individuals ($N=503$). I'm using the same individuals for the LD panel, which is used by both `RSSp` and `LDSC`.  As RSSp is still a little slow, I'm only using SNPs from chromosome 2 in this simulation. That works out to `r p` SNPs in total. I am also using the Wen and Stephens estimator (as implemented in `LDshrink`) to calculate LD (and LD scores).  I simulated traits with levels of $PVE$ ranging from `r min(tparam_df$tpve)` to `r max(tparam_df$tpve)`, and confounding (as a proportion of $PVE$) ranging from `r min(tparam_df$tbias)`to `r max(tparam_df$tbias)`.  With 4 replicates of each scenario, there were 108 traits in total.
+
+
+## Estimating $Var(U)$
+
+`ldsc`'s version of $Var(U)$ ($\sigma^2_u$), is $h^2/p$. `RSSp` reports $sigma^2_u$ directly
+
+
+```{r}
+ggplot(est_m,aes(x=tvaru,y=varu_ldsc))+geom_point()+geom_abline(slope=1,intercept=0)+ggtitle(bquote(Estimating~Var(U)),paste0("ldsc, N=",N," p=",p))+xlab(bquote(sigma[u]^2))+ylab(bquote(hat(sigma[u])^2))+geom_smooth(method="lm")
+
+```
+
+`ldsc's` estimates are relatively well correlated with $\sigma_u$, but are all dramatic underestiamtes.  Also note that at low $\sigma_u$, some of `ldsc`'s estimates are negative.
+
+
+```{r}
+ggplot(est_m,aes(x=tvaru,y=varu_RSSp))+geom_point()+geom_abline(slope=1,intercept=0)+ggtitle(bquote(Estimating~Var(U)),paste0("RSSp, N=",N," p=",p))+xlab(bquote(sigma[u]^2))+ylab(bquote(hat(sigma[u])^2))+geom_smooth(method="lm")
+```
+
+`RSSp` seems to slightly overestimate $\sigma^2_u$, but does a much better job overall.
+
+## Estimating confounding (intercept/inflation)
+
+Both methods are able to estimate confounding/inflation.  `ldsc` estimates an intercept, which can be positive or negative. `RSSp` (as currently implemented) estimates a confounding factor `c` which is (arbitrarily) bounded between `0` and `1`
+
+
+```{r}
+ggplot(est_m,aes(x=tbias,y=(intercept_ldsc-1)))+geom_point()+geom_abline(slope=1,intercept=0)+ggtitle("Estimating Confounding","ldsc")+xlab(bquote(c))+ylab(bquote(hat(c)))+geom_smooth(method="lm")
+
+```
+
+`ldsc` has a hard time estimating confounding when $c$ is low, but does ok as the level of confounding increases.
+
+
+```{r}
+ggplot(est_m,aes(x=tbias,y=intercept_RSSp))+geom_point()+geom_abline(slope=1,intercept=0)+ggtitle("Estimating Confounding","RSSp")+xlab(bquote(c))+ylab(bquote(hat(c)))+geom_smooth(method="lm")
+```
+
+`RSSp` consistently understimates the level of confounding, but is much better on average then `ldsc`
+
+
+
+
+
+
+
+```{r session-info}
+sessionInfo()
+```

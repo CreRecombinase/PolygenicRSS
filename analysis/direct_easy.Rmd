@@ -1,0 +1,18 @@
+---
+title: "direct_easy"
+author: "CreRecombinase"
+date: "2019-01-10"
+output: workflowr::wflow_html
+---
+
+## Introduction
+
+# ```{r}
+# library(tidyverse)
+# wf_df <- readRDS("../data/direct_sim_1kg.RDS")
+# ```
+# 
+# ```{r}
+# ggplot(wf_df,aes(x=tpve,y=pve))+geom_point()+geom_abline(slope=1,intercept=0)
+# ```
+

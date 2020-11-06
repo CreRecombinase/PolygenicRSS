@@ -1,0 +1,77 @@
+---
+  title: "UK Biobank PVE"
+author: "Nicholas Knoblauch"
+date: "2018-11-14"
+output: workflowr::wflow_html
+---
+
+  ## Introduction
+
+  Below are pve estimates from 69 uk biobank traits for which I could easily obtain:
+  1) GWAS summary statistics (from BoltLMM)
+2) LD score regression heritability estimates
+3) Individual-level-data based heritability estimates (from mmhe, described [here](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1006711#sec004))
+
+                                                                                   I ran `RSSp` for each of these 69 traits (using Xiang's new method for calculating pve).  First we see the summary based heritability estimates (y axis) versus individual level estimate (x-axis).
+
+
+
+
+```{r,echo=F,message=F,warning=F}
+suppressMessages(library(plotly))
+suppressMessages(library(tidyverse))
+library(fs)
+library(forcats)
+
+est_frds <- dir_ls("~/Dropbox/PolygenicRSS/output/pve/ukb/",recursive = T,type = "file",glob="*RDS")
+
+
+ukb_rssp_c <- map(est_frds,~safely(readRDS)(.x)[["result"]]) %>% discard(~any(class(.x)=="rssp")) %>%discard(~is.null(names(.x))) %>%  map(~modify_at(.x,"info",function(x){
+  return(list(x))
+})) %>% bind_rows()
+# ukb_rssp_df <- bind_rows(ukb_rssp_c)
+# map(ukb_rssp_c,class)
+ukb_rssp_c <- mutate(ukb_rssp_c,trait=as.integer(gsub("ukb_","",trait_id))) %>% select(-trait_id)
+ukb_rssp_c <- mutate(ukb_rssp_c,nterms=map_int(bias,nrow)+1)
+
+tukb <- ukb_rssp_c %>% filter(trait==trait_id[1])
+#trait_ctf <- dir_ls("~/Desktop/gardner_scratch/summary_statistics_fst/",glob="*sc.txt")
+ukb_hdf <- readxl::read_xlsx("~/Downloads/journal.pgen.1006711.s002.xlsx") %>% select(trait=`Field ID`,pve_ind=h2,N_ind=N)
+ukb_ldsc <- read_tsv("~/Downloads/ukbb_all_h2univar_results.txt.gz") %>% select(trait=phenotype,pve_ldsc=h2_observed,N_ldsc=N,int_ldsc=intercept)
+```
+
+```{r}
+all_traits <- inner_join(ukb_hdf, ukb_ldsc) %>% mutate(trait=as.integer(trait)) %>% 
+  inner_join(ukb_rssp_c) %>% rename(pve_rssp=pve)
+```
+
+```{r}
+p_traits <- select(all_traits,trait,starts_with("pve"),nterms)
+ggplot()
+max_pve <- max(c(p_traits$pve_ind,p_traits$pve_ldsc,p_traits$pve_rssp))
+new_names <- c("pve_ldsc"="LDSC","pve_rssp"="RSSp")
+new_df <- rename(p_traits) %>% 
+  select(-starts_with("N_")) %>%
+  gather(key = "method",value="pve_sumstat",-trait,-pve_ind,-nterms) %>% 
+  mutate(method=new_names[method]) 
+new_df%>%  ggplot(aes(x=pve_ind,y=pve_sumstat,col=method))+geom_point()+geom_abline(slope=1,intercept=0)+scale_x_continuous("Individual-Level-Data PVE (mmhe)",limits=c(0,max_pve))+scale_y_continuous("Summary statistic PVE",limits=c(0,max_pve))+geom_smooth(method="lm",formula = y~x+0)+ggtitle("RSSp vs LDSC on UK biobank traits")+facet_wrap(~nterms)
+```
+
+
+
+
+```{r}
+filter(new_df,method!="LDSC") %>% ggplot(aes(x=pve_ind,y=pve_sumstat,col=factor(nterms)))+geom_point()+geom_abline(slope=1,intercept=0)+scale_x_continuous("Individual-Level-Data PVE (mmhe)",limits=c(0,max_pve))+scale_y_continuous("Summary statistic PVE",limits=c(0,max_pve))+geom_smooth(method="lm",formula = y~x+0)+ggtitle("RSSp vs LDSC on UK biobank traits")
+```
+
+
+```{r}
+ukb_rssp_c <- inner_join(ukb_rssp_c,mutate(ukb_hdf,trait=as.integer(trait)))
+
+bias_rssp <- unnest(ukb_rssp_c,bias)
+
+
+```
+
+
+

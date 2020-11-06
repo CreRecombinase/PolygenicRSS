@@ -1,0 +1,107 @@
+---
+title: "Investigating Inflation in  Large Sample Simulations (cont.)"
+author: "Nicholas Knoblauch"
+date: 2018-03-21
+output: workflowr::wflow_html
+---
+
+
+
+
+
+
+```{r read_results,echo=FALSE,message=FALSE}
+
+library(tidyverse)
+library(RSSp)
+library(EigenH5)
+
+library(tidyverse)
+library(RSSp)
+library(EigenH5)
+library(ggridges)
+
+
+all_files <- dir("../output/RSSp_snakemake",full.names = T)
+sub_f <- ".+sim_(chr.+)_([A-Za-z0-9-]+)_([a-zA-Z0-9-]+)_([TF])_(hapmap|omni)_(gwas|direct)_RSSp_res_([A-Za-z]+)_([0-9]+.*[0-9]*)_([TF])_([TF]).txt.gz"
+all_res <- all_files[grepl(sub_f,all_files)]
+ 
+res_df <- map_df(all_res,~read_delim(.x,delim="\t") %>% mutate(
+  chrom = gsub(sub_f,"\\1",.x),
+  data_names = gsub(sub_f,"\\2",.x),
+  panel_names = gsub(sub_f,"\\3",.x),
+  ldetect_boundaries = gsub(sub_f,"\\4",.x)=="T",
+  genetic_map = gsub(sub_f,"\\5",.x),
+  simulation = gsub(sub_f,"\\6",.x),
+  trait = gsub(sub_f,"\\7",.x),
+  perc_var = as.numeric(gsub(sub_f,"\\8",.x)),
+  svd = gsub(sub_f,"\\9",.x)=="T",
+  estimation="RSSp"
+)) %>% filter(panel_names=="RA-CAD",chrom=="chr5",trait=="AllPVE")
+
+tparam_df <- distinct(res_df,fgeneid,tpve,tsigu) %>% arrange(fgeneid)
+```
+
+
+```{r}
+ggplot(res_df,aes(x=tpve,y=pve))+geom_point()+facet_grid(genetic_map~method)+geom_abline(slope=1,intercept=0)
+```
+
+
+
+
+
+```{r}
+lsub_f <- ".+sim_(chr.+)_([A-Za-z0-9-]+)_([TF])_(hapmap|omni)_(gwas|direct)_ldsc_res_([A-Za-z]+).txt.gz"
+ldsc_rf <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake/ldsc_res",full.names=T)
+
+# ldsc_res <- map_df(ldsc_rf,~read_delim(.x,delim="\t")%>%  ) %>% inner_join(tparam_df)
+ldsc_res <- map_df(ldsc_rf,~read_delim(.x,delim="\t") %>% rename(pve=Total_Observed_scale_h2) %>% mutate(estimation="LDSC") %>% mutate(
+  chrom = gsub(lsub_f,"\\1",.x),
+  data_names = gsub(lsub_f,"\\2",.x),
+  ldetect_boundaries = gsub(lsub_f,"\\3",.x)=="T",
+  genetic_map = gsub(lsub_f,"\\4",.x),
+  simulation = gsub(lsub_f,"\\5",.x),
+  trait = gsub(lsub_f,"\\6",.x)
+)) %>% filter(data_names=="genred",chrom=="chr5") %>%
+  inner_join(tparam_df)
+```
+```{r}
+ggplot(ldsc_res,aes(x=tpve,y=pve))+geom_point()+facet_wrap(~genetic_map)+geom_abline(slope=1,intercept=0)
+```
+
+
+
+```{r}
+ldsc_res_df <- filter(ldsc_res,genetic_map=="hapmap") %>% select(pve,tpve,fgeneid) %>% mutate(method="RSSp",pve_error=pve-tpve)
+rss_res_df <- filter(res_df,
+                     method=="NoConfound",
+                     genetic_map=="hapmap") %>% select(pve,tpve,fgeneid) %>% mutate(method="LDSC",pve_error=pve-tpve)
+
+brss_df <- bind_rows(ldsc_res_df,rss_res_df)
+```
+```{r}
+ggplot(brss_df,aes(x=tpve,group=tpve,y=pve_error,col=method))+geom_boxplot()+facet_wrap(~method)
+```
+
+```{r}
+
+```
+
+
+
+```{r}
+ggplot(ldsc_res,aes(x=tpve,y=pve))+geom_point()+facet_wrap(~genetic_map)
+```
+
+```{r}
+quhf <- dir("/home/nwknoblauch/Desktop/scratch/polyg_scratch/RSSp_genome_gwas_quh_chunk",full.names = T)
+```
+
+
+
+
+
+
+
+

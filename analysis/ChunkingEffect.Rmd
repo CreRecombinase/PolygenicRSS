@@ -1,0 +1,208 @@
+---
+title: "Visualizing LDSC vs RSSp"
+author: "Nicholas Knoblauch"
+date: "May 28, 2018"
+output: workflowr::wflow_html
+---
+
+
+```{r libs,echo=F,message=F,warnings=F}
+library(EigenH5)
+library(tidyverse)
+library(plotly)
+library(RSSp)
+scen <- "NCovarsBP"
+```
+
+## LD score vs $\Chi^2
+
+Another way of visualizing our simulation data is by plotting LD scores vs $\Chi^2$.  Because there are a large number of points to visualize, and because the relationship between LD score and $\Chi^2$ can be noisy, I've binned SNPs based on their LD score, and below you can see the average LD score vs average $\Chi^2$ across the 10 bins
+
+
+```{r load_d,echo=F,message = F,warnings = F}
+res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",full.names = T,pattern="SNP")
+res_d_ldsc <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake/ldsc_res/",pattern="cd",full.names = T)
+res_df_rssp <- map_df(res_d_rssp,~quietly(read_delim)(.x,delim = "\t")$result %>% mutate(chrom=as.character(chrom),method="RSSp",useLDetect=as.character(useLDetect),fgeneid=as.character(fgeneid))) %>% filter(!is.na(simulation),!is.na(useLDshrink),!is.na(ncovar)) %>% filter(scenario == scen, dataset == "cd", panel_dataset == "bd",chrom=="1-22",simulation=="gwas",!is.na(chrom),!is.na(AF)) %>% select(-ends_with("bound"),-sigu,-lnZ,-bias,-tbias,-optim,-useGradient,-log_params,-message,-convergence) %>% mutate(Intercept="0")
+
+res_df_ldsc <- map_df(res_d_ldsc,~quietly(read_delim)(.x,delim = "\t")$result %>% mutate(Intercept=as.character(Intercept),
+                                                                                         chrom=as.character(chrom),fgeneid=as.character(fgeneid),useLDetect=as.character(useLDetect),method=ifelse(useIntercept,"LDSC_Intercept","LDSC_noIntercept"))) %>%
+  filter(scenario == scen, dataset == "cd", panel_dataset == "bd",chrom=="1-22",simulation=="gwas",!is.na(chrom),!is.na(AF),!is.na(ncovar))%>% select(-Lambda_GC,-Mean_Chi_2,-Total_time_elapsed)
+res_df <- bind_rows(res_df_rssp,res_df_ldsc) %>% mutate(sigu=RSSp:::calc_sigu(pve,p/n),
+                                                        fgeneid=as.character(fgeneid)) %>% mutate(Intercept=ifelse(is.na(as.numeric(Intercept)),0,as.numeric(Intercept)))
+
+sum_df <- res_df %>%  group_by_at(vars(-pve,-fgeneid)) %>% summarise(mean_pve=mean(pve),sd_pve=sd(pve),error_pve=mean((pve-tpve)^2),error_sd=sd((pve-tpve)/tpve),rel_error_pve=mean(((pve-tpve)/tpve)^2)) %>% ungroup() %>% mutate(error_rmse=sqrt(error_pve))
+```
+
+
+```{r}
+```
+
+
+
+
+
+
+```{r evdf,echo=F,message=F,warnings=F}
+evdf_d <- data_frame(filename=dir("/home/nwknoblauch/Dropbox/scratch/polyg_scratch/EVD_H5",full.names=T)) %>% filter(!grepl('dell',filename)) %>% filter(!grepl('sparse_LD',filename)) 
+evdf_df <- map_df(evdf_d$filename,~read_df_h5(.x,"Wildcards") %>% mutate(filename_ld=.x))
+```
+
+
+```{r uhdf,echo=F,message=F,warnings=F}
+
+uhf <-  data_frame(filename=dir("/home/nwknoblauch/Dropbox/scratch/polyg_scratch/gwas_uh/",full.names=T)) %>% filter(!grepl('dell',filename))%>% filter(grepl(paste0("_",scen,"_"),filename))
+uhf_df <- map_df(uhf$filename,~read_df_h5(.x,"Wildcards") %>% mutate(filename_uh=.x))
+```
+
+
+```{r quhdf,echo=F,message=F,warnings=F}
+quhf <-  data_frame(filename=dir("/home/nwknoblauch/Dropbox/scratch/polyg_scratch/quh/",full.names=T)) %>% filter(!grepl('dell',filename))%>% filter(grepl(paste0("_",scen,"_"),filename))
+quhff_df <- map_df(quhf$filename,~read_df_h5(.x,"Wildcards") %>% mutate(filename_quh=.x))
+```
+
+
+
+```{r bdf,echo=F,message=F,warnings=F}
+buh_df <- inner_join(uhf_df,evdf_df)
+bqh_df <- inner_join(quhff_df,evdf_df)
+filename_ld <- buh_df$filename_ld[1]
+filename_uh <- buh_df$filename_uh[1]
+```
+
+
+```{r read_lduh,echo=F,message=F,warnings=F}
+l2df_uh <- function(filename_ld,filename_uh,...){
+  argl <- list(...)
+  ld_df <- read_df_h5(filename_ld,"LDinfo") %>% group_by(region_id) %>% do(mutate(.,L2=read_vector_h5(filename_ld,paste0("L2/",as.character(.$region_id[1]),"/L2")))) %>% ungroup() %>% mutate(L2_dec=ntile(L2,10)) 
+  ld_sum <- group_by(ld_df,L2_dec) %>% summarise(mean_L2=mean(L2)) %>% ungroup() %>% mutate(L2_dec=as.character(L2_dec))
+  tfdf <- read_df_h5(filename_uh,"SimulationInfo") %>% select(-pcovar,-p,-n,-tbias,-tsigu)
+  uhm <- read_matrix_h5(filename_uh,"uh")^2 %>% magrittr::set_colnames(tfdf$fgeneid) %>%  apply(2,function(x,l2d){by(x,l2d,mean)},l2d=ld_df$L2_dec)
+  uh_df <- as_tibble(uhm,rownames="L2_dec") %>% gather(fgeneid,mean_ch,-L2_dec) %>% inner_join(tfdf) %>% inner_join(ld_sum)
+  invoke(mutate,argl,.data=uh_df) %>%
+    mutate(AF=as.numeric(AF),N=as.integer(N),SNPCT=as.integer(SNPCT),ncovar=as.integer(ncovar),useLDshrink=as.logical(useLDshrink))
+}
+
+res_df_uh <- pmap_dfr(buh_df,l2df_uh)
+
+```
+```{r inner_uh,echo=F,message=F,warnings=F}
+res_df_uh <- mutate(res_df_uh,useLDetect=as.character(useLDetect)) %>% inner_join(res_df)
+```
+
+```{r l2,echo=F,message=F,warnings=F}
+filter(res_df_uh,method=="LDSC_noIntercept")  %>% mutate(AF=as.factor(AF)) %>%  ggplot(aes(x=mean_L2,y=mean_ch,col=useLDetect))+
+  geom_point()+
+  facet_grid(useLDshrink~tpve,labeller = label_both)+
+  geom_abline(aes(slope=tsigu^2,intercept=1),col="gold")+
+  xlab("Mean LD score(10 bins)")+
+  ylab(bquote(Mean~chi^2~(per~LD~bin)))+
+  ggtitle("LD Score vs Chi^2","Fit without an intercept term")
+```
+
+
+```{r ldsc_nil2,echo=F,message=F,warnings=F}
+filter(res_df_uh,method=="LDSC_noIntercept")  %>% mutate(AF=as.factor(AF)) %>%  ggplot(aes(x=mean_L2,y=mean_ch,col=useLDetect))+
+  geom_point()+
+  facet_grid(useLDshrink~tpve,labeller = label_both)+
+  geom_abline(aes(slope=calc_varu(pve,p/n),intercept=Intercept+1,col=useLDetect))+
+  geom_abline(aes(slope=tsigu^2,intercept=1),col="gold")+
+  xlab("Mean LD score(10 bins)")+
+  ylab(bquote(Mean~chi^2~(per~LD~bin)))+
+  ggtitle("LD Score Regression","Fit without an intercept term")
+```
+
+```{r ldsc_i_l2,echo=F,message=F,warnings=F}
+filter(res_df_uh,method=="LDSC_Intercept")  %>% mutate(AF=as.factor(AF)) %>%  ggplot(aes(x=mean_L2,y=mean_ch,col=useLDetect))+
+  geom_point()+
+  facet_grid(useLDshrink~tpve,labeller = label_both)+
+  geom_abline(aes(slope=calc_varu(pve,p/n),intercept=Intercept,col=useLDetect))+
+  geom_abline(aes(slope=tsigu^2,intercept=1),col="gold")+
+  xlab("Mean LD score(10 bins)")+
+  ylab(bquote(Mean~chi^2~(per~LD~bin)))+
+  ggtitle("LD Score Regression","Fit with an intercept term")
+```
+
+```{r rssp_l2,echo=F,message=F,warnings=F}
+filter(res_df_uh,method=="RSSp")  %>% mutate(AF=as.factor(AF)) %>%  ggplot(aes(x=mean_L2,y=mean_ch,col=useLDetect))+
+  geom_point()+
+  facet_grid(useLDshrink~tpve,labeller = label_both)+
+  geom_abline(aes(slope=calc_varu(pve,p/n),intercept=Intercept+1,col=useLDetect))+
+  geom_abline(aes(slope=tsigu^2,intercept=1),col="gold")+
+  xlab("Mean LD score(10 bins)")+
+  ylab(bquote(Mean~chi^2~(per~LD~bin)))+
+  ggtitle("RSSp")
+```
+
+
+```{r rquh,echo=F,message=F,warnings=F}
+l2df_quh <- function(filename_ld,filename_quh,...){
+  argl <- list(...)
+  ld_df <- read_df_h5(filename_ld,"LDinfo") %>% group_by(region_id) %>% do(mutate(.,D=read_vector_h5(filename_ld,paste0("EVD/",as.character(.$region_id[1]),"/D")))) %>% ungroup() %>% mutate(D_dec=ntile(D,20)) 
+  ld_sum <- group_by(ld_df,D_dec) %>% summarise(mean_D2=mean(D^2)) %>% ungroup() %>% mutate(D_dec=as.character(D_dec))
+  tfdf <- read_df_h5(filename_quh,"SimulationInfo") %>% select(-pcovar,-p,-n,-tbias,-tsigu)
+  quhm <- read_matrix_h5(filename_quh,"quh")^2 %>% magrittr::set_colnames(tfdf$fgeneid) %>%  apply(2,function(x,d_dec,d){by(x-d,d_dec,mean)},d=ld_df$D,d_dec=ld_df$D_dec)
+  quh_df <- as_tibble(quhm,rownames="D_dec") %>% gather(fgeneid,mean_qu,-D_dec) %>% inner_join(tfdf) %>% inner_join(ld_sum)
+  invoke(mutate,argl,.data=quh_df) %>% mutate(AF=as.numeric(AF),N=as.integer(N),SNPCT=as.integer(SNPCT),ncovar=as.integer(ncovar),useLDshrink=as.logical(useLDshrink),useLDetect)
+}
+res_df_quh <- pmap_dfr(bqh_df,l2df_quh) 
+res_df_quh <- res_df_quh %>% inner_join(res_df)
+```
+## $(Q^{T}\hat{u})^2-\lambda$ vs $\lambda^2$
+
+
+In the RSSp model, $Q^{T}\hat{u} \sim N(0,\sigma^2_u \lambda^2+\lambda)$.  Here's a plot of $(Q^{T}\hat{u})^2-\lambda$ vs $\lambda^2$
+
+
+
+```{r evdp,echo=F,message=F,warnings=F}
+filter(res_df_quh,method=="RSSp") %>% 
+ggplot(aes(x=mean_D2,y=mean_qu,col=useLDetect))+
+  geom_point()+
+  facet_grid(useLDshrink~tpve,labeller = label_both)+
+  xlab(bquote(bar(lambda^2)~(10~bins)))+geom_abline(aes(slope=tsigu^2,intercept=0),col="gold")+
+  ylab(bquote(bar(group("(",Q^T~hat(u),")")^2-lambda)))
+```
+
+```{r rssp_evd,echo=F,message=F,warnings=F}
+filter(res_df_quh,method=="RSSp") %>% 
+ggplot(aes(x=mean_D2,y=mean_qu,col=useLDetect))+
+  geom_point()+
+  facet_grid(useLDshrink~tpve,labeller = label_both)+geom_abline(aes(slope=sigu^2,intercept=Intercept,col=useLDetect))+
+  xlab(bquote(bar(lambda^2)~(10~bins)))+geom_abline(aes(slope=tsigu^2,intercept=0),col="gold")+
+  ylab(bquote(bar(group("(",Q^T~hat(u),")")^2-lambda)))+ggtitle("RSSp")
+```
+
+
+```{r ldsc_evd,echo=F,message=F,warnings=F}
+
+filter(res_df_quh,method=="LDSC_noIntercept") %>% 
+ggplot(aes(x=mean_D2,y=mean_qu,col=factor(AF)))+
+  geom_point()+
+  facet_grid(useLDshrink~tpve,labeller = label_both)+geom_abline(aes(slope=calc_varu(pve,p/n),intercept=Intercept,col=factor(AF)))+
+  xlab(bquote(bar(lambda^2)~(10~bins)))+geom_abline(aes(slope=tsigu^2,intercept=0),col="gold")+
+  ylab(bquote(bar(group("(",Q^T~hat(u),")")^2-lambda)))+ggtitle("LDSC_noIntercept")
+```
+
+
+
+
+```{r ldsc_i_evd,echo=F,message=F,warnings=F}
+
+filter(res_df_quh,method=="LDSC_Intercept") %>% 
+ggplot(aes(x=mean_D2,y=mean_qu,col=factor(AF)))+
+  geom_point()+
+  facet_grid(useLDshrink~tpve,labeller = label_both)+geom_abline(aes(slope=calc_varu(pve,p/n),intercept=Intercept-1,col=factor(AF)))+
+  xlab(bquote(bar(lambda^2)~(10~bins)))+geom_abline(aes(slope=tsigu^2,intercept=0),col="gold")+
+  ylab(bquote(bar(group("(",Q^T~hat(u),")")^2-lambda)))+ggtitle("LDSC_Intercept")
+```
+
+```{r rmse_oos,echo=F,message = F,warnings = F}
+p <- filter(sum_df,ncovar==0,tpve>=0.1)  %>% mutate(Method=method) %>%
+  ggplot(aes(x = tpve, y = error_rmse,fill=Method,col=Method)) +
+  geom_col(position=position_dodge()) + facet_grid(useLDshrink~AF,labeller = label_both)+
+  ggtitle("Root Mean Squared Error of Out-of-Sample-LD-based PVE Estimates","10 replicates per PVE value") +
+  xlab("PVE") +
+  ylab("RMSE(PVE)")
+p
+```
+

@@ -1,0 +1,88 @@
+---
+title: "Comparing RSS-p to ldsc"
+author: "Nicholas Knoblauch"
+date: 2017-08-07
+output: workflowr::wflow_html
+---
+
+
+
+
+
+## Data
+
+To compare RSS-polygenic to LDSC, I'll use GWAS data/LD data from chromosome 19.  This dataset has 16506 SNPs.
+
+```{r,eval=F}
+library(LDshrink)
+library(RSSp)
+library(tidyverse)
+library(reshape2)
+library(SeqArray)
+library(RcppEigenH5)
+
+# tdata <- read_delim("/media/nwknoblauch/Data/1kg/ldsc_sim_gwas_16/sim_1.sumstats.gz",delim="\t")
+# N <- tdata$N[1]
+# p <- nrow(tdata)
+RSS_res_gwas <- readRDS("/media/nwknoblauch/Data/1kg/RSSp_est_gwas_2/sim_results.RDS") %>% filter(method=="Confound",!log_params) %>% rename(pve_RSSp=pve,intercept_RSSp=a_hat,sigu_RSSp=sigu) %>% mutate(varu_RSSp=sigu_RSSp^2)
+RSS_est_solo <- select(RSS_res_gwas,fgeneid,pve_RSSp,intercept_RSSp,varu_RSSp)
+ldsc_res_gwas <- read_delim("/media/nwknoblauch/Data/1kg/ldsc_est_gwas_2/sim_results.tsv",delim="\t") %>% mutate(fgeneid=as.character(fgeneid)) %>% mutate(varu_ldsc=Total_Observed_scale_h2/p)
+ldsc_est_solo <- select(ldsc_res_gwas,fgeneid,varu_ldsc,intercept_ldsc=Intercept) 
+tparam_df <- select(ldsc_res_gwas,fgeneid,tbias,tpve,tsigu,n,p) %>% mutate(tvaru=tsigu^2)
+est_m <- inner_join(ldsc_est_solo,RSS_est_solo) %>% inner_join(tparam_df)
+ggplot(est_m,aes(x=varu_RSSp,y=varu_ldsc))+geom_point()+geom_smooth(method="lm")
+
+
+b_res <- inner_join(RSS_res_gwas,ldsc_res_gwas)
+
+
+```
+
+```{r}
+ggplot(est_m,aes(x=tvaru,y=varu_ldsc))+geom_point()+geom_abline(slope=1,intercept=0)+ggtitle(bquote(Estimating~Var(U)),paste0("RSSp, N=",N," p=",p))+xlab(bquote(sigma[u]^2))+ylab(bquote(hat(sigma[u])^2))+geom_smooth(method="lm")
+
+```
+
+
+
+
+```{r}
+ggplot(est_m,aes(x=tvaru,y=varu_RSSp))+geom_point()+geom_abline(slope=1,intercept=0)+ggtitle(bquote(Estimating~Var(U)),paste0("RSSp, N=",N," p=",p))+xlab(bquote(sigma[u]^2))+ylab(bquote(hat(sigma[u])^2))+geom_smooth(method="lm")
+```
+```{r}
+ggplot(est_m,aes(x=tsigu,y=sigu_RSSp))+geom_point()+geom_abline(slope=1,intercept=0)+ggtitle(bquote(Estimating~Var(U)),)+xlab(bquote(sigma[u]))+ylab(bquote(hat(sigma[u])))+geom_smooth(method="lm")
+
+```
+
+```{r}
+filter(nRSS_res_gwas,tbias==0,method!="Confound") %>% ggplot(aes(x=tpve,y=pve,col=log_params,shape=useGradient))+geom_point()+geom_a
+```
+
+
+
+
+```{r}
+filter(RSS_res_gwas,tbias==0,method!="Confound") %>% ggplot(aes(x=tpve,y=pve,col=log_params,shape=useGradient))+geom_point()
+```
+
+
+```{r}
+filter(RSS_res_gwas,!log_params,method=="Confound",useGradient) %>% mutate(rel_bias=tbias/tpve) %>%  ggplot(aes(x=tpve,y=pve))+geom_point()+geom_abline(slope=1,intercept=0)+facet_wrap(~rel_bias+method,labeller = label_both)
+```
+
+
+
+
+```{r}
+filter(RSS_res_gwas,!log_params,method=="Confound",useGradient) %>% mutate(rel_bias=tbias/tpve) %>%  ggplot(aes(x=tbias/tpve,y=a_hat/tpve))+geom_point()+geom_smooth(method="lm")+geom_abline(slope=1,intercept=0)+facet_wrap(~tpve,labeller = label_both)+geom_jitter()
+```
+
+
+
+
+
+
+
+
+
+

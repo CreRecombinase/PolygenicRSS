@@ -27,7 +27,9 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.0.13/css/fa-svg-with-js.css" rel="stylesheet" />
+<script src="site_libs/font-awesome-5.0.13/js/fontawesome-all.min.js"></script>
+<script src="site_libs/font-awesome-5.0.13/js/fa-v4-shims.min.js"></script>
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
@@ -95,6 +97,9 @@ img {
 }
 .tabbed-pane {
   padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
 }
 button.code-folding-btn:focus {
   outline: none;
@@ -318,13 +323,12 @@ div.section {
 </div>
 
 
-<p><strong>Last updated:</strong> 2018-05-31</p>
+<p><strong>Last updated:</strong> 2018-10-12</p>
 <strong>workflowr checks:</strong> <small>(Click a bullet for more information)</small>
 <ul>
 <li>
 <details>
-<p><summary> <strong style="color:blue;">✔</strong> <strong>R Markdown file:</strong> up-to-date </summary></p>
-<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+<p><summary> <strong style="color:red;">✖</strong> <strong>R Markdown file:</strong> uncommitted changes </summary> The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
 </details>
 </li>
 <li>
@@ -347,7 +351,7 @@ div.section {
 </li>
 <li>
 <details>
-<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/2bd21fe09ac41960fa9a147a4d5785c91879e5d2" target="_blank">2bd21fe</a> </summary></p>
+<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/3e8d63586b52a479c3443dde63d687cccda85820" target="_blank">3e8d635</a> </summary></p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
 <pre><code>
 Ignored files:
@@ -357,15 +361,20 @@ Ignored files:
     Ignored:    .httr-oauth
     Ignored:    analysis/PolygenicEstimation_cache/
     Ignored:    code/.Rhistory
-    Ignored:    code/snakemake_files/.RData
+    Ignored:    code/scripts/.Rhistory
+    Ignored:    code/snakemake_files/.Rhistory
+    Ignored:    code/snakemake_files/.snakemake/
     Ignored:    code/snakemake_files/parameter_generation/
     Ignored:    code/snakemake_files/subset_data_pipeline/.RData
     Ignored:    data/rep_polygenic/
 
 Untracked files:
     Untracked:  _workflowr.yml
+    Untracked:  analysis/#Exp_Heritability.Rmd#
     Untracked:  analysis/#RSSp_WTCC_noConfounding.Rmd#
     Untracked:  analysis/AFvsp.Rmd
+    Untracked:  analysis/ChunkingEffect.Rmd
+    Untracked:  analysis/ChunkingLD.Rmd
     Untracked:  analysis/DownSamplingResults.Rmd
     Untracked:  analysis/EVD_SVD.Rmd
     Untracked:  analysis/GRM_estimation.Rmd
@@ -385,12 +394,16 @@ Untracked files:
     Untracked:  analysis/RSSp_ldsc_noConfounding.Rmd
     Untracked:  analysis/Running_ldetect.Rmd
     Untracked:  analysis/SPVE.Rmd
+    Untracked:  analysis/SharedSNPAnalysis (dell-desktop's conflicted copy 2018-09-04).Rmd
+    Untracked:  analysis/SharedSNPAnalysis.Rmd
     Untracked:  analysis/Summary.Rmd
     Untracked:  analysis/Summary.org
     Untracked:  analysis/Vanilla_LDSC.Rmd
     Untracked:  analysis/chr_16.Rmd
     Untracked:  analysis/derby.log
+    Untracked:  analysis/eQTL_Pipelines.Rmd
     Untracked:  analysis/fquh_mod.RDS
+    Untracked:  analysis/importFramExp.Rmd
     Untracked:  analysis/ltximg/
     Untracked:  analysis/nquh_mod.RDS
     Untracked:  analysis/out_res.RDS
@@ -398,6 +411,9 @@ Untracked files:
     Untracked:  analysis/quh_mod.RDS
     Untracked:  analysis/scz_data.org
     Untracked:  analysis/shrinkage_effect.Rmd
+    Untracked:  code/.ipynb_checkpoints/
+    Untracked:  code/RSSp_abstract.org
+    Untracked:  code/RSSp_abstract_notes.org
     Untracked:  code/RSSp_talk_notes.org
     Untracked:  code/RSSp_talk_notes.pdf
     Untracked:  code/RSSp_talk_notes.tex
@@ -405,25 +421,30 @@ Untracked files:
     Untracked:  code/Untitled1.ipynb
     Untracked:  code/ideas.org
     Untracked:  code/ltximg/
+    Untracked:  code/rssp.yml
+    Untracked:  code/scripts/#compare_eqtl.R#
     Untracked:  code/scripts/RSSp_ldsc_results.Rmd
     Untracked:  code/scripts/bin/
     Untracked:  code/scripts/ldsc_rssp.Rmd
     Untracked:  code/scripts/matlab2h5.py
     Untracked:  code/scripts/vcf-liftover.sh
     Untracked:  code/scripts/vcf2allel.py
-    Untracked:  code/snakemake_files/.snakemake/
+    Untracked:  code/snakemake_files/#LD_snakefile#
     Untracked:  code/snakemake_files/environment_rssp.yml
+    Untracked:  code/snakemake_files/eqtl_check.RDS
     Untracked:  code/snakemake_files/kg_snakefile~
     Untracked:  code/snakemake_files/ldsc/
-    Untracked:  code/snakemake_files/matlab_snakefile
     Untracked:  code/snakemake_files/plink.log
     Untracked:  code/snakemake_files/rssp_ldsc_report/
     Untracked:  code/snakemake_files/temp_map_19.RDS
     Untracked:  code/snakemake_files/temp_target_19.RDS
-    Untracked:  code/snakemake_files/wtcc_start_snakefile
+    Untracked:  code/snakemake_files/vert.txt
+    Untracked:  code/snakemake_files/vgcore.30188
     Untracked:  code/workflow_params.json~
     Untracked:  data/NCBI34_to_GRCh38.chain.gz
+    Untracked:  data/SNP_ws.RData
     Untracked:  data/Snakemake_inputs/
+    Untracked:  data/all_df.RDS
     Untracked:  data/temp_ws.RData
     Untracked:  docs/#RSSp_WTCC_noConfounding.Rmd#
     Untracked:  docs/RSSp.stan
@@ -435,18 +456,26 @@ Untracked files:
     Untracked:  docs/figure/RSSp_WTCC_noConfounding.Rmd/
     Untracked:  docs/figure/RSSp_ldsc_highPVE_chr1.Rmd/
     Untracked:  docs/figure/RSSp_ldsc_highPVE_hr.Rmd/
+    Untracked:  docs/figure/SharedSNPAnalysis.Rmd/
     Untracked:  docs/fquh_mod.RDS
     Untracked:  docs/log4j.spark.log
     Untracked:  docs/ltximg/
     Untracked:  docs/nquh_mod.RDS
     Untracked:  docs/quh_mod.RDS
     Untracked:  docs/scz_data.org
+    Untracked:  dosage.scan.RData
+    Untracked:  dosage.snp.RData
     Untracked:  output/RSSp_snakemake/
 
 Unstaged changes:
+    Modified:   .gitignore
+    Modified:   PolygenicRSS.Rproj
+    Modified:   analysis/DownsamplingResults2.Rmd
     Modified:   analysis/IndependenceCheck.Rmd
     Modified:   analysis/Meeting_Notes.Rmd
     Modified:   analysis/New_WholeGenome.Rmd
+    Modified:   analysis/OutOfSampleLD.Rmd
+    Modified:   analysis/OutOfSampleLD_smallPVE.Rmd
     Modified:   analysis/PolygenicEstimation.Rmd
     Modified:   analysis/RSSP_standard_error.Rmd
     Modified:   analysis/RSSp_Chunksize_Investigation.Rmd
@@ -467,20 +496,8 @@ Unstaged changes:
     Modified:   analysis/simulatingGWAS.Rmd
     Modified:   analysis/simulation.Rmd
     Modified:   code/TF_LDshrink.ipynb
-    Modified:   code/scripts/subset_snp_chr.R
-    Modified:   code/snakemake_files/LD_snakefile
-    Modified:   code/snakemake_files/Snakefile
-    Modified:   code/snakemake_files/direct_snakefile
-    Modified:   code/snakemake_files/envs/ldpred.yml
-    Modified:   code/snakemake_files/impute_snakefile
-    Modified:   code/snakemake_files/ldsc_snakefile
-    Modified:   code/snakemake_files/manip_snakefile
+    Modified:   code/dask_LDshrink.ipynb
     Modified:   code/snakemake_files/param_snakefile
-    Modified:   code/snakemake_files/rssp_snakefile
-    Modified:   code/snakemake_files/trait_snakefile
-    Modified:   code/workflow_params.json
-    Modified:   code/workflow_params_rcc.json
-    Modified:   code/workflow_params_xps.json
 
 </code></pre>
 Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
@@ -511,6 +528,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/55dbe4a38771c222740aefb6b5065a5c7cce0d2d/docs/DownsamplingResults2.html" target="_blank">55dbe4a</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-05-31
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
 <tr>
 <td style="text-align:left;">
 Rmd
@@ -692,6 +726,17 @@ Date
 <tbody>
 <tr>
 <td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/55dbe4a38771c222740aefb6b5065a5c7cce0d2d/docs/figure/DownsamplingResults2.Rmd/unnamed-chunk-3-1.png" target="_blank">55dbe4a</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-05-31
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/b99b5caa9c357b3faf60a7b8962b79c58bcf817d/docs/figure/DownsamplingResults2.Rmd/unnamed-chunk-3-1.png" target="_blank">b99b5ca</a>
 </td>
 <td style="text-align:left;">
@@ -722,6 +767,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/55dbe4a38771c222740aefb6b5065a5c7cce0d2d/docs/figure/DownsamplingResults2.Rmd/unnamed-chunk-4-1.png" target="_blank">55dbe4a</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-05-31
+</td>
+</tr>
 <tr>
 <td style="text-align:left;">
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/4c2a49fb042d7e75339dc72725a5fbcce09cbb40/docs/figure/DownsamplingResults2.Rmd/unnamed-chunk-4-1.png" target="_blank">4c2a49f</a>
@@ -767,6 +823,17 @@ Date
 <tbody>
 <tr>
 <td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/55dbe4a38771c222740aefb6b5065a5c7cce0d2d/docs/figure/DownsamplingResults2.Rmd/unnamed-chunk-5-1.png" target="_blank">55dbe4a</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-05-31
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/a03c1198b3dbf1473a2485cd550019f6c99e1fb7/docs/figure/DownsamplingResults2.Rmd/unnamed-chunk-5-1.png" target="_blank">a03c119</a>
 </td>
 <td style="text-align:left;">
@@ -810,6 +877,17 @@ Date
 <tbody>
 <tr>
 <td style="text-align:left;">
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/55dbe4a38771c222740aefb6b5065a5c7cce0d2d/docs/figure/DownsamplingResults2.Rmd/unnamed-chunk-6-1.png" target="_blank">55dbe4a</a>
+</td>
+<td style="text-align:left;">
+CreRecombinase
+</td>
+<td style="text-align:left;">
+2018-05-31
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/47f69bee3de3dd616831d49bad7ad5647e856148/docs/figure/DownsamplingResults2.Rmd/unnamed-chunk-6-1.png" target="_blank">47f69be</a>
 </td>
 <td style="text-align:left;">
@@ -833,10 +911,11 @@ CreRecombinase
 </tbody>
 </table>
 </details>
+<p><img src="figure/DownsamplingResults2.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>R version 3.5.0 (2018-04-23)
+<pre><code>R version 3.5.1 (2018-07-02)
 Platform: x86_64-pc-linux-gnu (64-bit)
 Running under: Manjaro Linux
 
@@ -855,32 +934,29 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] bindrcpp_0.2.2     forcats_0.3.0      stringr_1.3.1     
- [4] dplyr_0.7.5        purrr_0.2.4        readr_1.1.1       
- [7] tidyr_0.8.1        tibble_1.4.2       ggplot2_2.2.1.9000
-[10] tidyverse_1.2.1    EigenH5_1.1       
+ [1] bindrcpp_0.2.2  forcats_0.3.0   stringr_1.3.1   dplyr_0.7.6    
+ [5] purrr_0.2.5     readr_1.2.0     tidyr_0.8.1     tibble_1.4.2   
+ [9] ggplot2_3.0.0   tidyverse_1.2.1 EigenH5_1.2    
 
 loaded via a namespace (and not attached):
- [1] RcppEigen_0.3.3.4.0 tidyselect_0.2.4    reshape2_1.4.3     
- [4] haven_1.1.1         lattice_0.20-35     colorspace_1.3-2   
- [7] htmltools_0.3.6     yaml_2.1.19         rlang_0.2.1        
-[10] R.oo_1.22.0         pillar_1.2.2        withr_2.1.2        
-[13] foreign_0.8-70      glue_1.2.0          R.utils_2.6.0      
-[16] readxl_1.1.0        modelr_0.1.2        bindr_0.1.1        
-[19] plyr_1.8.4          cellranger_1.1.0    munsell_0.4.3      
-[22] gtable_0.2.0        workflowr_1.0.1     rvest_0.3.2        
-[25] R.methodsS3_1.7.1   libblosc_1.12.1     psych_1.8.4        
-[28] evaluate_0.10.1     labeling_0.3        knitr_1.20         
-[31] parallel_3.5.0      broom_0.4.4         Rcpp_0.12.17       
-[34] backports_1.1.2     scales_0.5.0        jsonlite_1.5       
-[37] mnormt_1.5-5        hms_0.4.2           digest_0.6.15      
-[40] stringi_1.2.2       grid_3.5.0          rprojroot_1.3-2    
-[43] cli_1.0.0           tools_3.5.0         magrittr_1.5       
-[46] lazyeval_0.2.1      crayon_1.3.4        whisker_0.3-2      
-[49] pkgconfig_2.0.1     Matrix_1.2-14       xml2_1.2.0         
-[52] lubridate_1.7.4     rstudioapi_0.7      assertthat_0.2.0   
-[55] rmarkdown_1.9       httr_1.3.1          R6_2.2.2           
-[58] nlme_3.1-137        git2r_0.21.0        compiler_3.5.0     </code></pre>
+ [1] tidyselect_0.2.4  reshape2_1.4.3    haven_1.1.2      
+ [4] lattice_0.20-35   colorspace_1.3-2  htmltools_0.3.6  
+ [7] yaml_2.2.0        rlang_0.2.99.0000 R.oo_1.22.0      
+[10] pillar_1.3.0      glue_1.3.0        withr_2.1.2      
+[13] R.utils_2.7.0     modelr_0.1.2      readxl_1.1.0     
+[16] bindr_0.1.1       plyr_1.8.4        munsell_0.5.0    
+[19] gtable_0.2.0      workflowr_1.1.1   cellranger_1.1.0 
+[22] rvest_0.3.2       R.methodsS3_1.7.1 evaluate_0.11    
+[25] labeling_0.3      knitr_1.20        broom_0.5.0      
+[28] Rcpp_0.12.19.2    backports_1.1.2   scales_1.0.0     
+[31] jsonlite_1.5      hms_0.4.2.9001    digest_0.6.17    
+[34] stringi_1.2.4     grid_3.5.1        rprojroot_1.3-2  
+[37] cli_1.0.1         tools_3.5.1       magrittr_1.5     
+[40] lazyeval_0.2.1    crayon_1.3.4      whisker_0.3-2    
+[43] pkgconfig_2.0.2   xml2_1.2.0        lubridate_1.7.4  
+[46] assertthat_0.2.0  rmarkdown_1.10    httr_1.3.1       
+[49] rstudioapi_0.8    R6_2.3.0          nlme_3.1-137     
+[52] git2r_0.23.0      compiler_3.5.1   </code></pre>
 </div>
 </div>
 
@@ -924,7 +1000,7 @@ footer is added to webpages before the MathJax javascript. -->
 <p>
   This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a>
   analysis was created with
-  <a href="https://github.com/jdblischak/workflowr">workflowr</a> 1.0.1
+  <a href="https://github.com/jdblischak/workflowr">workflowr</a> 1.1.1
 </p>
 <hr>
 

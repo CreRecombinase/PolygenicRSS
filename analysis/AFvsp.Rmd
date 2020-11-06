@@ -1,0 +1,64 @@
+---
+title: "Allele Frequency vs Number of SNPs"
+author: "Nicholas Knoblauch"
+date: "May 28, 2018"
+output: workflowr::wflow_html
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(EigenH5)
+library(tidyverse)
+library(dplyr)
+```
+
+
+
+```{r}
+quh_df <- dir("/home/nwknoblauch/Dropbox/scratch/polyg_scratch/quh/",pattern="gwas",full.names = T) %>%  map_df(~read_df_h5(.x,groupname="Wildcards") %>% mutate(filename=.x)) %>% mutate(AF=as.numeric( AF ),N = as.integer( N ),SNPCT=as.integer( SNPCT )) %>% filter(chrom == "1",N==0,SNPCT!=0)
+summarise_all(quh_df,n_distinct)
+```
+```{r}
+quh_df <- dir("/home/nwknoblauch/Dropbox/scratch/polyg_scratch/RSSp_genome_gwas_uh/",full.names = T) %>% map_df(~read_df_h5(.x,groupname="Wildcards") %>% mutate(filename_uh=.x)) %>% mutate(AF=as.numeric( AF ),N = as.integer( N ),SNPCT=as.integer( SNPCT )) %>% filter(chrom == "1")  %>% inner_join(quh_df)
+
+```
+
+```{r}
+D_df <- group_by(quh_df,filename) %>% do(nest(data_frame(D=read_vector_h5(.$filename,"/","D")))) %>% inner_join(quh_df) %>% ungroup() 
+```
+
+```{r}
+filter(D_df,N==0,SNPCT!=0,useLDshrink=="T") %>% unnest() %>% ggplot(aes(x=D,..density..))+geom_histogram(bins=100)+facet_grid(AF~SNPCT)+scale_x_log10()
+```
+
+
+
+```{r}
+filter(D_df,N==0,SNPCT!=0,useLDshrink=="F") %>% unnest() %>% ggplot(aes(x=D,..density..))+geom_histogram(bins=200)+facet_grid(AF~SNPCT)+scale_x_log10()
+
+```
+
+
+
+```{r}
+mquh_df <- filter(quh_df,N==0,SNPCT!=0)
+
+tx <- mquh_df$filename[1]
+tu <- mquh_df$filename_uh[1]
+
+tquh <- read_matrix_h5(tx,"/","quh")
+
+tuh <- read_matrix_h5(tu,"/","uh")
+dim(tuh)
+
+```
+
+```{r}
+
+```
+
+
+

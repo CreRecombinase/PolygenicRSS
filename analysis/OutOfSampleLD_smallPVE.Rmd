@@ -26,8 +26,8 @@ library(plotly)
 res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",full.names = T,pattern="SNP")
 res_d_ldsc <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake/ldsc_res/",pattern="cd",full.names = T)
 
-res_df_rssp <- map_df(res_d_rssp,~quietly(read_delim)(.x,delim = "\t")$result %>% mutate(chrom=as.character(chrom),method="RSSp")) %>% filter(!is.na(simulation),!is.na(useLDshrink)) %>% filter(scenario == "SmallvPVE", dataset == "cd", panel_dataset == "bd",chrom=="1-22",simulation=="gwas",!is.na(chrom),!is.na(AF)) %>% select(-ends_with("bound"),-sigu,-lnZ,-bias,-tbias,-optim,-useGradient,-log_params,-message,-convergence)
-res_df_ldsc <- map_df(res_d_ldsc,~quietly(read_delim)(.x,delim = "\t")$result %>% mutate(Intercept=as.character(Intercept),chrom=as.character(chrom),method=ifelse(useIntercept,"LDSC_Intercept","LDSC_noIntercept"))) %>% filter(scenario == "SmallvPVE", dataset == "cd", panel_dataset == "bd",chrom=="1-22",simulation=="gwas",!is.na(chrom),!is.na(AF))%>% select(-Lambda_GC,-Mean_Chi_2,-Total_time_elapsed,-Intercept)
+res_df_rssp <- map_df(res_d_rssp,~quietly(read_delim)(.x,delim = "\t")$result %>% mutate(chrom=as.character(chrom),method="RSSp",useLDetect=as.character(useLDetect))) %>% filter(!is.na(simulation),!is.na(useLDshrink)) %>% filter(scenario == "SmallvPVE", dataset == "cd", panel_dataset == "bd",chrom=="1-22",simulation=="gwas",!is.na(chrom),!is.na(AF)) %>% select(-ends_with("bound"),-sigu,-lnZ,-bias,-tbias,-optim,-useGradient,-log_params,-message,-convergence)
+res_df_ldsc <- map_df(res_d_ldsc,~quietly(read_delim)(.x,delim = "\t")$result %>% mutate(Intercept=as.character(Intercept),chrom=as.character(chrom),method=ifelse(useIntercept,"LDSC_Intercept","LDSC_noIntercept"),useLDetect=as.character(useLDetect))) %>% filter(scenario == "SmallvPVE", dataset == "cd", panel_dataset == "bd",chrom=="1-22",simulation=="gwas",!is.na(chrom),!is.na(AF))%>% select(-Lambda_GC,-Mean_Chi_2,-Total_time_elapsed,-Intercept)
 res_df <- bind_rows(res_df_rssp,res_df_ldsc)
 
 sum_df <- res_df %>%  group_by_at(vars(-pve,-fgeneid)) %>% summarise(mean_pve=mean(pve),sd_pve=sd(pve),error_pve=mean((pve-tpve)^2),error_sd=sd((pve-tpve)/tpve),rel_error_pve=mean(((pve-tpve)/tpve)^2)) %>% ungroup() %>% mutate(error_rmse=sqrt(error_pve))
@@ -56,8 +56,9 @@ p <- filter(sum_df,SNPCT==0,N==0,AF!=0.2) %>% ggplot(aes(x = tpve, y = mean_pve,
   facet_grid( AF~useLDshrink,labeller = "label_both") +
   ggtitle("RSSp vs LDSc across Allele Frequencies (with and without LDshrink)") +
   xlab("PVE") + 
-  ylab("PVE Estimate")
-ggplotly(p)
+  ylab("PVE Estimate")+scale_y_sqrt()+scale_x_sqrt()
+print(p)
+# ggplotly(p)
 ```
 
 
@@ -69,8 +70,8 @@ px <- filter(sum_df,SNPCT==0,N==0,AF!=0.2) %>% ggplot(aes(x = method, y = error_
   xlab("Method") + 
   ylab("PVE squared error")+
   scale_y_sqrt()
-
-ggplotly(px)
+print(px)
+#ggplotly(px)
 ```
 
 ### How much Better is `RSSp` than `LDSC`?

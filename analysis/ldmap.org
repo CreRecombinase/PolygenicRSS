@@ -1,0 +1,120 @@
+* Analyzing GWAS data with ldmap
+
+** The data
+
+** The reference panel
+
+We'll use the 1000 genomes europeans as reference
+
+#+BEGIN_SRC R :session 
+  library(ldmap)
+  library(tidyverse)
+  library(EigenH5)
+  hap_leg_files <- fs::dir_ls("/run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes", glob = "*legend.gz")
+  hap_files <- fs::dir_ls("/run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes", glob = "*hap.gz")
+
+#+END_SRC
+
+#+RESULTS:
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr10_1kg_geno.hap.gz |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr11_1kg_geno.hap.gz |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr12_1kg_geno.hap.gz |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr13_1kg_geno.hap.gz |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr14_1kg_geno.hap.gz |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr15_1kg_geno.hap.gz |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr16_1kg_geno.hap.gz |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr17_1kg_geno.hap.gz |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr18_1kg_geno.hap.gz |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr19_1kg_geno.hap.gz |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr1_1kg_geno.hap.gz  |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr20_1kg_geno.hap.gz |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr21_1kg_geno.hap.gz |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr22_1kg_geno.hap.gz |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr2_1kg_geno.hap.gz  |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr3_1kg_geno.hap.gz  |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr4_1kg_geno.hap.gz  |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr5_1kg_geno.hap.gz  |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr6_1kg_geno.hap.gz  |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr7_1kg_geno.hap.gz  |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr8_1kg_geno.hap.gz  |
+| /run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr9_1kg_geno.hap.gz  |
+
+#+BEGIN_SRC R :session 
+  chroms <- 1:22
+  tchrom <- 1:22
+  output_f <- "/run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotype.h5"
+
+
+
+  mtf <- tempfile()
+
+  for(tchrom in 1:22){
+    cat("chrom: ", tchrom, "\n")
+    tlf <- glue::glue("/run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr{tchrom}_1kg_geno.legend.gz")
+    tl_df <- read_hap_legend(tlf, read_fun = vroom::vroom) %>%
+      mutate(rsid = rsid2int(id))
+    write_df_h5(select(tl_df,-id),output_f,"snp",append=TRUE)
+    cat("Done with chrom: ",tchrom,"\n")
+  }
+
+  sizes_df <- tibble(hgs=hg19_sizes) %>% explode_ldmap_region(remove=FALSE) %>% select(hgs,chrom,chrom_size=end)
+  ldmr_df <- tibble(ldmr=ldetect_EUR) %>% explode_ldmap_region(remove=FALSE) %>% inner_join(sizes_df)
+  last_regions <- ldmr_df %>% group_by(chrom) %>% filter(end==max(end)) %>% ungroup()  %>% mutate(ldmr = new_ldmap_region(chrom,end,chrom_size)) %>% pull(ldmr)
+  nldmr <- sort(c(ldetect_EUR,last_regions))
+  all_snps <- read_vector_h5(output_f,"snp/snp")
+  ldmid <- snp_in_region(all_snps,nldmr)
+  rleo <- rle2offset(ldmid) %>% mutate(ldmr=nldmr[value])
+  write_df_h5(rleo, output_f, "ldmap_region_offset")
+
+
+  chrom_o <- rle2offset(chromosomes(all_snps))
+
+
+  td <- thl[[1]]
+  ctd <- as.character(td)
+  cctd <- as_ldmap_ht(ctd)
+  ## write_vector_h5(thl[[1]],mtf,datapath="thap")
+
+  ## cd <- read_vector_h5(mtf,datapath="thap")
+
+  create_matrix_h5(
+    filename = output_f,
+    datapath = "haplotypes",
+    data = numeric(),
+    dim = c(16, length(all_snps))
+  )
+
+  for(tchrom in 1:22){
+    cat("chrom: ", tchrom, "\n")
+    thf <- glue::glue("/run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/haplotypes/EUR.chr{tchrom}_1kg_geno.hap.gz")
+    thl <- ldmap::read_hap(thf)
+    thm <- simplify2array(thl)
+
+    offset_v <- c(0L,as.integer(chrom_o$offset[tchrom]))
+    stopifnot(chrom_o$datasize[tchrom]==ncol(thm))  
+    write_matrix_h5(thm, output_f, "haplotypes", offset = offset_v, datasize = dim(thm))
+    cat("Done with chrom: ",tchrom,"\n")
+  }
+#+END_SRC
+
+#+BEGIN_SRC R :session 
+  genmap_df <- ldmap:::dl_1kg_map("CEU", dest_dir = "/run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/")
+
+
+
+  tl_df <- assign_genetic_map(tl_df, genmap_df) %>%
+    dplyr::mutate(map = map - min(map),
+                  region_id = ldetect_EUR[snp_in_region(snp, ldetect_EUR)],
+                  hap = read_hap(thf, progress = TRUE)
+                  )
+
+#+END_SRC
+
+
+#+BEGIN_SRC R :session 
+
+  gwas_file <- "/run/media/nwknoblauch/Data/gwas_data/gwas_sumstats/meta.stat"
+
+#+END_SRC
+
+

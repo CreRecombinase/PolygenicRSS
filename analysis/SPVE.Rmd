@@ -1,0 +1,232 @@
+---
+title: "Out Of Sample LD"
+author: "Nicholas Knoblauch"
+date: 2018-04-12
+output: workflowr::wflow_html
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# SPVE
+
+The formula for Xiang's Summary PVE (SPVE):
+
+$$\sum_{i=1}^p \sum_{j=1}^p \frac{r_{i,j} \beta_i \beta_j}{\sqrt{(n \hat{\sigma_i}+\hat{\beta_i}^2)(n \hat{\sigma_j}+\hat{\beta_j}^2)}} $$
+
+
+In the polygenic prior case, we'll use the posterior mean of $\beta_i$ ($\bar{\beta_i}$)in place of $\beta_i$.  We'll calculate $\bar{\beta}_i$ from $\bar{u}_i$: 
+$$\bar{\boldsymbol{\beta}}=\bar{\textbf{u}}*\boldsymbol{\hat{\sigma}}$$
+
+
+$\bar{\textbf{u}}$ is :
+
+$$\bar{\textbf{u}}=\textbf{Q} \text{diag} \left( \frac{1}{\lambda_i + \frac{1}{\sigma_u^2}} \right) \textbf{Q}^{T} \hat{\textbf{u}}$$
+
+An alternate formulation of SPVE is as follows, let $$\hat{\textbf{z}}=\frac{\hat{\boldsymbol{\beta}}}{\sqrt{n \hat{\boldsymbol{\sigma}}^2 + \hat{\boldsymbol{\beta}}^2}}=\frac{\hat{\textbf{u}} \hat{\boldsymbol{\sigma}}}{\sqrt{n \hat{\boldsymbol{\sigma}}^2 + (\hat{\textbf{u}} \hat{\boldsymbol{\sigma}})^2}}$$
+
+
+
+$$=\frac{\hat{\textbf{u}} \hat{\boldsymbol{\sigma}}}{\sqrt{\hat{\boldsymbol{\sigma}}^2*(n  + \hat{\textbf{u}}^2) }}=\frac{\hat{\textbf{u}} }{\sqrt{n  + \hat{\textbf{u}}^2 }}$$
+SPVE is then: $$\text{SPVE}=\left(\textbf{Q} \text{diag} \left( \frac{1}{\lambda_i + \frac{1}{\sigma_u^2}} \right) \textbf{Q}^T\hat{\textbf{z}}\right)^{T} \textbf{Q} \text{diag}(\lambda_i)\textbf{Q}^{T}\left(\textbf{Q}\text{diag} \left( \frac{1}{\lambda_i + \frac{1}{\sigma_u^2}} \right) \textbf{Q}^T\hat{\textbf{z}}\right) $$
+
+$$= \hat{\textbf{z}}^{T}\textbf{Q} \text{diag} \left( \frac{1}{\lambda_i + \frac{1}{\sigma_u^2}} \right) \textbf{Q}^T \textbf{Q} \text{diag}(\lambda_i) \textbf{Q}^T \textbf{Q}\text{diag} \left( \frac{1}{\lambda_i + \frac{1}{\sigma_u^2}} \right) \textbf{Q}^T\hat{\textbf{z}}$$
+
+$$=\hat{\textbf{z}}^{T}Q\text{diag} \left( \frac{\sqrt{\lambda_i}}{\lambda_i + \frac{1}{\sigma_u^2}} \right)^2Q^{T}\hat{\textbf{z}}=\hat{\textbf{z}}^{T}Q\text{diag} \left( \frac{\lambda_i}{\lambda_i^2 +2\frac{\lambda_i}{\sigma_u^2}+ \frac{1}{\sigma_u^4}} \right)Q^{T}\hat{\textbf{z}}$$
+This is what's known as a "quadratic form", and 
+
+
+```{r,echo=F,message=F,warnings=F}
+library(EigenH5)
+library(tidyverse)
+library(RSSp)
+```
+
+```{r}
+res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",full.names = T,pattern="SNP")
+# res_d_rssp <- dir("~/Dropbox/PolygenicRSS/output/RSSp_snakemake",pattern="ra",full.names = T)
+
+res_df <- map_df(res_d_rssp,~quietly(read_delim)(.x,delim = "\t")$result %>% mutate(chrom=as.character(chrom))) %>% filter(!is.na(simulation),!is.na(useLDshrink)) %>% filter(scenario == "RepPVE", dataset == "cd", panel_dataset == "cd",!is.na(chrom),!is.na(AF),chrom=="1-22")%>% select_if(function(x){!all(is.na(x))})
+```
+
+
+```{r}
+filter(res_df,simulation=="gwas",n==max(n),useLDetect==T)  %>% 
+  filter(p<155175) %>%
+  ggplot(aes(x=tpve,y=pve,col=useLDshrink)) +
+  geom_point() + 
+  facet_grid(p~AF,scales = "free_y") +
+  geom_abline(slope=1,intercept=0)
+```
+
+
+
+
+
+```{r}
+
+est_spvef <- dir("/home/nwknoblauch/Dropbox/scratch/polyg_scratch/spve_est",full.names=T)
+# true_spvef <- dir("/home/nwknoblauch/Dropbox/scratch/polyg_scratch/spve_true/",full.names=T)
+# temp_est_spvef <- est_spvef[1]
+# temp_true_spvef <- true_spvef[1]
+# est_spve_chunk <- read_df_h5(temp_est_spvef,"spve_chunks")
+# true_spve_chunk <- read_df_h5(temp_true_spvef,"spve_chunks")
+# oracle_spve_chunk <- read_df_h5(temp_est_spvef,"oracle_spve_chunks")
+# tp_df <- read_df_h5(temp_est_spvef,"SimulationInfo")
+```
+
+
+```{r}
+parse_pvef <- function(pvef,is_est=TRUE){
+  wc <- read_df_h5(pvef,"Wildcards") %>% mutate(is_est=is_est,ttce=NA)
+  tp_df <- read_df_h5(pvef,"SimulationInfo") %>% mutate(ttce=NA) %>% inner_join(wc,by="ttce") %>% select(-ttce)
+  res_df <- read_df_h5(pvef,"spve_chunks") %>% inner_join(tp_df,by="fgeneid")
+}
+all_est_df <- map_df(est_spvef,parse_pvef) %>% filter(chrom=="1-22",N=="0",scenario=="RepPVE")
+```
+
+```{r}
+all_est <- nest(all_est_df,region_id,pve_chunk) %>% mutate(pve_est=map_dbl(data,~sum(.x$pve_chunk)))
+```
+
+
+```{r}
+bad_est_df <- filter(all_est_df,pve_chunk>90)
+```
+
+
+
+
+```{r}
+filter(all_est_df,simulation=="gwas",useLDetect=="T",useLDshrink=="T",scenario=="RepPVE",p<=150000) %>%ggplot(aes(x=pve_chunk))+geom_histogram()+facet_grid(p~AF)+scale_x_log10()+geom_vline(aes(xintercept=tpve))
+```
+
+
+```{r}
+filter(all_est,simulation=="gwas",useLDetect=="T",p<=150000,scenario=="RepPVE") %>%
+ggplot(aes(x=tpve,y=pve_est,col=useLDshrink))+geom_point()+facet_grid(AF~p)+geom_abline(slope=1,intercept=0)
+```
+
+```{r}
+
+uhf <-  "/home/nwknoblauch/Dropbox/scratch/polyg_scratch/RSSp_genome_gwas_uh/chr1AF0.1SNP0N0_cd_cd_FastPVE_sim.h5"
+quhf <-  "/home/nwknoblauch/Dropbox/scratch/polyg_scratch/quh/gwas_chr1AF0.1SNP0N0_cd_cd_T_omni_FastPVE_F.h5"
+
+evdf <- "/home/nwknoblauch/Dropbox/scratch/polyg_scratch/EVD_H5/chr1AF0.1SNP0N0_cd_cd_T_omni_F.h5"
+betam <- "/home/nwknoblauch/Dropbox/scratch/polyg_scratch/spve_est/chr1AF0.1SNP0N0_cd_cd_T_omni_direct_RSSp_res_FastPVE_.1_T_F.h5"
+tbetam <- "/home/nwknoblauch/Dropbox/scratch/polyg_scratch/spve_true/chr1AF0.1SNP0N0_cd_cd_T_omni_direct_RSSp_res_FastPVE_.1_T_F.h5"
+#bw <- read_df_h5(betam,"Wildcards")
+resf <- "/home/nwknoblauch/Dropbox/PolygenicRSS/output/RSSp_snakemake/sim_chr1AF0.1SNP0N0_cd_cd_T_omni_gwas_RSSp_res_FastPVE_.1_T_F.txt.gz"
+betaf="/home/nwknoblauch/Dropbox/scratch/polyg_scratch/RSSp_sim_gwas_beta/chr1AF0.1SNP0N0_cd_cd_FastPVE_beta.h5"
+
+res_df <- read_delim(resf,"\t")
+R <- read_matrix_h5(evdf,"LD/2","R")
+Q <- read_matrix_h5(evdf,"EVD/2","Q")
+D <- read_vector_h5(evdf,"EVD/2","D")
+tp <- length(D)
+snp_df <- read_df_h5(evdf,"LDinfo") %>% mutate(tsnp_id=1:n()) %>% filter(region_id==2)
+#snp_df <- read_df_h5(evdf,"LDi/2")
+# Ri <- solve(R)
+# tRi <- Q%*%diag(1/D)%*%t(Q)
+
+#snp_df_u <- read_df_h5(uhf,"SNPinfo") %>% mutate(tsnpid=1:n()) %>%semi_join(snp_df)
+uh <- read_matrix_h5(uhf,"/","uh",subset_rows=snp_df$tsnp_id)
+quh <- read_matrix_h5(quhf,"/","quh",subset_rows=snp_df$tsnp_id)
+# cuh <- Q%*%quh
+# all.equal(cuh,uh)
+se <- read_matrix_h5(uhf,"/","se",subset_rows=snp_df$tsnp_id)
+bh <- uh*se
+tparam_df <- read_df_h5(uhf,"SimulationInfo")
+varu <- tparam_df$tsigu^2
+tbeta_mean <- read_matrix_h5(tbetam,"/","Beta_Mean",subset_rows=snp_df$tsnp_id)
+beta_mean <- read_matrix_h5(betam,"/","Beta_Mean",subset_rows=snp_df$tsnp_id)
+true_beta <- t(read_matrix_h5(betaf,"/","Beta",subset_cols=snp_df$tsnp_id))
+true_S <- read_vector_h5(betaf,"/","S",subset=snp_df$tsnp_id)
+true_u <- true_beta/true_S
+N <- unique(tparam_df$n)
+nbh <- (N*se^2+bh^2)
+
+g <- length(varu)
+est_bm <- beta_mean
+pve_est <- numeric(g)
+gtp <- tp
+nD <- beta_mean
+for(i in 1:g){
+  nD[,i] <- varu[i]/(D*varu[i]+1)
+  est_bm[,i] <- Q%*%diag(nD[,i])%*%t(Q)%*%(uh[,i]*se[,i])
+  pve_est[i] <- sum((R*est_bm[,i]%o%est_bm[,i])/sqrt(nbh[,i]%o%nbh[,i]))
+}
+
+
+alt_spve <- function(tuh,tQ,tD,tsigu,tn){
+  tz <- tuh/sqrt(tn+tuh^2)
+  qtuh <- quh[,1]/sqrt(tn+tuh^2)
+  tnD <- tD/(tD^2+2*tD*(tsigu^(-2))+tsigu^(-4))
+  Qtz <- crossprod(Q,tz)
+  return(sum(crossprod(Q,tz)^2*tnD))
+}
+
+
+
+test_qdf <- data_frame(uhat=c(uh[,1]),quhat=c(quh[,1]),t_u=c(true_u[,1]))
+data_frame(betahat=c(bh[,1]),betamean=c(beta_mean[,1])) %>% ggplot(aes(x=betahat,y=betamean))+geom_point()+geom_abline(slope=1,intercept=0)+xlim(c(-.15,.15))+ylim(c(-.15,.15))
+ggplot(test_qdf,aes(x=uhat,y=quhat))+geom_point()
+```
+
+```{r}
+
+```
+
+
+
+```{r}
+data_frame(betamean=c(beta_mean[,1]),true_beta=c(true_beta[,1])) %>% ggplot(aes(x=betamean,y=true_beta))+geom_point()+geom_abline(slope=1,intercept=0)+xlim(-.15,.15)+ylim(-.15,.15)
+
+```
+
+
+
+```{r}
+ggplot(all_true,aes(x=tpve,y=pve_est,col=useLDshrink))+geom_point()+facet_grid(AF~n)
+
+```
+
+
+## Posterior mean of Beta
+```{r}
+parse_beta <- function(pvef,is_est=TRUE){
+  wc <- read_df_h5(pvef,"Wildcards") %>% mutate(is_est=is_est,ttce=NA)
+  tp_df <- read_df_h5(pvef,"SimulationInfo") %>% mutate(ttce=NA) %>% inner_join(wc,by="ttce") %>% select(-ttce)
+  read_matrix_h5(pvef,"/","Beta_Mean")  %>%as_data_frame()%>% magrittr::set_colnames(tp_df$fgeneid) %>% mutate(nsnp_id=1:n()) %>% gather(fgeneid,beta_mean,-nsnp_id)%>% inner_join(tp_df,by="fgeneid")
+}
+beta_est_df <- map_df(est_spvef,parse_beta) %>% filter(chrom=="19")
+beta_est <- nest(beta_est_df,nsnp_id,beta_mean) %>% mutate(sigu_est=map_dbl(data,~sd(.x$beta_mean))) %>% mutate(pve_est=calc_pve(sigu_est,p/n))
+```
+
+```{r}
+filter(beta_est,AF==".2") %>%ggplot(aes(x=tpve,y=pve_est,col=useLDshrink))+geom_point()+geom_abline(slope=1,intercept=0)+facet_grid(simulation~useLDetect)
+```
+```{r}
+beta_true_df <- map_df(true_spvef,parse_beta,is_est=F)
+beta_true <- nest(beta_true_df,nsnp_id,beta_mean) %>% mutate(sigu_est=map_dbl(data,~sd(.x$beta_mean))) %>% mutate(pve_est=calc_pve(sigu_est,p/n))
+
+```
+
+```{r}
+ggplot(beta_true,aes(x=tpve,y=pve_est,col=useLDshrink))+geom_point()+facet_grid(AF~n)
+```
+```
+
+
+
+```{r}
+
+```
+
+
+
+
+
+
+

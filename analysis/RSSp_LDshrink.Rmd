@@ -1,0 +1,45 @@
+---
+title: "Effect of LDshrink on PVE estimates"
+author: "Nicholas Knoblauch"
+date: 2018-03-09
+output: workflowr::wflow_html
+---
+
+
+
+
+
+
+#Comparing eigenvalues with and without `LDshrink`
+
+```{r}
+library(tidyverse)
+library(EigenH5)
+evdf_f <- "/run/media/nwknoblauch/Data/EVD_H5/chr1-22_RA-CAD_F_hapmap.h5"
+evdf_t <- "/run/media/nwknoblauch/Data/EVD_H5/chr1-22_RA-CAD_T_hapmap.h5"
+ld_grp_t <- get_objs_h5(evdf_f,"SVD")
+stopifnot(all(ld_grp==get_objs_h5(evdf,"EVD")))
+
+
+read_d <- function(evdf){
+  tchr <- read_vector_h5(evdf,"LDinfo","chr")
+  treg <- read_vector_h5(evdf,"LDinfo","region_id")
+  chunked <- (length(unique(treg))>length(unique(tchr)))
+  svd_grp <- get_objs_h5(evdf,"SVD")
+  stopifnot(all(ld_grp==get_objs_h5(evdf,"EVD")),length(ld_grp)==length(unique(treg)))
+  d_df <- map_df(ld_grp,~data_frame(d=read_vector_h5(evdf,paste0("SVD/",.x),"d"),D=read_vector_h5(evdf,paste0("EVD/",.x),"D"),region_id=.x) %>% mutate(eigen_id=1:n()))
+}
+
+
+
+
+```
+
+```{r}
+ggplot(d_df,aes(x=d^2,y=D))+geom_point()
+```
+
+
+
+
+
