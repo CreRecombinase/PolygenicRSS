@@ -1,0 +1,63 @@
+---
+__default__:
+  partition: 'broadwl'
+  time: '01:30:00'
+  nodes: '1'
+  ntasks: '1'
+  cpuspertask: '1'
+  output: "output/{rule}_{wildcards}.txt"
+  error: "error/{rule}_{wildcards}.txt"
+  export: "ALL"
+  mem: '22gb'
+gcta_h2:
+  time: '00:20:00'
+  mem: '16gb'
+poly_sim_pheno:
+  time: '02:30:00'
+  mem: '64gb'
+tbgen2bgen:
+  time: '05:30:00'
+  mem: '3gb'
+cmp_baseline_ldscores:
+  time: '03:30:00'
+  mem: '32gb'
+pull_map_p:
+  time: '03:30:00'
+  mem: '75gb'
+rssp_quh_p:
+  time: '02:30:00'
+  mem: '32gb'
+ldshrink_ld:
+  time: '03:30:00'
+  mem: '32gb'
+plink_gwas_cov:
+  time: '01:30:00'
+  mem: '16gb'
+  cpuspertask: '12'
+gcta_p_grm:
+  time: '02:00:00'
+  mem: '25gb'
+all_bgen2plink:
+  time: '06:40:00'
+  mem: '32gb'
+  cpuspertask: '5'
+subset_bgen_qctool:
+  time: '05:40:00'
+  mem: '32gb'
+anno2torus_fdr:
+  mem: '45G'
+ldshrink_ldo:
+  mem: '32gb'
+  time: '01:00:00'
+rssp:
+  mem: '32gb'
+  time: '01:25:00'
+subset_bgen_qctool:
+  mem: '32gb'
+  time: '03:25:00'
+rssp_o:
+  mem: '32gb'
+  time: '00:35:00'
+run_ldsc:
+  mem: '45gb'
+  time: '02:00:00'

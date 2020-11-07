@@ -1,0 +1,25 @@
+rule gwas_ukb_Z:
+    input:
+        gwasf = config_d["UKB_GWAS"]+"{traitid}_irnt.gwas.imputed_v3.{sexes}.tsv.bgz",
+        h5f=expand(config_d['LD_DIR']+"ld_shrink_{{model}}/ind_{{samplesize}}_chr{{chrom}}_{scatteritem}.h5",scatteritem=range(1,ldc+1))
+    output:
+        outputf="results/temp_qs/chr{chrom}_{model}_{traitid}_{samplesize}_{sexes}.shrink.qs"
+    script:
+        "../scripts/rssp_quh_full.R"
+
+rule gwas_ss_ps:
+    input:
+        gwasf = config_d["UKB_GWAS"]+"{traitid}_irnt.gwas.imputed_v3.{sexes}.tsv.bgz"
+    output:
+        outputf=temp("results/ss/{traitid}_{sexes}.shrink.RDS")
+    script:
+        "../scripts/gwas_ss_ps.R"
+
+rule rssp_ukb:
+    input:
+        qsf=expand("results/temp_qs/chr{chrom}_{{model}}_{{traitid}}_{{samplesize}}_{{sexes}}.shrink.qs",chrom=range(1,23)),
+        samplesize_rdsf="results/ss/{traitid}_{sexes}.shrink.RDS"
+    output:
+        outputf="results/real_ukb_ind/{model}_{traitid}_{samplesize}_{sexes}.shrink.RDS"
+    script:
+        "../scripts/concat_rssp.R"
