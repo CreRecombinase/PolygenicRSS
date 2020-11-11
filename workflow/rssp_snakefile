@@ -6,7 +6,7 @@ rule rssp_quh_p:
     params:
         samplesize = "{samplesize}"
     output:
-        oldf=expand(config_d['RSSPI'] +"{{shrink}}_{{source}}_chr{{chrom}}_{{model}}_{trait}_10_{{h2}}_{{samplesize}}.qs",trait=ntr)
+        oldf=expand(config_d['RSSPI'] +"{{shrink}}_{{source}}_chr{{chrom}}_{{model}}_{trait}_{{sp}}_{{h2}}_{{samplesize}}.qs",trait=ntr)
     script:
         "../scripts/rssp_quh_est.R"
 
@@ -15,9 +15,9 @@ rule rssp_quh_p:
 
 rule sumstat2db:
     input:
-       gwasf=config_d['GWAS'] +"ldsc_input/{model}_{trait}_10_{h2}_{samplesize}.sumstats.gz"
+       gwasf=config_d['GWAS'] +"ldsc_input/{model}_{trait}_{sp}_{h2}_{samplesize}.sumstats.gz"
     output:
-        output_d=config_d['GWASDB'] +"rssp_ss/{model}_{trait}_10_{h2}_{samplesize}.sumstats"
+        output_d=config_d['GWASDB'] +"rssp_ss/{model}_{trait}_{sp}_{h2}_{samplesize}.sumstats"
     script:
         "../scripts/sumstat2db.R"
 
@@ -25,23 +25,10 @@ rule sumstat2db:
 
 rule rssp_p:
     input:
-        gwasf=expand(config_d['RSSPI'] +"{{shrink}}_{{source}}_chr{chrom}_{{model}}_{{trait}}_10_{{h2}}_{{samplesize}}.qs",chrom=range(1,23))
+        gwasf=expand(config_d['RSSPI'] +"{{shrink}}_{{source}}_chr{chrom}_{{model}}_{{trait}}_{{sp}}_{{h2}}_{{samplesize}}.qs",chrom=range(1,23))
     params:
         samplesize = "{samplesize}"
     output:
-        est_rdsf="results/sim_ukb_{source}/{model}_{trait}_10_{h2}_{samplesize}.{shrink}.RDS"
-    script:
-        "../scripts/rssp_est.R"
-
-
-rule rssp_o:
-    input:
-        h5f=config_d['GWAS']+"ldo_{shrink}/{source}_{samplesize}_chr19.h5",
-        gwasf=config_d['GWAS'] +"ldsc_input/onec_{trait}_10_{h2}_{samplesize}.sumstats.gz"
-    params:
-        chroms=19,
-        samplesize = "{samplesize}"
-    output:
-        est_rdsf="results/sim_ukb_{source}/onec_{trait}_{nt}_{nc}_{h2}_{samplesize}.{shrink}.RDS"
+        est_rdsf="results/sim_ukb_{source}/{model}_{trait}_{sp}_{h2}_{samplesize}.{shrink}.RDS"
     script:
         "../scripts/rssp_est.R"

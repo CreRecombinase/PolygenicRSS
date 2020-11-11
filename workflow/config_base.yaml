@@ -12,9 +12,9 @@ paths:
   'WEIGHTS': !Dep {host: *hst, pref: *dl, path: {midway2: &weight "1kg/1000G_Phase3_weights_hm3_no_MHC/", gardner: *weight, desktop: *weight}} 
   'FRQF':    !Dep {host: *hst, pref: *dl, path: {midway2: &frq "1kg/1000G_Phase3_frq/", gardner: *frq, desktop: "1kg/1000G_Phase3_frq/"}} 
   'GWAS':    !Dep {host: *hst, pref: null, path: {midway2: &gwas "ptb/", gardner: "/gpfs/data/xhe-lab/polyg/", desktop: "/run/media/nwknoblauch/Backup412/polyg/"}}
-  'UKB_GWAS':    !Dep {host: *hst, pref: null, path: {midway2: &ukbgwas "ptb/", gardner: "/scratch/t.cri.nknoblauch/polyg_scratch/data/", desktop: "/run/media/nwknoblauch/Backup412/ukb_gwas/"}}
+  'UKB_GWAS':    !Dep {host: *hst, pref: null, path: {midway2: &ukbgwas "/scratch/midway2/nwknoblauch/polyg_scratch/ukb_gwas/", gardner: "/scratch/t.cri.nknoblauch/polyg_scratch/data/", desktop: "/run/media/nwknoblauch/Backup412/ukb_gwas/"}}
   'GWASDB':    !Dep {host: *hst, pref: null, path: {midway2: "ptb/", gardner: "/gpfs/data/xhe-lab/polyg/", desktop: "/run/media/nwknoblauch/Backup412/polyg/"}}
-  'LD_DIR':    !Dep {host: *hst, pref: null, path: {midway2: "ptb/", gardner: "/gpfs/data/xhe-lab/polyg/", desktop: "/run/media/nwknoblauch/BackupData/"}}
+  'LD_DIR':    !Dep {host: *hst, pref: null, path: {midway2: "/scratch/midway2/nwknoblauch/polyg_scratch/", gardner: "/gpfs/data/xhe-lab/polyg/", desktop: "/run/media/nwknoblauch/BackupData/"}}
   'RSSPI':    !Dep {host: *hst, pref: null, path: {midway2: &rssp "ptb/", gardner: "/gpfs/data/xhe-lab/polyg/rssp_input/", desktop: "/run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/polyg/rssp_input/"}}
   'UKB_LDSC':    !Dep {host: *hst, pref: *dl, path: {midway2: &ukbldsc "ukb_ldsc/", gardner: *ukbldsc, desktop: "../Backup412/ukb_ldsc/"}}
   'UKB_SAMPLE':    !Dep {host: *hst, pref: null, path: {midway2:  "", gardner: "/gpfs/data/pierce-lab/uk-biobank-genotypes/ukb17346_imp_chr17_v3_s487378.sample", desktop: "/run/media/nwknoblauch/c67d20d8-a8bf-4ab9-91af-978fa311014a/1kg/bgen/ukb_imp_chr16_v3.sample"}}
@@ -31,4 +31,4 @@ paths:
 envs:
   'r':    !Dep {host: *hst, pref:  null, path: { midway2: null, gardner: null, desktop: null }}
   'ldsc': !Dep {host: *hst, pref:  null, path: { midway2: null, gardner: null, desktop: null }}
-  'cmd_prefix': !Dep {host: *hst, pref:  null, path: { midway2: "", gardner: "spack load /3xjt5yk; ", desktop: ". /run/media/nwknoblauch/Backup412/spack/share/spack/setup-env.sh;"  }}
+  'cmd_prefix': !Dep {host: *hst, pref:  null, path: { midway2: "module load R/4.0.0; ", gardner: "spack load /3xjt5yk; ", desktop: ". /run/media/nwknoblauch/Backup412/spack/share/spack/setup-env.sh;"  }}

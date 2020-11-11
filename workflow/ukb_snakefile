@@ -592,6 +592,15 @@ rule causal_snps_polymatch:
     script:
         "../scripts/filter_freq.R"
 
+rule sparse_causal_snps_polymatch:
+    input:
+        snp_list=config_d["MODELD"]+"model_{samplesize}/polym.txt"
+    output:
+        snp_list=config_d["MODELD"]+"model_sp_{samplesize}/{model}.txt"
+    params:
+        sample_frac=0.5
+    script:
+        "../scripts/sample_frac.R"
 
 rule causal_snps_poly:
     input:
@@ -657,6 +666,27 @@ rule poly_sim_simu:
         "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/simu-0.9.4.1-v4noiyhxr5574otcocygl2l2jd7krwns/bin/simu --bfile {params.ip} --out {params.pref} --hsq {params.h2} --causal-variants {input.snp_list} --qt --gcta-sigma"
 
 
+
+
+rule poly_sim_simu_sp:
+    input:
+        snp_list=config_d["MODELD"]+"model_sp_{samplesize}/{model}.txt",
+        famf=config_d["UKB_PED"]+"all_{samplesize}_ind.fam",
+        bimf=config_d["UKB_PED"]+"all_{samplesize}_ind.bim",
+        bedf=config_d["UKB_PED"]+"all_{samplesize}_ind.bed"
+    params:
+        h2="{h2}",
+        pref=config_d["GWAS"]+"pheno/{model}_{h2}_{trait}_05_{samplesize}",
+        ip=config_d["UKB_PED"]+"all_{samplesize}_ind"
+    output:
+        phenof=config_d["GWAS"]+"pheno/{model}_{h2}_{trait}_05_{samplesize}.1.causals",
+        true_b=config_d["GWAS"]+"pheno/{model}_{h2}_{trait}_05_{samplesize}.pheno"
+    log:
+        logf=config_d["GWAS"]+"pheno/{model}_{h2}_{trait}_05_{samplesize}.log"
+    shell:
+        "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/simu-0.9.4.1-v4noiyhxr5574otcocygl2l2jd7krwns/bin/simu --bfile {params.ip} --out {params.pref} --hsq {params.h2} --causal-variants {input.snp_list} --qt --gcta-sigma"
+
+
 rule ind2plink:
     input:
         bgen=config_d["UKB_PED"]+"all_{samplesize}_01_ind.bgen",
@@ -678,14 +708,14 @@ rule ind2plink:
         #         famf=config_d["UKB_PED"]+"split_map/ind_{samplesize}_chr19.fam",
         #         bimf=config_d["UKB_PED"]+"split_map/ind_{samplesize}_chr19.bim",
         #         bedf=config_d["UKB_PED"]+"split_map/ind_{samplesize}_chr19.bed",
-        #         phenof=config_d["GWAS"]+"pheno/onec_{h2}_10_{samplesize}.phen",
+        #         phenof=config_d["GWAS"]+"pheno/onec_{h2}_{sp}_{samplesize}.phen",
         #         vecf=config_d["GWAS"]+"pca/{samplesize}_grm.eigenvec"
         #     params:
         #         ip=config_d["UKB_PED"]+"split_map/ind_{samplesize}_chr19",
-        #         op=config_d["GWAS"]+"gwas_covar_ss/onec_{h2}_10_10_{samplesize}/res",
+        #         op=config_d["GWAS"]+"gwas_covar_ss/onec_{h2}_{sp}_10_{samplesize}/res",
         #     output:
-        #         assoc_d=directory(config_d["GWAS"]+"gwas_covar_ss/onec_{h2}_10_10_{samplesize}"),
-        #         logf="onec_{h2}_10_10_{samplesize}.log"
+        #         assoc_d=directory(config_d["GWAS"]+"gwas_covar_ss/onec_{h2}_{sp}_10_{samplesize}"),
+        #         logf="onec_{h2}_{sp}_10_{samplesize}.log"
         #     threads:
         #         12
         #     shell:
@@ -696,13 +726,13 @@ rule ind2plink:
         #     input:
         #         bgen=config_d["UKB_PED"]+"all_{samplesize}_01_ind.bgen",
         #         samplef=config_d["UKB_PED"]+"chr1_{samplesize}_01_ind.sample",
-        #         phenof=config_d["GWAS"]+"pheno/poly_{h2}_10_{samplesize}.phen",
+        #         phenof=config_d["GWAS"]+"pheno/poly_{h2}_{sp}_{samplesize}.phen",
         #         vecf=config_d["GWAS"]+"pca/{samplesize}_grm.eigenvec"
         #     params:
-        #         op=config_d["GWAS"]+"gwas_covar_ss/poly_{h2}_10_10_{samplesize}/res"
+        #         op=config_d["GWAS"]+"gwas_covar_ss/poly_{h2}_{sp}_10_{samplesize}/res"
         #     output:
-        #         assoc_d=directory(config_d["GWAS"]+"gwas_covar_ss/poly_{h2}_10_10_{samplesize}"),
-        #         logf="poly_{h2}_10_10_{samplesize}.log"
+        #         assoc_d=directory(config_d["GWAS"]+"gwas_covar_ss/poly_{h2}_{sp}_10_{samplesize}"),
+        #         logf="poly_{h2}_{sp}_10_{samplesize}.log"
         #     threads:
         #         12
         #     shell:
@@ -730,14 +760,14 @@ rule gcta_gwas_cov_p:
         famf=config_d["UKB_PED"]+"all_{samplesize}_ind.fam",
         bimf=config_d["UKB_PED"]+"all_{samplesize}_ind.bim",
         bedf=config_d["UKB_PED"]+"all_{samplesize}_ind.bed",
-        phenof=config_d["GWAS"]+"pheno/{model}_{h2}_{trait}_10_{samplesize}.pheno",
+        phenof=config_d["GWAS"]+"pheno/{model}_{h2}_{trait}_{sp}_{samplesize}.pheno",
         vecf=config_d["GWAS"]+"pca_{model}/{samplesize}_grm.eigenvec"
     params:
         ip=config_d["UKB_PED"]+"all_{samplesize}_ind",
-        op=config_d["GWAS"]+"gwas_covar_ss/{model}_{h2}_{trait}_10_{samplesize}/res"
+        op=config_d["GWAS"]+"gwas_covar_ss/{model}_{h2}_{trait}_{sp}_{samplesize}/res"
     output:
-        assoc_d=config_d["GWAS"]+"gwas_covar_ss/{model}_{h2}_{trait}_10_{samplesize}/res.fastGWA",
-        logf=config_d["GWAS"] +  "gwas_covar_ss/{model}_{h2}_{trait}_10_{samplesize}/res.log"
+        assoc_d=config_d["GWAS"]+"gwas_covar_ss/{model}_{h2}_{trait}_{sp}_{samplesize}/res.fastGWA",
+        logf=config_d["GWAS"] +  "gwas_covar_ss/{model}_{h2}_{trait}_{sp}_{samplesize}/res.log"
     threads:
         2
     shell:
@@ -745,32 +775,32 @@ rule gcta_gwas_cov_p:
 
 # rule sub_gwass_p:
 #     input:
-#         vecf=config_d["GWAS"]+"gwas_covar_ss/poly_{h2}_{nt}_10_{samplesize}/res.fastGWA"
+#         vecf=config_d["GWAS"]+"gwas_covar_ss/poly_{h2}_{nt}_{sp}_{samplesize}/res.fastGWA"
 #     output:
-#         tempf=config_d['GWAS'] +"ldsc_input/poly_{trait}_{nt}_10_{h2}_{samplesize}.sumstats.gz"
+#         tempf=config_d['GWAS'] +"ldsc_input/poly_{trait}_{nt}_{sp}_{h2}_{samplesize}.sumstats.gz"
 #     script:
 #         "../scripts/cols_cut.R"
 
 rule sub_gwass_gcta:
     input:
-        vecf=config_d["GWAS"]+"gwas_covar_ss/poly_{h2}_{trait}_10_{samplesize}/res.fastGWA",
+        vecf=config_d["GWAS"]+"gwas_covar_ss/poly_{h2}_{trait}_{sp}_{samplesize}/res.fastGWA",
     output:
-        tempf=config_d['GWAS'] +"ldsc_input/poly_{trait}_10_{h2}_{samplesize}.sumstats.gz"
+        tempf=config_d['GWAS'] +"ldsc_input/poly_{trait}_{sp}_{h2}_{samplesize}.sumstats.gz"
     script:
         "../scripts/cols_cut_gcta.R"
 
 rule sub_gwass_gcta_pm:
     input:
-        vecf=config_d["GWAS"]+"gwas_covar_ss/polym_{h2}_{trait}_10_{samplesize}/res.fastGWA",
+        vecf=config_d["GWAS"]+"gwas_covar_ss/polym_{h2}_{trait}_{sp}_{samplesize}/res.fastGWA",
     output:
-        tempf=config_d['GWAS'] +"ldsc_input/polym_{trait}_10_{h2}_{samplesize}.sumstats.gz"
+        tempf=config_d['GWAS'] +"ldsc_input/polym_{trait}_{sp}_{h2}_{samplesize}.sumstats.gz"
     script:
         "../scripts/cols_cut_gcta.R"
 
 
 rule sub_gwass_gcta_h5:
     input:
-        vecf=expand(config_d["GWASDB"]+"gwas_covar_ss/polym_{{h2}}_{trait}_10_{{samplesize}}/res.fastGWA",trait=ntr)
+        vecf=expand(config_d["GWASDB"]+"gwas_covar_ss/polym_{{h2}}_{trait}_{sp}_{{samplesize}}/res.fastGWA",trait=ntr)
     params:
         h2=["{h2}"]*10,
         traits=ntr
@@ -782,9 +812,9 @@ rule sub_gwass_gcta_h5:
 
 rule sub_gwass_o:
     input:
-        vecf=config_d["GWAS"]+"gwas_covar_ss/onec_{h2}_{trait}_10_{samplesize}/res.PHENO{trait}.glm.linear"
+        vecf=config_d["GWAS"]+"gwas_covar_ss/onec_{h2}_{trait}_{sp}_{samplesize}/res.PHENO{trait}.glm.linear"
     output:
-        tempf=config_d['GWAS'] +"ldsc_input/onec_{trait}_10_{h2}_{samplesize}.sumstats.gz"
+        tempf=config_d['GWAS'] +"ldsc_input/onec_{trait}_{sp}_{h2}_{samplesize}.sumstats.gz"
     script:
         "../scripts/cols_cut.R"
 
@@ -837,7 +867,7 @@ rule ldshrink_ld:
         bimf=config_d["UKB_PED"]+"split_map/{source}_{samplesize}_chr{chrom}.bim",
         bedf=config_d["UKB_PED"]+"split_map/{source}_{samplesize}_chr{chrom}.bed",
         snp_list=config_d["MODELD"]+"model_{samplesize}/{model}.txt",
-        sumststat_dbd=config_d['GWASDB'] +"rssp_ss/{model}_1_10_0.1_{samplesize}.sumstats"
+        sumststat_dbd=config_d['GWASDB'] +"rssp_ss/{model}_1_{sp}_0.1_{samplesize}.sumstats"
     params:
         shrink="{shrink}",
         ldchunk="{scatteritem}",
@@ -866,16 +896,16 @@ rule cmp_baselineb_ldscores:
 
 rule baseline_ldsc:
     input:
-        gwasf=config_d['GWAS'] +"ldsc_input/{model}_{trait}_10_{h2}_{samplesize}.sumstats.gz",
+        gwasf=config_d['GWAS'] +"ldsc_input/{model}_{trait}_{sp}_{h2}_{samplesize}.sumstats.gz",
         baselinef=expand(config_d['L2'] +"ukb_baseline/{{source}}.{{samplesize}}.{chrom}.l2.ldscore.gz",chrom=range(1,23)),
         baseline_l2m=expand(config_d['L2'] +"ukb_baseline/{{source}}.{{samplesize}}.{chrom}.l2.M",chrom=range(1,23)),
         baseline_l2m50=expand(config_d['L2'] +"ukb_baseline/{{source}}.{{samplesize}}.{chrom}.l2.M_5_50",chrom=range(1,23))
     output:
-        dataf="results/sim_ukb_{source}/{model}_{trait}_10_{h2}_{samplesize}.int.log"
+        dataf="results/sim_ukb_{source}/{model}_{trait}_{sp}_{h2}_{samplesize}.int.log"
     params:
         baseline=config_d['L2']+"ukb_baseline/{source}.{samplesize}.",
         weights=config_d['L2']+"ukb_baseline/{source}.{samplesize}.",#,config_d['WEIGHTS']+"weights.hm3_noMHC.",
-        odir="results/sim_ukb_{source}/{model}_{trait}_10_{h2}_{samplesize}.int"
+        odir="results/sim_ukb_{source}/{model}_{trait}_{sp}_{h2}_{samplesize}.int"
     shell:
         config_d['LDSC']+"ldsc.py --h2 {input.gwasf} --ref-ld-chr {params.baseline} --w-ld-chr {params.weights} --out {params.odir}"
 
@@ -883,23 +913,23 @@ rule baseline_ldsc:
 
 rule baseline_ldsc_noi:
     input:
-        gwasf=config_d['GWAS'] +"ldsc_input/{model}_{trait}_10_{h2}_{samplesize}.sumstats.gz",
+        gwasf=config_d['GWAS'] +"ldsc_input/{model}_{trait}_{sp}_{h2}_{samplesize}.sumstats.gz",
         baselinef=expand(config_d['L2'] +"ukb_baseline/{{source}}.{{samplesize}}.{chrom}.l2.ldscore.gz",chrom=range(1,23)),
         baseline_l2m=expand(config_d['L2'] +"ukb_baseline/{{source}}.{{samplesize}}.{chrom}.l2.M",chrom=range(1,23)),
         baseline_l2m50=expand(config_d['L2'] +"ukb_baseline/{{source}}.{{samplesize}}.{chrom}.l2.M_5_50",chrom=range(1,23))
     output:
-        dataf="results/sim_ukb_{source}/{model}_{trait}_10_{h2}_{samplesize}.noint.log"
+        dataf="results/sim_ukb_{source}/{model}_{trait}_{sp}_{h2}_{samplesize}.noint.log"
     params:
         baseline=config_d['L2']+"ukb_baseline/{source}.{samplesize}.",
         weights=config_d['L2']+"ukb_baseline/{source}.{samplesize}.",#,config_d['WEIGHTS']+"weights.hm3_noMHC.",
-        odir="results/sim_ukb_{source}/{model}_{trait}_10_{h2}_{samplesize}.noint"
+        odir="results/sim_ukb_{source}/{model}_{trait}_{sp}_{h2}_{samplesize}.noint"
     shell:
         config_d['LDSC']+"ldsc.py --h2 {input.gwasf} --ref-ld-chr {params.baseline} --w-ld-chr {params.weights} --no-intercept --out {params.odir}"
 
 def aggregate_input_io(wildcards):
     #checkpoint_output = checkpoints.plink_gwas_cov_o.get(nt=wildcards.nt,h2=wildcards.h2,samplesize=wildcards.samplesize)
     #nt = int(wildcards.nt)
-    part_s = "results/sim_ukb_ind/onec_{{trait}}_10_{h2}_{samplesize}.hsq".format(
+    part_s = "results/sim_ukb_ind/onec_{{trait}}_{sp}_{h2}_{samplesize}.hsq".format(
         h2=wildcards.h2,
         samplesize=wildcards.samplesize)
     out_fl_b = expand(part_s,
@@ -909,7 +939,7 @@ def aggregate_input_io(wildcards):
 def aggregate_input_ip(wildcards):
     #checkpoint_output = checkpoints.plink_gwas_cov_p.get(nt=wildcards.nt,h2=wildcards.h2,samplesize=wildcards.samplesize)
     #nt = int(wildcards.nt)
-    part_s = "results/sim_ukb_ind/poly_{{trait}}_10_{h2}_{samplesize}.hsq".format(
+    part_s = "results/sim_ukb_ind/poly_{{trait}}_{sp}_{h2}_{samplesize}.hsq".format(
         h2=wildcards.h2,
         samplesize=wildcards.samplesize)
     out_fl_b = expand(part_s,
@@ -920,7 +950,7 @@ def aggregate_input_ip(wildcards):
 def aggregate_input_o(wildcards):
     #checkpoint_output = checkpoints.plink_gwas_cov_o.get(nt=wildcards.nt,h2=wildcards.h2,samplesize=wildcards.samplesize)
     #nt = int(wildcards.nt)
-    part_s = "results/sim_ukb_{source}/onec_{{trait}}_10_{h2}_{samplesize}.{{inter}}".format(
+    part_s = "results/sim_ukb_{source}/onec_{{trait}}_{sp}_{h2}_{samplesize}.{{inter}}".format(
         h2=wildcards.h2,
         source=wildcards.source,
         samplesize=wildcards.samplesize)
@@ -932,7 +962,7 @@ def aggregate_input_o(wildcards):
 def aggregate_input_p(wildcards):
     #checkpoint_output = checkpoints.plink_gwas_cov_p.get(nt=wildcards.nt,h2=wildcards.h2,samplesize=wildcards.samplesize)
     #nt = int(wildcards.nt)
-    part_s = "results/sim_ukb_{source}/poly_{{trait}}_10_{h2}_{samplesize}.{{inter}}".format(
+    part_s = "results/sim_ukb_{source}/poly_{{trait}}_{sp}_{h2}_{samplesize}.{{inter}}".format(
         h2=wildcards.h2,
         source=wildcards.source,
         samplesize=wildcards.samplesize)
@@ -946,7 +976,7 @@ rule cat_filefo:
     input:
         aggregate_input_o
     output:
-        config_d["GWAS"]+"gwas_covar_fl_{source}/onec_{h2}_{trait}_10_{samplesize}"
+        config_d["GWAS"]+"gwas_covar_fl_{source}/onec_{h2}_{trait}_{sp}_{samplesize}"
     shell:
         "echo {input} > {output}"
 
@@ -955,7 +985,7 @@ rule cat_filefp:
     input:
         aggregate_input_p
     output:
-        config_d["GWAS"]+"gwas_covar_fl_{source}/poly_{h2}_{trait}_10_{samplesize}"
+        config_d["GWAS"]+"gwas_covar_fl_{source}/poly_{h2}_{trait}_{sp}_{samplesize}"
     shell:
         "echo {input} > {output}"
 
@@ -964,7 +994,7 @@ rule cat_fileio:
     input:
         aggregate_input_io
     output:
-        config_d["GWAS"]+"gwas_covar_il_ind/onec_{h2}_{trait}_10_{samplesize}"
+        config_d["GWAS"]+"gwas_covar_il_ind/onec_{h2}_{trait}_{sp}_{samplesize}"
     shell:
         "echo {input} > {output}"
 
@@ -972,17 +1002,17 @@ rule cat_fileip:
     input:
         aggregate_input_ip
     output:
-        config_d["GWAS"]+"gwas_covar_il_ind/poly_{h2}_{trait}_10_{samplesize}"
+        config_d["GWAS"]+"gwas_covar_il_ind/poly_{h2}_{trait}_{sp}_{samplesize}"
     shell:
         "echo {input} > {output}"
 
 rule cat_fileipo:
     input:
-        config_d["GWAS"]+"gwas_covar_il_ind/{model}_{h2}_{trait}_10_{samplesize}",
-        config_d["GWAS"]+"gwas_covar_fl_ind/{model}_{h2}_{trait}_10_{samplesize}",
-        config_d["GWAS"]+"gwas_covar_fl_panel/{model}_{h2}_{trait}_10_{samplesize}"
+        config_d["GWAS"]+"gwas_covar_il_ind/{model}_{h2}_{trait}_{sp}_{samplesize}",
+        config_d["GWAS"]+"gwas_covar_fl_ind/{model}_{h2}_{trait}_{sp}_{samplesize}",
+        config_d["GWAS"]+"gwas_covar_fl_panel/{model}_{h2}_{trait}_{sp}_{samplesize}"
     output:
-        flag="{model}_{h2}_{trait}_10_{samplesize}.txt"
+        flag="{model}_{h2}_{trait}_{sp}_{samplesize}.txt"
     shell:
         "echo {input} > {output}"
 
@@ -1017,15 +1047,15 @@ rule gcta_h2:
         grmf=config_d["GWAS"]+"grm_{model}_{samplesize}/grm.grm.bin",
         grm_id=config_d["GWAS"]+"grm_{model}_{samplesize}/grm.grm.id",
         grm_Nf=config_d["GWAS"]+"grm_{model}_{samplesize}/grm.grm.N.bin",
-        phenof=config_d["GWAS"]+"pheno/{model}_{h2}_{trait}_10_{samplesize}.pheno",
+        phenof=config_d["GWAS"]+"pheno/{model}_{h2}_{trait}_{sp}_{samplesize}.pheno",
         covarf=config_d["GWAS"]+"pca_{model}/{samplesize}_grm.eigenvec"
     params:
         grm_pref=config_d["GWAS"]+"grm_{model}_{samplesize}/grm",
-        out_pref="results/sim_ukb_ind/{model}_{trait}_10_{h2}_{samplesize}",
+        out_pref="results/sim_ukb_ind/{model}_{trait}_{sp}_{h2}_{samplesize}",
         trait="{trait}"
     threads: 9
     output:
-        out_f="results/sim_ukb_ind/{model}_{trait}_10_{h2}_{samplesize}.hsq",
-        logf="results/sim_ukb_ind/{model}_{trait}_10_{h2}_{samplesize}.log"
+        out_f="results/sim_ukb_ind/{model}_{trait}_{sp}_{h2}_{samplesize}.hsq",
+        logf="results/sim_ukb_ind/{model}_{trait}_{sp}_{h2}_{samplesize}.log"
     shell:
         "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/gcta-1.93.2beta-yz57zzuencwoygoiry6q62ab23tdpd27/bin/gcta64 --reml --grm {params.grm_pref} --pheno {input.phenof} --qcovar {input.covarf} --out {params.out_pref} --thread-num {threads}"

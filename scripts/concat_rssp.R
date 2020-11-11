@@ -11,7 +11,7 @@ stopifnot(!is.null(input_f))
 rssp_df <- map_df(input_f, qs::qread) %>% filter(D > 1e-5)
 Nf <- snakemake@input[["samplesize_rdsf"]]
 if(!is.null(Nf)){
-  N <- qs::qread(Nf)
+  N <- readRDS(Nf)
 }else{
   N <- snakemake@params[["samplesize"]]
   stopifnot(!is.null(N))
@@ -23,6 +23,6 @@ res_df <- RSSp::RSSp_estimate(
                   rssp_df$quh,
                   rssp_df$D,
                   sample_size = N,
-                  p = nrow(rssp_df)
+                  p = sum(rssp_df$D)
                 )
-saveRDS(res_df, snakemake@output[["est_rdsf"]])
+saveRDS(res_df, snakemake@output[["outputf"]])

@@ -42,6 +42,8 @@ wildcard_constraints:
     samplesize="\d+",
     chrom="\d+",
     traitid="[^_]+",
+    trait="[0-9]+",
+    sp="[01][05]",
     source="[^/]+",
     model="[^/]+",
     ps="[^_]+"
@@ -56,10 +58,10 @@ genome_chr=range(1,23)
 ldc = 10
 h2r = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8]
 ntr = range(1,11)
-#include: "ukb_snakefile"
+include: "ukb_snakefile"
 
-#include: "rssp_snakefile"
-include: "ukb_gwas_snakefile"
+include: "rssp_snakefile"
+#include: "ukb_gwas_snakefile"
 #localrules: cat_grm_bin,cat_filefo,cat_filefp,cat_fileio,cat_fileipo,bgensplit_inp
 
 
@@ -67,14 +69,14 @@ include: "ukb_gwas_snakefile"
 # print(all_ukb_traits[0:10])
 #expand(config_d["UKB_PED"]+"chr{chrom}_"+config_d["SAMPLEN"]+"_01.bgen",chrom=genome_chr)
 
-all_ukb_traits,= glob_wildcards(config_d["UKB_GWAS"]+"{trait}_irnt.gwas.imputed_v3.both_sexes.tsv.bgz")
-
+#all_ukb_traits,= glob_wildcards(config_d["UKB_GWAS"]+"{trait}_irnt.gwas.imputed_v3.both_sexes.tsv.bgz")
+#expand("results/sim_ukb_{ip}/{model}_{nt}_05_{h2}_{samplesize}.int.log",ip=["ind","panel"],model=["polym"],h2=h2r,nt=ntr,samplesize="10000"),
 rule all:
     input:
-        expand("results/real_ukb_ind/{model}_{traitid}_{samplesize}_{sexes}.shrink.RDS",model=["polym"],traitid=all_ukb_traits,samplesize="10000",sexes="both_sexes")
-        # expand("results/sim_ukb_{ip}/{model}_{nt}_10_{h2}_{samplesize}.int.log",ip=["ind","panel"],model=["polym"],h2=h2r,nt=ntr,samplesize="10000"),
+        expand("results/sim_ukb_{ip}/{model}_{nt}_05_{h2}_{samplesize}.noshrink.RDS",model=["polym"],nt=ntr,samplesize="10000",h2=h2r,ip=["ind","panel"]),
+        expand("results/sim_ukb_ind/{model}_{nt}_05_{h2}_{samplesize}.hsq",model=["polym"],h2=h2r,nt=ntr,samplesize="10000")
         # expand("results/sim_ukb_{ip}/{model}_{nt}_10_{h2}_{samplesize}.noint.log",ip=["ind","panel"],model=["polym"],h2=h2r,nt=ntr,samplesize="10000"),
-        # expand("results/sim_ukb_ind/{model}_{nt}_10_{h2}_{samplesize}.hsq",model=["polym"],h2=h2r,nt=ntr,samplesize="10000")
+
 
         #expand(config_d["GWAS"]+"pheno/{model}_{h2}_{trait}_10_{samplesize}.1.causals",model=["poly"],trait=range(1,11),h2=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8],nt=[n_cvrt[host]],samplesize=[samplen[host]])
 

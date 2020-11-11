@@ -1,7 +1,3 @@
-## save.image("quh.RData")
-## stop("oops!")
-
-## load("quh.RData")
 library(RSSp)
 library(dplyr)
 library(EigenH5)
@@ -20,17 +16,12 @@ panel_size <- as.integer(snakemake@params[["samplesize"]] %||% 10000)
 oldf <- snakemake@output[["oldf"]]
 
 ncol_Z <- dim_h5(sumstat_h5,"Z")[2]
-## mN <-   summarise(sumstat_df,mean_N=mean(N,na.rm=TRUE)) %>% collect() %>% pull(1)
-
 
 read_snp_h5 <- function(file, ldmr_id) {
-  tibble(snp_struct=read_vector_h5(file, paste0(ldmr_id, "/snp_struct")))
+  tibble::tibble(snp_struct = read_vector_h5(file, paste0(ldmr_id, "/snp_struct")))
 }
 
-
-
-
-all_reg_df <- map_dfr(set_names(input_f,input_f),~tibble(ldmr=ls_h5(.x)),.id="file")
+all_reg_df <- map_dfr(set_names(input_f, input_f), ~tibble(ldmr = ls_h5(.x)), .id = "file")
 
 
 read_r <- function(tldmr,tf) {

@@ -1,22 +1,20 @@
-## save.image("quh.RData")
-  ## stop("oops!")
+library(RSSp)
+library(dplyr)
+library(EigenH5)
+library(ldmap)
+library(purrr)
+library(readr)
 
-## load("quh.RData")
-## sumstatf <- "/run/media/nwknoblauch/Backup412/ukb_gwas/100001_raw.gwas.imputed_v3.male.tsv.bgz"
-## input_f <- fs::dir_ls("/run/media/nwknoblauch/BackupData/ld_shrink_polym/",glob="*ind*")
-
-  library(RSSp)
-  library(dplyr)
-  library(EigenH5)
-  library(ldmap)
-  library(purrr)
-
-
-  input_f <- snakemake@input[["h5f"]]
-  sumstatf <- snakemake@input[["gwasf"]]
-                                          #snplist_f <- snakemake@input[["snp_list"]]
-                                          #snplist_df <- tibble(rsid=rsid2int(scan(snplist_f,what=character())))
-sumstat_df <- vroom::vroom(sumstatf) %>% transmute(snp_struct=as_ldmap_snp(variant),samplesize=n_complete_samples,Z=tstat)
+input_f <- snakemake@input[["h5f"]]
+sumstatf <- snakemake@input[["gwasf"]]
+                                        #snplist_f <- snakemake@input[["snp_list"]]
+                                        #snplist_df <- tibble(rsid=rsid2int(scan(snplist_f,what=character())))
+co  <- readr::cols(variant=readr::col_character(),
+                   n_complete_samples=readr::col_integer(),
+                   tstat=readr::col_double())
+pipe_cmd  <- paste0("bgzip -cd ",sumstatf, " | cut -f 1,5,10")
+sumstat_df <- readr::read_tsv(pipe(pipe_cmd))
+sumstat_df <- transmute(sumstat_df,snp_struct=as_ldmap_snp(variant),samplesize=n_complete_samples,Z=tstat)
 
 gc()
 sumstat_df <- mutate(sumstat_df,ldmr=ldetect_EUR[snp_in_region(snp_struct,ldetect_EUR)])
@@ -26,11 +24,11 @@ panel_size <- mean(sumstat_df$samplesize)
 oldf <- snakemake@output[["outputf"]]
 
 
-  read_snp_h5 <- function(file, ldmr_id) {
-    tibble::tibble(snp_struct = read_vector_h5(file, paste0(ldmr_id, "/snp_struct")))
-  }
+read_snp_h5 <- function(file, ldmr_id) {
+  tibble::tibble(snp_struct = read_vector_h5(file, paste0(ldmr_id, "/snp_struct")))
+}
 
-  all_reg_df <- map_dfr(set_names(input_f, input_f), ~tibble(ldmr = ls_h5(.x)), .id = "file")
+all_reg_df <- map_dfr(set_names(input_f, input_f), ~tibble(ldmr = ls_h5(.x)), .id = "file")
 
 
 
@@ -70,12 +68,5 @@ progressr::with_progress({
     tibble(quh = quh, D = zapsmall(D), ldmr = as.character(tldmr))
   }) %>% filter(D > 1e-5)
 },enable=TRUE)
-## res_df <- RSSp::RSSp_estimate(
-##                   rssp_df$quh,
-##                   rssp_df$D,
-##                   sample_size = panel_size,
-##                   p = nrow(rssp_df)
-##                 )
-## saveRDS(res_df, oldf)
 
 qs::qsave(rssp_df,oldf)
