@@ -43,7 +43,7 @@ wildcard_constraints:
     chrom="\d+",
     traitid="[^_]+",
     trait="[0-9]+",
-    sp="[01][05]",
+    sp="[01][051]",
     source="[^/]+",
     model="[^/]+",
     ps="[^_]+"
