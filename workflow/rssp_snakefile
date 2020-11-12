@@ -1,7 +1,7 @@
 rule rssp_quh_p:
     input:
         h5f=expand(config_d["LD_DIR"]+"ld_{{shrink}}_{{model}}/{{source}}_{{samplesize}}_chr{{chrom}}_{scatteritem}.h5",scatteritem=range(1,ldc+1)),
-        gwasf=config_d['GWASDB'] +"gwas_h5/polym_{h2}_{samplesize}_sumstats.h5",
+        gwasf=config_d['GWASDB'] +"gwas_h5/polym_{sp}_{h2}_{samplesize}_sumstats.h5",
         snp_list=config_d["MODELD"]+"model_{samplesize}/{model}.txt"
     params:
         samplesize = "{samplesize}"
