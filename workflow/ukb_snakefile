@@ -602,6 +602,17 @@ rule sparse_causal_snps_polymatch:
     script:
         "../scripts/sample_frac.R"
 
+
+rule sparse_causal_snps_polymatch:
+    input:
+        snp_list=config_d["MODELD"]+"model_{samplesize}/polym.txt"
+    output:
+        snp_list=config_d["MODELD"]+"model_spp_{samplesize}/{model}.txt"
+    params:
+        sample_frac=0.125
+    script:
+        "../scripts/sample_frac.R"
+
 rule causal_snps_poly:
     input:
         freqf=config_d["UKB_PED"]+"all_{samplesize}_ind_freq.afreq"
@@ -683,6 +694,25 @@ rule poly_sim_simu_sp:
         true_b=config_d["GWAS"]+"pheno/{model}_{h2}_{trait}_05_{samplesize}.pheno"
     log:
         logf=config_d["GWAS"]+"pheno/{model}_{h2}_{trait}_05_{samplesize}.log"
+    shell:
+        "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/simu-0.9.4.1-v4noiyhxr5574otcocygl2l2jd7krwns/bin/simu --bfile {params.ip} --out {params.pref} --hsq {params.h2} --causal-variants {input.snp_list} --qt --gcta-sigma"
+
+
+rule poly_sim_simu_spp:
+    input:
+        snp_list=config_d["MODELD"]+"model_spp_{samplesize}/{model}.txt",
+        famf=config_d["UKB_PED"]+"all_{samplesize}_ind.fam",
+        bimf=config_d["UKB_PED"]+"all_{samplesize}_ind.bim",
+        bedf=config_d["UKB_PED"]+"all_{samplesize}_ind.bed"
+    params:
+        h2="{h2}",
+        pref=config_d["GWAS"]+"pheno/{model}_{h2}_{trait}_01_{samplesize}",
+        ip=config_d["UKB_PED"]+"all_{samplesize}_ind"
+    output:
+        phenof=config_d["GWAS"]+"pheno/{model}_{h2}_{trait}_01_{samplesize}.1.causals",
+        true_b=config_d["GWAS"]+"pheno/{model}_{h2}_{trait}_01_{samplesize}.pheno"
+    log:
+        logf=config_d["GWAS"]+"pheno/{model}_{h2}_{trait}_01_{samplesize}.log"
     shell:
         "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/simu-0.9.4.1-v4noiyhxr5574otcocygl2l2jd7krwns/bin/simu --bfile {params.ip} --out {params.pref} --hsq {params.h2} --causal-variants {input.snp_list} --qt --gcta-sigma"
 
