@@ -603,7 +603,7 @@ rule sparse_causal_snps_polymatch:
         "../scripts/sample_frac.R"
 
 
-rule sparse_causal_snps_polymatch:
+rule really_sparse_causal_snps_polymatch:
     input:
         snp_list=config_d["MODELD"]+"model_{samplesize}/polym.txt"
     output:
