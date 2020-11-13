@@ -15,7 +15,7 @@ rule rssp_quh_p:
 
 rule sumstat2db:
     input:
-       gwasf=config_d['GWAS'] +"ldsc_input/{model}_{trait}_{sp}_{h2}_{samplesize}.sumstats.gz"
+        gwasf=config_d["GWAS"]+"gwas_covar_ss/{model}_{h2}_{trait}_{sp}_{samplesize}/res.fastGWA"
     output:
         output_d=config_d['GWASDB'] +"rssp_ss/{model}_{trait}_{sp}_{h2}_{samplesize}.sumstats"
     script:
