@@ -830,7 +830,7 @@ rule sub_gwass_gcta_pm:
 
 rule sub_gwass_gcta_h5:
     input:
-        vecf=expand(config_d["GWASDB"]+"gwas_covar_ss/{model}_{{h2}}_{trait}_{{sp}}_{{samplesize}}/res.fastGWA",trait=ntr)
+        vecf=expand(config_d["GWASDB"]+"gwas_covar_ss/{{model}}_{{h2}}_{trait}_{{sp}}_{{samplesize}}/res.fastGWA",trait=ntr)
     params:
         h2=["{h2}"]*10,
         traits=ntr
