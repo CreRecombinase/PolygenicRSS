@@ -72,10 +72,10 @@ include: "rssp_snakefile"
 #expand("results/sim_ukb_{ip}/{model}_{nt}_05_{h2}_{samplesize}.int.log",ip=["ind","panel"],model=["polym"],h2=h2r,nt=ntr,samplesize="10000"),
 rule all:
     input:
-        expand("results/sim_ukb_{ip}/{model}_{nt}_01_{h2}_{samplesize}.noshrink.RDS",model=["polym"],nt=ntr,samplesize="10000",h2=h2r,ip=["ind","panel"]),
-        expand("results/sim_ukb_ind/{model}_{nt}_01_{h2}_{samplesize}.hsq",model=["polym"],h2=h2r,nt=ntr,samplesize="10000"),
-        expand("results/sim_ukb_{ip}/{model}_{nt}_01_{h2}_{samplesize}.noint.log",ip=["ind","panel"],model=["polym"],h2=h2r,nt=ntr,samplesize="10000"),
-        expand("results/sim_ukb_{ip}/{model}_{nt}_01_{h2}_{samplesize}.int.log",ip=["ind","panel"],model=["polym"],h2=h2r,nt=ntr,samplesize="10000")
+        expand("results/sim_ukb_{ip}/{model}_{nt}_10_{h2}_{samplesize}.noshrink.RDS",model=["polym","kgsubsnps"],nt=ntr,samplesize="10000",h2=h2r,ip=["ind","panel"]),
+        expand("results/sim_ukb_ind/{model}_{nt}_10_{h2}_{samplesize}.hsq",model=["polym","kgsubsnps"],h2=h2r,nt=ntr,samplesize="10000"),
+        expand("results/sim_ukb_{ip}/{model}_{nt}_10_{h2}_{samplesize}.noint.log",ip=["ind","panel"],model=["polym"],h2=h2r,nt=ntr,samplesize="10000"),
+        expand("results/sim_ukb_{ip}/{model}_{nt}_10_{h2}_{samplesize}.int.log",ip=["ind","panel"],model=["polym"],h2=h2r,nt=ntr,samplesize="10000")
 
 
         #expand(config_d["GWAS"]+"pheno/{model}_{h2}_{trait}_10_{samplesize}.1.causals",model=["poly"],trait=range(1,11),h2=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8],nt=[n_cvrt[host]],samplesize=[samplen[host]])

@@ -594,7 +594,7 @@ rule causal_snps_polymatch:
 
 rule sparse_causal_snps_polymatch:
     input:
-        snp_list=config_d["MODELD"]+"model_{samplesize}/polym.txt"
+        snp_list=config_d["MODELD"]+"model_{samplesize}/{model}.txt"
     output:
         snp_list=config_d["MODELD"]+"model_sp_{samplesize}/{model}.txt"
     params:
@@ -605,7 +605,7 @@ rule sparse_causal_snps_polymatch:
 
 rule really_sparse_causal_snps_polymatch:
     input:
-        snp_list=config_d["MODELD"]+"model_{samplesize}/polym.txt"
+        snp_list=config_d["MODELD"]+"model_{samplesize}/{model}.txt"
     output:
         snp_list=config_d["MODELD"]+"model_spp_{samplesize}/{model}.txt"
     params:
@@ -821,9 +821,9 @@ rule sub_gwass_gcta:
 
 rule sub_gwass_gcta_pm:
     input:
-        vecf=config_d["GWAS"]+"gwas_covar_ss/polym_{h2}_{trait}_{sp}_{samplesize}/res.fastGWA",
+        vecf=config_d["GWAS"]+"gwas_covar_ss/{model}_{h2}_{trait}_{sp}_{samplesize}/res.fastGWA",
     output:
-        tempf=config_d['GWAS'] +"ldsc_input/polym_{trait}_{sp}_{h2}_{samplesize}.sumstats.gz"
+        tempf=config_d['GWAS'] +"ldsc_input/{model}_{trait}_{sp}_{h2}_{samplesize}.sumstats.gz"
     script:
         "../scripts/cols_cut_gcta.R"
 
