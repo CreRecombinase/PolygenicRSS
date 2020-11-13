@@ -830,12 +830,12 @@ rule sub_gwass_gcta_pm:
 
 rule sub_gwass_gcta_h5:
     input:
-        vecf=expand(config_d["GWASDB"]+"gwas_covar_ss/polym_{{h2}}_{trait}_{{sp}}_{{samplesize}}/res.fastGWA",trait=ntr)
+        vecf=expand(config_d["GWASDB"]+"gwas_covar_ss/{model}_{{h2}}_{trait}_{{sp}}_{{samplesize}}/res.fastGWA",trait=ntr)
     params:
         h2=["{h2}"]*10,
         traits=ntr
     output:
-        outf=config_d['GWAS'] +"gwas_h5/polym_{sp}_{h2}_{samplesize}_sumstats.h5"
+        outf=config_d['GWAS'] +"gwas_h5/{model}_{sp}_{h2}_{samplesize}_sumstats.h5"
     script:
         "../scripts/cols_cut_gwas_h5.R"
 
