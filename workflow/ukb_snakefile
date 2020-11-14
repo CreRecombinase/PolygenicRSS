@@ -912,29 +912,30 @@ rule cmp_baselineb_ldscores:
     input:
         famf=config_d["UKB_PED"]+"split_map/{source}_{samplesize}_chr{chrom}.fam",
         bimf=config_d["UKB_PED"]+"split_map/{source}_{samplesize}_chr{chrom}.bim",
-        bedf=config_d["UKB_PED"]+"split_map/{source}_{samplesize}_chr{chrom}.bed"
+        bedf=config_d["UKB_PED"]+"split_map/{source}_{samplesize}_chr{chrom}.bed",
+        snp_list=config_d["MODELD"]+"model_{samplesize}/{model}.txt"
     output:
-        l2=(config_d['L2']+"ukb_baseline/{source}.{samplesize}.{chrom}.l2.M"),
-        l2M_50=(config_d['L2']+"ukb_baseline/{source}.{samplesize}.{chrom}.l2.M_5_50"),
-        l2gz=(config_d['L2']+"ukb_baseline/{source}.{samplesize}.{chrom}.l2.ldscore.gz")
+        l2=(config_d['L2']+"ukb_baseline/{model}/{source}.{samplesize}.{chrom}.l2.M"),
+        l2M_50=(config_d['L2']+"ukb_baseline/{model}/{source}.{samplesize}.{chrom}.l2.M_5_50"),
+        l2gz=(config_d['L2']+"ukb_baseline/{model}/{source}.{samplesize}.{chrom}.l2.ldscore.gz")
     params:
-        plink=config_d["UKB_PED"]+"split_map/{source}_{samplesize}_chr{chrom}",
+        plink=config_d["UKB_PED"]+"split_map/{model}/{source}_{samplesize}_chr{chrom}",
         odir=config_d['L2']+"ukb_baseline/{source}.{samplesize}.{chrom}"
     shell:
-        config_d['LDSC']+"ldsc.py --l2 --bfile {params.plink}  --ld-wind-cm 1 --out {params.odir}"
+        config_d['LDSC']+"ldsc.py --l2 --bfile {params.plink}  --extract {input.snp_list} --ld-wind-cm 1 --out {params.odir}"
 
 
 rule baseline_ldsc:
     input:
         gwasf=config_d['GWAS'] +"ldsc_input/{model}_{trait}_{sp}_{h2}_{samplesize}.sumstats.gz",
-        baselinef=expand(config_d['L2'] +"ukb_baseline/{{source}}.{{samplesize}}.{chrom}.l2.ldscore.gz",chrom=range(1,23)),
-        baseline_l2m=expand(config_d['L2'] +"ukb_baseline/{{source}}.{{samplesize}}.{chrom}.l2.M",chrom=range(1,23)),
-        baseline_l2m50=expand(config_d['L2'] +"ukb_baseline/{{source}}.{{samplesize}}.{chrom}.l2.M_5_50",chrom=range(1,23))
+        baselinef=expand(config_d['L2'] +"ukb_baseline/{{model}}/{{source}}.{{samplesize}}.{chrom}.l2.ldscore.gz",chrom=range(1,23)),
+        baseline_l2m=expand(config_d['L2'] +"ukb_baseline/{{model}}/{{source}}.{{samplesize}}.{chrom}.l2.M",chrom=range(1,23)),
+        baseline_l2m50=expand(config_d['L2'] +"ukb_baseline/{{model}}/{{source}}.{{samplesize}}.{chrom}.l2.M_5_50",chrom=range(1,23))
     output:
         dataf="results/sim_ukb_{source}/{model}_{trait}_{sp}_{h2}_{samplesize}.int.log"
     params:
-        baseline=config_d['L2']+"ukb_baseline/{source}.{samplesize}.",
-        weights=config_d['L2']+"ukb_baseline/{source}.{samplesize}.",#,config_d['WEIGHTS']+"weights.hm3_noMHC.",
+        baseline=config_d['L2']+"ukb_baseline/{model}/{source}.{samplesize}.",
+        weights=config_d['L2']+"ukb_baseline/{model}/{source}.{samplesize}.",#,config_d['WEIGHTS']+"weights.hm3_noMHC.",
         odir="results/sim_ukb_{source}/{model}_{trait}_{sp}_{h2}_{samplesize}.int"
     shell:
         config_d['LDSC']+"ldsc.py --h2 {input.gwasf} --ref-ld-chr {params.baseline} --w-ld-chr {params.weights} --out {params.odir}"
@@ -944,14 +945,14 @@ rule baseline_ldsc:
 rule baseline_ldsc_noi:
     input:
         gwasf=config_d['GWAS'] +"ldsc_input/{model}_{trait}_{sp}_{h2}_{samplesize}.sumstats.gz",
-        baselinef=expand(config_d['L2'] +"ukb_baseline/{{source}}.{{samplesize}}.{chrom}.l2.ldscore.gz",chrom=range(1,23)),
-        baseline_l2m=expand(config_d['L2'] +"ukb_baseline/{{source}}.{{samplesize}}.{chrom}.l2.M",chrom=range(1,23)),
-        baseline_l2m50=expand(config_d['L2'] +"ukb_baseline/{{source}}.{{samplesize}}.{chrom}.l2.M_5_50",chrom=range(1,23))
+        baselinef=expand(config_d['L2'] +"ukb_baseline/{{model}}/{{source}}.{{samplesize}}.{chrom}.l2.ldscore.gz",chrom=range(1,23)),
+        baseline_l2m=expand(config_d['L2'] +"ukb_baseline/{{model}}/{{source}}.{{samplesize}}.{chrom}.l2.M",chrom=range(1,23)),
+        baseline_l2m50=expand(config_d['L2'] +"ukb_baseline/{{model}}/{{source}}.{{samplesize}}.{chrom}.l2.M_5_50",chrom=range(1,23))
     output:
         dataf="results/sim_ukb_{source}/{model}_{trait}_{sp}_{h2}_{samplesize}.noint.log"
     params:
-        baseline=config_d['L2']+"ukb_baseline/{source}.{samplesize}.",
-        weights=config_d['L2']+"ukb_baseline/{source}.{samplesize}.",#,config_d['WEIGHTS']+"weights.hm3_noMHC.",
+        baseline=config_d['L2']+"ukb_baseline/{model}/{source}.{samplesize}.",
+        weights=config_d['L2']+"ukb_baseline/{model}/{source}.{samplesize}.",#,config_d['WEIGHTS']+"weights.hm3_noMHC.",
         odir="results/sim_ukb_{source}/{model}_{trait}_{sp}_{h2}_{samplesize}.noint"
     shell:
         config_d['LDSC']+"ldsc.py --h2 {input.gwasf} --ref-ld-chr {params.baseline} --w-ld-chr {params.weights} --no-intercept --out {params.odir}"
