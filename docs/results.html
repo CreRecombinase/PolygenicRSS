@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 
 
 <title>Results</title>
 
+<script src="site_libs/header-attrs-2.5/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
@@ -25,9 +26,29 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/font-awesome-5.0.13/css/fa-svg-with-js.css" rel="stylesheet" />
-<script src="site_libs/font-awesome-5.0.13/js/fontawesome-all.min.js"></script>
-<script src="site_libs/font-awesome-5.0.13/js/fa-v4-shims.min.js"></script>
+<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
@@ -75,9 +96,7 @@ h6 {
 </style>
 
 
-</head>
 
-<body>
 
 <style type = "text/css">
 .main-container {
@@ -91,7 +110,6 @@ code {
 }
 img {
   max-width:100%;
-  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -101,6 +119,9 @@ img {
 }
 button.code-folding-btn:focus {
   outline: none;
+}
+summary {
+  display: list-item;
 }
 </style>
 
@@ -116,7 +137,6 @@ body {
   padding-top: 56px;
   margin-top: -56px;
 }
-
 .section h2 {
   padding-top: 56px;
   margin-top: -56px;
@@ -136,6 +156,43 @@ body {
 .section h6 {
   padding-top: 56px;
   margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
 }
 </style>
 
@@ -157,47 +214,66 @@ $(document).ready(function () {
 });
 </script>
 
-
-<div class="container-fluid main-container">
-
 <!-- tabsets -->
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-</script>
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
 
 <!-- code folding -->
 
 
-
-
-<script>
-$(document).ready(function ()  {
-
-    // move toc-ignore selectors from section div to header
-    $('div.section.toc-ignore')
-        .removeClass('toc-ignore')
-        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
-
-    // establish options
-    var options = {
-      selectors: "h1,h2,h3",
-      theme: "bootstrap3",
-      context: '.toc-content',
-      hashGenerator: function (text) {
-        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
-      },
-      ignoreSelector: ".toc-ignore",
-      scrollTo: 0
-    };
-    options.showAndHide = true;
-    options.smoothScroll = true;
-
-    // tocify
-    var toc = $("#TOC").tocify(options).data("toc-tocify");
-});
-</script>
 
 <style type="text/css">
 
@@ -211,6 +287,12 @@ $(document).ready(function ()  {
 }
 }
 
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
 
 .toc-content {
   padding-left: 30px;
@@ -246,8 +328,6 @@ div.tocify {
 
 .tocify-subheader .tocify-item {
   font-size: 0.90em;
-  padding-left: 25px;
-  text-indent: 0;
 }
 
 .tocify .list-group-item {
@@ -256,6 +336,16 @@ div.tocify {
 
 
 </style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
 
 <!-- setup 3col/9col grid for toc_float and main content  -->
 <div class="row-fluid">
@@ -303,13 +393,6 @@ div.tocify {
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-<!-- Add a small amount of space between sections. -->
-<style type="text/css">
-div.section {
-  padding-top: 12px;
-}
-</style>
-
 <div class="fluid-row" id="header">
 
 
@@ -319,80 +402,111 @@ div.section {
 </div>
 
 
-<p><strong>Last updated:</strong> 2018-12-05</p>
-<strong>workflowr checks:</strong> <small>(Click a bullet for more information)</small>
-<ul>
-<li>
-<details>
-<p><summary> <strong style="color:blue;">✔</strong> <strong>R Markdown file:</strong> up-to-date </summary></p>
-<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
-</details>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
 </li>
 <li>
-<details>
-<p><summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/e3ed2f6e1c4d413e2d7870cfc68b6d7ce5d08e14" target="_blank">e3ed2f6</a> </summary></p>
-Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2020-11-14
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 1 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>PolygenicRSS/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomCreRecombinasePolygenicRSStreec7682ce5365db28f28b357f890847cac756780e8targetblankc7682cea"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/c7682ce5365db28f28b357f890847cac756780e8" target="_blank">c7682ce</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomCreRecombinasePolygenicRSStreec7682ce5365db28f28b357f890847cac756780e8targetblankc7682cea" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/CreRecombinase/PolygenicRSS/tree/c7682ce5365db28f28b357f890847cac756780e8" target="_blank">c7682ce</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
 <pre><code>
 Ignored files:
     Ignored:    .RData
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
     Ignored:    .httr-oauth
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/ChunkingLD.nb.html
+    Ignored:    analysis/Exp_Heritability.nb.html
+    Ignored:    analysis/Normalization.nb.html
+    Ignored:    analysis/Optimization.nb.html
     Ignored:    analysis/PolygenicEstimation_cache/
+    Ignored:    analysis/SharedSNPAnalysis (dell-desktop's conflicted copy 2018-09-04).nb.html
+    Ignored:    analysis/SharedSNPAnalysis.nb (dell-desktop's conflicted copy 2018-09-04).html
+    Ignored:    analysis/SharedSNPAnalysis.nb.html
+    Ignored:    analysis/eQTL_Pipelines.nb.html
+    Ignored:    analysis/importFramExp.nb.html
+    Ignored:    analysis/ldshrink_test.nb.html
+    Ignored:    analysis/ukb_sim_freq.nb.html
     Ignored:    code/.Rhistory
     Ignored:    code/scripts/.Rhistory
+    Ignored:    code/snakemake_files/.RData
     Ignored:    code/snakemake_files/.Rhistory
     Ignored:    code/snakemake_files/.snakemake/
+    Ignored:    code/snakemake_files/eqtl_check.RDS
+    Ignored:    code/snakemake_files/ldsc_est_gwas_genome/
     Ignored:    code/snakemake_files/parameter_generation/
-    Ignored:    code/snakemake_files/subset_data_pipeline/.RData
+    Ignored:    code/snakemake_files/subset_data_pipeline/
+    Ignored:    code/snakemake_files/temp_map_19.RDS
+    Ignored:    code/snakemake_files/temp_target_19.RDS
     Ignored:    data/rep_polygenic/
+    Ignored:    org/.Rhistory
 
 Untracked files:
     Untracked:  _workflowr.yml
-    Untracked:  analysis/#Exp_Heritability.Rmd#
-    Untracked:  analysis/#RSSp_WTCC_noConfounding.Rmd#
-    Untracked:  analysis/AFvsp.Rmd
-    Untracked:  analysis/ChunkingEffect.Rmd
-    Untracked:  analysis/ChunkingLD.Rmd
-    Untracked:  analysis/DownSamplingResults.Rmd
-    Untracked:  analysis/EVD_SVD.Rmd
-    Untracked:  analysis/GRM_estimation.Rmd
-    Untracked:  analysis/GenomeWideSimulation.Rmd
-    Untracked:  analysis/Heritability.Rmd
-    Untracked:  analysis/LDshrink_effect.Rmd
-    Untracked:  analysis/MeetingSummary1.Rmd
-    Untracked:  analysis/Normalization.Rmd
-    Untracked:  analysis/RSSR_PolygenicData.Rmd
-    Untracked:  analysis/RSSp.stan
-    Untracked:  analysis/RSSp2.stan
-    Untracked:  analysis/RSSp_LDshrink.Rmd
-    Untracked:  analysis/RSSp_Large_WTCC_noConfounding.Rmd
-    Untracked:  analysis/RSSp_Largest_Simulation.Rmd
-    Untracked:  analysis/RSSp_WTCC_noConfounding.Rmd
-    Untracked:  analysis/RSSp_ldsc_highPVE_chr1.Rmd
-    Untracked:  analysis/RSSp_ldsc_highPVE_hr.Rmd
-    Untracked:  analysis/RSSp_ldsc_noConfounding.Rmd
-    Untracked:  analysis/Running_ldetect.Rmd
-    Untracked:  analysis/SPVE.Rmd
-    Untracked:  analysis/SharedSNPAnalysis (dell-desktop's conflicted copy 2018-09-04).Rmd
-    Untracked:  analysis/SharedSNPAnalysis.Rmd
-    Untracked:  analysis/Summary.Rmd
-    Untracked:  analysis/Summary.org
-    Untracked:  analysis/Vanilla_LDSC.Rmd
-    Untracked:  analysis/chr_16.Rmd
-    Untracked:  analysis/derby.log
-    Untracked:  analysis/eQTL_Pipelines.Rmd
-    Untracked:  analysis/fquh_mod.RDS
-    Untracked:  analysis/importFramExp.Rmd
-    Untracked:  analysis/ltximg/
-    Untracked:  analysis/nquh_mod.RDS
-    Untracked:  analysis/out_res.RDS
-    Untracked:  analysis/pvv_opt.Rmd
-    Untracked:  analysis/quh_mod.RDS
-    Untracked:  analysis/scz_data.org
-    Untracked:  analysis/shrinkage_effect.Rmd
-    Untracked:  code/#scikit_allel.org#
+    Untracked:  analysis/ukb_1kg_sim.Rmd
+    Untracked:  analysis/ukb_sim_freq.Rmd
+    Untracked:  code/.directory
     Untracked:  code/.ipynb_checkpoints/
+    Untracked:  code/LD_raster.png
     Untracked:  code/RSSp_abstract.org
     Untracked:  code/RSSp_abstract_notes.org
     Untracked:  code/RSSp_talk_notes.org
@@ -400,12 +514,16 @@ Untracked files:
     Untracked:  code/RSSp_talk_notes.tex
     Untracked:  code/Untitled.ipynb
     Untracked:  code/Untitled1.ipynb
+    Untracked:  code/dl_1kg.org
     Untracked:  code/ideas.org
     Untracked:  code/ltximg/
+    Untracked:  code/params/
     Untracked:  code/quhdypi/
     Untracked:  code/rssp.yml
     Untracked:  code/scikit_allel.org
-    Untracked:  code/scripts/#compare_eqtl.R#
+    Untracked:  code/scripts/#break_df.R#
+    Untracked:  code/scripts/#evd_1kg_h5.R#
+    Untracked:  code/scripts/#map_uh_covar.R#
     Untracked:  code/scripts/RSSp_ldsc_results.Rmd
     Untracked:  code/scripts/bin/
     Untracked:  code/scripts/ldsc_rssp.Rmd
@@ -413,833 +531,900 @@ Untracked files:
     Untracked:  code/scripts/vcf-liftover.sh
     Untracked:  code/scripts/vcf2allel.py
     Untracked:  code/skl_vf.ipynb
-    Untracked:  code/snakemake_files/#LD_snakefile#
-    Untracked:  code/snakemake_files/#kg_snakefile#
+    Untracked:  code/snakemake_files/#trait_snakefile#
     Untracked:  code/snakemake_files/EUR.samples
+    Untracked:  code/snakemake_files/UKBB_mf.csv
+    Untracked:  code/snakemake_files/config.yaml
     Untracked:  code/snakemake_files/environment_rssp.yml
-    Untracked:  code/snakemake_files/eqtl_check.RDS
-    Untracked:  code/snakemake_files/kg_snakefile~
+    Untracked:  code/snakemake_files/envs/ldsc.yml
+    Untracked:  code/snakemake_files/ldi.RData
     Untracked:  code/snakemake_files/ldsc/
-    Untracked:  code/snakemake_files/plink.log
     Untracked:  code/snakemake_files/rssp_ldsc_report/
-    Untracked:  code/snakemake_files/temp_map_19.RDS
-    Untracked:  code/snakemake_files/temp_target_19.RDS
+    Untracked:  code/snakemake_files/sim.RData
+    Untracked:  code/snakemake_files/sum.RData
     Untracked:  code/snakemake_files/vert.txt
-    Untracked:  code/snakemake_files/vgcore.30188
     Untracked:  code/t_scripts/
     Untracked:  code/test_py.py
     Untracked:  code/workflow_params.json~
+    Untracked:  data/.~lock.GREML_h2.xlsx#
+    Untracked:  data/GREML_h2.xlsx
+    Untracked:  data/LDSC_UKB_SumStatManifest.tsv
     Untracked:  data/NCBI34_to_GRCh38.chain.gz
     Untracked:  data/SNP_ws.RData
     Untracked:  data/Snakemake_inputs/
     Untracked:  data/all_df.RDS
+    Untracked:  data/direct_sim_1kg.RDS
+    Untracked:  data/journal.pgen.1006711.s002.xlsx
+    Untracked:  data/journal.pgen.1006711.s003.xlsx
+    Untracked:  data/ldsc_h2.txt.gz
     Untracked:  data/ntr_results.RData
     Untracked:  data/temp_ws.RData
-    Untracked:  docs/#RSSp_WTCC_noConfounding.Rmd#
-    Untracked:  docs/RSSp.stan
-    Untracked:  docs/RSSp2.stan
-    Untracked:  docs/Summary.org
-    Untracked:  docs/derby.log
-    Untracked:  docs/figure/LDshrink_effect.Rmd/
-    Untracked:  docs/figure/RSSp_Large_WTCC_noConfounding.Rmd/
-    Untracked:  docs/figure/RSSp_WTCC_noConfounding.Rmd/
-    Untracked:  docs/figure/RSSp_ldsc_highPVE_chr1.Rmd/
-    Untracked:  docs/figure/RSSp_ldsc_highPVE_hr.Rmd/
-    Untracked:  docs/figure/SharedSNPAnalysis.Rmd/
-    Untracked:  docs/fquh_mod.RDS
-    Untracked:  docs/log4j.spark.log
-    Untracked:  docs/ltximg/
-    Untracked:  docs/nquh_mod.RDS
-    Untracked:  docs/quh_mod.RDS
-    Untracked:  docs/scz_data.org
+    Untracked:  data/ukb31063_h2_all.02Oct2019.tsv.gz
     Untracked:  dosage.scan.RData
     Untracked:  dosage.snp.RData
+    Untracked:  foobar.csv
+    Untracked:  org/ukb_gwas.org
+    Untracked:  output/Allele_freq_match.png
+    Untracked:  output/FRAM/
     Untracked:  output/RSSp_snakemake/
+    Untracked:  output/bd/
+    Untracked:  output/enrichment_NA_K.png
+    Untracked:  output/enrichment_kidney.png
     Untracked:  output/pve/
+    Untracked:  output/rssp_ldsc_oos.png
+    Untracked:  output/rssp_res/
+    Untracked:  scripts/summarise_all.Rmd
+    Untracked:  storms.csv
+    Untracked:  workflow/.snakemake/
+    Untracked:  workflow/gcta_h2_est/
+    Untracked:  workflow/ind_f.afreq
+    Untracked:  workflow/ldsc.log
+    Untracked:  workflow/old_results/
+    Untracked:  workflow/onec_0.5_1_10_100.log
+    Untracked:  workflow/panel_f.afreq
+    Untracked:  workflow/plink2.log
+    Untracked:  workflow/poly_0.1_1_10_100.log
+    Untracked:  workflow/poly_0.2_1_10_100.log
+    Untracked:  workflow/poly_0.3_1_10_100.log
+    Untracked:  workflow/poly_0.4_1_10_100.log
+    Untracked:  workflow/poly_0.5_1_10_100.log
+    Untracked:  workflow/poly_0.6_1_10_100.log
+    Untracked:  workflow/poly_0.7_1_10_100.log
+    Untracked:  workflow/poly_0.8_1_10_100.log
+    Untracked:  workflow/quh.RData
+    Untracked:  workflow/results/
+    Untracked:  workflow/sim_ukb_ind/
+    Untracked:  workflow/sim_ukb_panel/
+    Untracked:  workflow/ts.RData
 
 Unstaged changes:
-    Modified:   .gitignore
     Modified:   PolygenicRSS.Rproj
-    Modified:   analysis/DownsamplingResults2.Rmd
-    Modified:   analysis/Exp_Heritability.Rmd
-    Modified:   analysis/IndependenceCheck.Rmd
-    Modified:   analysis/Meeting_Notes.Rmd
-    Modified:   analysis/New_WholeGenome.Rmd
-    Modified:   analysis/OutOfSampleLD.Rmd
-    Modified:   analysis/OutOfSampleLD_smallPVE.Rmd
-    Modified:   analysis/PolygenicEstimation.Rmd
-    Modified:   analysis/RSSP_standard_error.Rmd
-    Modified:   analysis/RSSp_Chunksize_Investigation.Rmd
-    Modified:   analysis/RSSp_Large_Simulation.Rmd
-    Modified:   analysis/RSSp_Posterior.Rmd
-    Modified:   analysis/RSSp_Prediction.Rmd
-    Modified:   analysis/RSSp_ldsc.Rmd
-    Modified:   analysis/RSSp_ldsc_gwas_direct_noConfounding.Rmd
-    Modified:   analysis/RSSp_ldsc_highPVE.Rmd
-    Modified:   analysis/SimulationPipeline.Rmd
-    Modified:   analysis/_site.yml
-    Modified:   analysis/about.Rmd
-    Modified:   analysis/chr_2.Rmd
-    Deleted:    analysis/chunks.R
-    Modified:   analysis/index.Rmd
-    Modified:   analysis/license.Rmd
-    Modified:   analysis/lnzDist.Rmd
-    Modified:   analysis/simulatingGWAS.Rmd
-    Modified:   analysis/simulation.Rmd
+    Modified:   analysis/results.Rmd
+    Modified:   analysis/ukb_sim.Rmd
     Modified:   code/TF_LDshrink.ipynb
     Modified:   code/dask_LDshrink.ipynb
-    Modified:   code/snakemake_files/kg_ld_snakefile
-    Modified:   code/workflow_params_desktop.json
-    Modified:   code/workflow_params_xps.json
+    Modified:   code/scripts/evd_1kg_h5.R
+    Modified:   code/scripts/summarise_gcta.R
+    Modified:   code/scripts/ukb_dl.R
+    Modified:   code/snakemake_files/LD_snakefile
+    Modified:   code/snakemake_files/Snakefile
+    Modified:   code/snakemake_files/converters_snakefile
+    Modified:   code/snakemake_files/grm_snakefile
+    Modified:   code/snakemake_files/param_snakefile
+    Modified:   code/snakemake_files/ukb_snakefile
+    Modified:   org/pipeline.org
+    Modified:   org/setup.org
+    Modified:   org/ukb_sim.org
 
 </code></pre>
+<p>
 Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
-</details>
-</li>
-</ul>
-<details>
-<summary> <small><strong>Expand here to see past versions:</strong></small> </summary>
-<ul>
-<table style="border-collapse:separate; border-spacing:5px;">
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/results.Rmd</code>) and HTML (<code>docs/results.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
 <thead>
 <tr>
-<th style="text-align:left;">
+<th>
 File
 </th>
-<th style="text-align:left;">
+<th>
 Version
 </th>
-<th style="text-align:left;">
+<th>
 Author
 </th>
-<th style="text-align:left;">
+<th>
 Date
 </th>
-<th style="text-align:left;">
+<th>
 Message
 </th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
-<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/e3ed2f6e1c4d413e2d7870cfc68b6d7ce5d08e14/analysis/results.Rmd" target="_blank">e3ed2f6</a>
+<td>
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/8f911ac5a08966c55340aa1bf4174b0f5b8cdcad/analysis/results.Rmd" target="_blank">8f911ac</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
+2020-11-06
+</td>
+<td>
+update with great ukb results
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/650ec417af2f00cc02b2d3ae929ab4fd12b8f886/docs/results.html" target="_blank">650ec41</a>
+</td>
+<td>
+CreRecombinase
+</td>
+<td>
 2018-12-05
 </td>
-<td style="text-align:left;">
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/e3ed2f6e1c4d413e2d7870cfc68b6d7ce5d08e14/analysis/results.Rmd" target="_blank">e3ed2f6</a>
+</td>
+<td>
+CreRecombinase
+</td>
+<td>
+2018-12-05
+</td>
+<td>
 wflow_publish(c(“analysis/results.Rmd”, “analysis/ukb_pve.Rmd”))
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/3e8d63586b52a479c3443dde63d687cccda85820/docs/results.html" target="_blank">3e8d635</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/3e8d63586b52a479c3443dde63d687cccda85820/docs/results.html" target="_blank">3e8d635</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
 2018-09-25
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/a029d367f74f652ba30f12f92104c9ac763f4dbc/analysis/results.Rmd" target="_blank">a029d36</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
 2018-09-25
 </td>
-<td style="text-align:left;">
+<td>
 wflow_publish(c(“analysis/Exp_Heritability.Rmd”, “analysis/results.Rmd”))
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/8affe87cdcc330b57b45c6fab9442624422c1844/docs/results.html" target="_blank">8affe87</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/8affe87cdcc330b57b45c6fab9442624422c1844/docs/results.html" target="_blank">8affe87</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
 2018-08-01
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/f921dd3e6274a811df81fdbb89559e5f4438ae6c/docs/results.html" target="_blank">f921dd3</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/f921dd3e6274a811df81fdbb89559e5f4438ae6c/docs/results.html" target="_blank">f921dd3</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
 2018-08-01
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/a800289362dc9d81604d136f24c912e6625943d5/analysis/results.Rmd" target="_blank">a800289</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
 2018-08-01
 </td>
-<td style="text-align:left;">
+<td>
 wflow_publish(c(“analysis/ConfoundingAdj.Rmd”, “analysis/results.Rmd”))
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/55dbe4a38771c222740aefb6b5065a5c7cce0d2d/docs/results.html" target="_blank">55dbe4a</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/55dbe4a38771c222740aefb6b5065a5c7cce0d2d/docs/results.html" target="_blank">55dbe4a</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
 2018-05-31
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/2bd21fe09ac41960fa9a147a4d5785c91879e5d2/analysis/results.Rmd" target="_blank">2bd21fe</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
 2018-05-31
 </td>
-<td style="text-align:left;">
+<td>
 wflow_publish(c(“analysis/DownsamplingResults2.Rmd”, “analysis/OutOfSampleLD.Rmd”,
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/017f5377f2c9fe09bca2af6c9dba4860cf6a0fb5/docs/results.html" target="_blank">017f537</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/017f5377f2c9fe09bca2af6c9dba4860cf6a0fb5/docs/results.html" target="_blank">017f537</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
 2018-05-30
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/ef42e7df539954f5d250ab1aeeaddd8e7b2563fc/analysis/results.Rmd" target="_blank">ef42e7d</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
 2018-05-30
 </td>
-<td style="text-align:left;">
+<td>
 wflow_publish(“analysis/results.Rmd”)
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/36641072fbc96f40506d22ad48733624e107eb02/docs/results.html" target="_blank">3664107</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/36641072fbc96f40506d22ad48733624e107eb02/docs/results.html" target="_blank">3664107</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
 2018-05-04
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
-html
-</td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/5c7edf72bb0ea1a148529dacbba9b056715de5bf/docs/results.html" target="_blank">5c7edf7</a>
-</td>
-<td style="text-align:left;">
-CreRecombinase
-</td>
-<td style="text-align:left;">
-2018-04-25
-</td>
-<td style="text-align:left;">
-Build site.
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-html
-</td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/86d04d9dad6360587a23123a359b3b5213ba4743/docs/results.html" target="_blank">86d04d9</a>
-</td>
-<td style="text-align:left;">
-CreRecombinase
-</td>
-<td style="text-align:left;">
-2018-04-25
-</td>
-<td style="text-align:left;">
-Build site.
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
-<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/a4d7a0048f863f0ae78eec0abd36618192fd5868/analysis/results.Rmd" target="_blank">a4d7a00</a>
+<td>
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/ab3622828d41842f43ebc0e9421bcfc185d03d68/analysis/results.Rmd" target="_blank">ab36228</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
+2018-05-04
+</td>
+<td>
+wflow_publish(c(“results.Rmd”, “New_WholeGenome.Rmd”, “lnzDist.Rmd”))
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/5c7edf72bb0ea1a148529dacbba9b056715de5bf/docs/results.html" target="_blank">5c7edf7</a>
+</td>
+<td>
+CreRecombinase
+</td>
+<td>
 2018-04-25
 </td>
-<td style="text-align:left;">
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/86d04d9dad6360587a23123a359b3b5213ba4743/docs/results.html" target="_blank">86d04d9</a>
+</td>
+<td>
+CreRecombinase
+</td>
+<td>
+2018-04-25
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/CreRecombinase/PolygenicRSS/blob/a4d7a0048f863f0ae78eec0abd36618192fd5868/analysis/results.Rmd" target="_blank">a4d7a00</a>
+</td>
+<td>
+CreRecombinase
+</td>
+<td>
+2018-04-25
+</td>
+<td>
 wflow_publish(c(“analysis/New_WholeGenome.Rmd”, “analysis/results.Rmd”))
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/ab444fabb203f587ca20b37f2f7527811d4df145/docs/results.html" target="_blank">ab444fa</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/ab444fabb203f587ca20b37f2f7527811d4df145/docs/results.html" target="_blank">ab444fa</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
 2018-03-14
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/60684d5c99bba69105f113c6d6e85d0b5e05a8b8/analysis/results.Rmd" target="_blank">60684d5</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
 2018-03-14
 </td>
-<td style="text-align:left;">
+<td>
 wflow_publish(c(“results.Rmd”, “SimulationPipeline.Rmd”))
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/687bc0944b80e764ef096cb6cf5db6a2560ca8ab/docs/results.html" target="_blank">687bc09</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/687bc0944b80e764ef096cb6cf5db6a2560ca8ab/docs/results.html" target="_blank">687bc09</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
 2018-03-08
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/263c501ad73718e7cbda2fce61360fcf6aab5691/analysis/results.Rmd" target="_blank">263c501</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
 2018-03-08
 </td>
-<td style="text-align:left;">
+<td>
 wflow_publish(c(“analysis/results.Rmd”, “analysis/RSSp_Chunksize_Investigation.Rmd”))
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/6c284ef418ffe3bf68864964c5423744dc04bf7e/docs/results.html" target="_blank">6c284ef</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/6c284ef418ffe3bf68864964c5423744dc04bf7e/docs/results.html" target="_blank">6c284ef</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
 2018-03-01
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/93f2db9986494e3bee0459bb1be43a65cafb3f59/analysis/results.Rmd" target="_blank">93f2db9</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
 2018-03-01
 </td>
-<td style="text-align:left;">
+<td>
 wflow_publish(c(“analysis/results.Rmd”,
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/760d5638d7f0fd97e09ddb2d5b21433809122883/docs/results.html" target="_blank">760d563</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/760d5638d7f0fd97e09ddb2d5b21433809122883/docs/results.html" target="_blank">760d563</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
 2018-02-21
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/d17b4ada541d4e0233f53709f83970936b361ab3/analysis/results.Rmd" target="_blank">d17b4ad</a>
 </td>
-<td style="text-align:left;">
+<td>
 CreRecombinase
 </td>
-<td style="text-align:left;">
+<td>
 2018-02-21
 </td>
-<td style="text-align:left;">
+<td>
 wflow_publish(“analysis/results.Rmd”)
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/e77a5d238f9b41afeca266e4007b29e60e6e3efd/docs/results.html" target="_blank">e77a5d2</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/e77a5d238f9b41afeca266e4007b29e60e6e3efd/docs/results.html" target="_blank">e77a5d2</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-12-18
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/494aae91dc52b29d25f930718e8dfccd05dd7252/analysis/results.Rmd" target="_blank">494aae9</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-12-18
 </td>
-<td style="text-align:left;">
+<td>
 wflow_publish(c(“results.Rmd”, “Meeting_Notes.Rmd”))
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/c346df4a1d8856a62d1b8e8f8127170baebb5f02/docs/results.html" target="_blank">c346df4</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/c346df4a1d8856a62d1b8e8f8127170baebb5f02/docs/results.html" target="_blank">c346df4</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-12-06
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/6ce82f253f50b71e99c12d8b01d454b092301df4/analysis/results.Rmd" target="_blank">6ce82f2</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-12-06
 </td>
-<td style="text-align:left;">
+<td>
 wflow_publish(“analysis/results.Rmd”)
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/08bc464f391fbb06e57de5bf952b84fad7408b76/docs/results.html" target="_blank">08bc464</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/08bc464f391fbb06e57de5bf952b84fad7408b76/docs/results.html" target="_blank">08bc464</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-11-28
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/9a0134ba04fce788d29fabff78214781358e84e5/analysis/results.Rmd" target="_blank">9a0134b</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-11-28
 </td>
-<td style="text-align:left;">
+<td>
 wflow_publish(“analysis/results.Rmd”)
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/5d97777190ef78665877e8f1f9df41653e592169/docs/results.html" target="_blank">5d97777</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/5d97777190ef78665877e8f1f9df41653e592169/docs/results.html" target="_blank">5d97777</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-11-28
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/2c67d91fb587a203e547de3d041283ab8788a9d5/analysis/results.Rmd" target="_blank">2c67d91</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-11-28
 </td>
-<td style="text-align:left;">
+<td>
 wflow_publish(“analysis/results.Rmd”)
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/3f65b7ad1991cb147d18fcc09c90c7bf29103d8b/docs/results.html" target="_blank">3f65b7a</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/3f65b7ad1991cb147d18fcc09c90c7bf29103d8b/docs/results.html" target="_blank">3f65b7a</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-11-20
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/2a01543a12fe72012624d35882bc43a0efe24749/analysis/results.Rmd" target="_blank">2a01543</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-11-20
 </td>
-<td style="text-align:left;">
+<td>
 RSSP_standard_error.Rmd
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/af184c8c81cb9c8350ecdaec131977036ced8120/docs/results.html" target="_blank">af184c8</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/af184c8c81cb9c8350ecdaec131977036ced8120/docs/results.html" target="_blank">af184c8</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-11-16
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/976274d11ec6597567156f9fd18847b23e30eb4a/analysis/results.Rmd" target="_blank">976274d</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-11-16
 </td>
-<td style="text-align:left;">
+<td>
 wflow_publish(c(“RSSp_ldsc.Rmd”, “RSSp_Posterior.Rmd”, “RSSp_Prediction.Rmd”, “results.Rmd”))
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/4a1b73f2d1aac60ea9b4273853f5aa4e4fb3fda1/docs/results.html" target="_blank">4a1b73f</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/4a1b73f2d1aac60ea9b4273853f5aa4e4fb3fda1/docs/results.html" target="_blank">4a1b73f</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-10-30
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/140a008299eccaff20b9a7605d4510b939a81f2e/analysis/results.Rmd" target="_blank">140a008</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-10-30
 </td>
-<td style="text-align:left;">
+<td>
 wflow_publish(c(“results.Rmd”, “RSSp_Posterior.Rmd”))
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/bed2a0e5318e42891ac1b19b16af5bc5cfc1e267/docs/results.html" target="_blank">bed2a0e</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/bed2a0e5318e42891ac1b19b16af5bc5cfc1e267/docs/results.html" target="_blank">bed2a0e</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-09-14
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/20ec8ba42bec9adf2a7cac0aaf6c83996704ff93/analysis/results.Rmd" target="_blank">20ec8ba</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-09-14
 </td>
-<td style="text-align:left;">
+<td>
 wflow_publish(c(“analysis/chr_2.Rmd”, “analysis/results.Rmd”, “analysis/PolygenicEstimation.Rmd”))
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/be3bee40d6744d7dc8b6589af76b89ef67161a00/docs/results.html" target="_blank">be3bee4</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/be3bee40d6744d7dc8b6589af76b89ef67161a00/docs/results.html" target="_blank">be3bee4</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-08-14
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/a88809face2479162d73572b74366da25b3a5372/analysis/results.Rmd" target="_blank">a88809f</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-08-14
 </td>
-<td style="text-align:left;">
+<td>
 wflow_publish(“results.Rmd”)
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 html
 </td>
-<td style="text-align:left;">
-<a href="https://cdn.rawgit.com/CreRecombinase/PolygenicRSS/d8fabf4ca1eb3cae8a41ad5b6dd30783465bbdb6/docs/results.html" target="_blank">d8fabf4</a>
+<td>
+<a href="https://rawcdn.githack.com/CreRecombinase/PolygenicRSS/d8fabf4ca1eb3cae8a41ad5b6dd30783465bbdb6/docs/results.html" target="_blank">d8fabf4</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-07-28
 </td>
-<td style="text-align:left;">
+<td>
 Build site.
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">
+<td>
 Rmd
 </td>
-<td style="text-align:left;">
+<td>
 <a href="https://github.com/CreRecombinase/PolygenicRSS/blob/b29dab8a170c5ea9146243fc3ea548c0695b753e/analysis/results.Rmd" target="_blank">b29dab8</a>
 </td>
-<td style="text-align:left;">
+<td>
 Nicholas Knoblauch
 </td>
-<td style="text-align:left;">
+<td>
 2017-07-28
 </td>
-<td style="text-align:left;">
+<td>
 wflow_publish(files = c(“index.Rmd”, “simulation.Rmd”, “PolygenicEstimation.Rmd”, “results.Rmd”))
 </td>
 </tr>
 </tbody>
 </table>
-</ul>
-</details>
-<hr />
+</div>
+<hr>
+</div>
+</div>
+</div>
 <ul>
 <li><a href="chr_2.html">Comparing RSS-p to ldsc</a></li>
 <li><a href="IndependenceCheck.html">Diagonal Approximation of LD matrix</a></li>
@@ -1265,6 +1450,8 @@ wflow_publish(files = c(“index.Rmd”, “simulation.Rmd”, “PolygenicEstim
 <li><a href="ConfoundingAdj.html">Visualizing RSSp vs LDSc</a></li>
 <li><a href="Exp_Heritability.html">Heritability results from Framingham Data</a></li>
 <li><a href="ukb_pve.html">LDSC vs RSSp vs individual-level-data on UK biobank GWAS</a></li>
+<li><a href="ukb_sim.html">LDSC vs RSSp vs individual-level-data on UK biobank simulated GWAS</a></li>
+<li><a href="ukb_1kg_sim.html">LDSC vs RSSp vs individual-level-data on UK biobank simulated GWAS, hapmap3 SNPs</a></li>
 </ul>
 
 <hr>
@@ -1291,6 +1478,7 @@ wflow_publish(files = c(“index.Rmd”, “simulation.Rmd”, “PolygenicEstim
     <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
     <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 -->
+
 <!-- Adjust MathJax settings so that all math formulae are shown using
 TeX fonts only; see
 http://docs.mathjax.org/en/latest/configuration.html.  This will make
@@ -1303,13 +1491,7 @@ footer is added to webpages before the MathJax javascript. -->
   });
 </script>
 
-<hr>
-<p>
-  This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a>
-  analysis was created with
-  <a href="https://github.com/jdblischak/workflowr">workflowr</a> 1.1.1
-</p>
-<hr>
+
 
 
 </div>
@@ -1321,13 +1503,56 @@ footer is added to webpages before the MathJax javascript. -->
 
 // add bootstrap table styles to pandoc tables
 function bootstrapStylePandocTables() {
-  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
 }
 $(document).ready(function () {
   bootstrapStylePandocTables();
 });
 
 
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
 </script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
