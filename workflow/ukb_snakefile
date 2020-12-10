@@ -920,7 +920,7 @@ rule cmp_baselineb_ldscores:
         l2gz=(config_d['L2']+"ukb_baseline_{wind}/{model}/{source}.{samplesize}.{chrom}.l2.ldscore.gz")
     params:
         plink=config_d["UKB_PED"]+"split_map/{source}_{samplesize}_chr{chrom}",
-        odir=config_d['L2']+"ukb_baseline_{wind}/{model}/{source}.{samplesize}.{chrom}"
+        odir=config_d['L2']+"ukb_baseline_{wind}/{model}/{source}.{samplesize}.{chrom}",
         wind="{wind}"
     shell:
         config_d['LDSC']+"ldsc.py --l2 --bfile {params.plink}  --extract {input.snp_list} --ld-wind-cm {params.wind} --out {params.odir}"
