@@ -76,8 +76,8 @@ include: "rssp_snakefile"
 rule all:
     input:
         expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}.{shr}.RDS",model=["polym","kgsubsnps"],nt=ntr,samplesize="10000",h2=h2r,ip=["ind","panel"],shr=["noshrink","shrink"],sp=["10","05","01"])
-        expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}_{wind}.noint.log",ip=["ind","panel"],model=["polym","kgsubsnps"],h2=h2r,nt=ntr,samplesize="10000",wind=["1","10"]),
-        expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}_{wind}.int.log",ip=["ind","panel"],model=["polym","kgsubsnps"],h2=h2r,nt=ntr,samplesize="10000",wind=["1","10"])
+        expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}_{wind}.noint.log",ip=["ind","panel"],model=["polym","kgsubsnps"],h2=h2r,nt=ntr,samplesize="10000",wind=["1","10"],sp=["10","05","01"]),
+        expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}_{wind}.int.log",ip=["ind","panel"],model=["polym","kgsubsnps"],h2=h2r,nt=ntr,samplesize="10000",wind=["1","10"],sp=["10","05","01"])
 
 
         #expand(config_d["GWAS"]+"pheno/{model}_{h2}_{trait}_10_{samplesize}.1.causals",model=["poly"],trait=range(1,11),h2=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8],nt=[n_cvrt[host]],samplesize=[samplen[host]])
