@@ -915,28 +915,29 @@ rule cmp_baselineb_ldscores:
         bedf=config_d["UKB_PED"]+"split_map/{source}_{samplesize}_chr{chrom}.bed",
         snp_list=config_d["MODELD"]+"model_{samplesize}/{model}.txt"
     output:
-        l2=(config_d['L2']+"ukb_baseline/{model}/{source}.{samplesize}.{chrom}.l2.M"),
-        l2M_50=(config_d['L2']+"ukb_baseline/{model}/{source}.{samplesize}.{chrom}.l2.M_5_50"),
-        l2gz=(config_d['L2']+"ukb_baseline/{model}/{source}.{samplesize}.{chrom}.l2.ldscore.gz")
+        l2=(config_d['L2']+"ukb_baseline_{wind}/{model}/{source}.{samplesize}.{chrom}.l2.M"),
+        l2M_50=(config_d['L2']+"ukb_baseline_{wind}/{model}/{source}.{samplesize}.{chrom}.l2.M_5_50"),
+        l2gz=(config_d['L2']+"ukb_baseline_{wind}/{model}/{source}.{samplesize}.{chrom}.l2.ldscore.gz")
     params:
         plink=config_d["UKB_PED"]+"split_map/{source}_{samplesize}_chr{chrom}",
-        odir=config_d['L2']+"ukb_baseline/{model}/{source}.{samplesize}.{chrom}"
+        odir=config_d['L2']+"ukb_baseline_{wind}/{model}/{source}.{samplesize}.{chrom}"
+        wind="{wind}"
     shell:
-        config_d['LDSC']+"ldsc.py --l2 --bfile {params.plink}  --extract {input.snp_list} --ld-wind-cm 1 --out {params.odir}"
+        config_d['LDSC']+"ldsc.py --l2 --bfile {params.plink}  --extract {input.snp_list} --ld-wind-cm {params.wind} --out {params.odir}"
 
 
 rule baseline_ldsc:
     input:
         gwasf=config_d['GWAS'] +"ldsc_input/{model}_{trait}_{sp}_{h2}_{samplesize}.sumstats.gz",
-        baselinef=expand(config_d['L2'] +"ukb_baseline/{{model}}/{{source}}.{{samplesize}}.{chrom}.l2.ldscore.gz",chrom=range(1,23)),
-        baseline_l2m=expand(config_d['L2'] +"ukb_baseline/{{model}}/{{source}}.{{samplesize}}.{chrom}.l2.M",chrom=range(1,23)),
-        baseline_l2m50=expand(config_d['L2'] +"ukb_baseline/{{model}}/{{source}}.{{samplesize}}.{chrom}.l2.M_5_50",chrom=range(1,23))
+        baselinef=expand(config_d['L2'] +"ukb_baseline_{{wind}}/{{model}}/{{source}}.{{samplesize}}.{chrom}.l2.ldscore.gz",chrom=range(1,23)),
+        baseline_l2m=expand(config_d['L2'] +"ukb_baseline_{{wind}}/{{model}}/{{source}}.{{samplesize}}.{chrom}.l2.M",chrom=range(1,23)),
+        baseline_l2m50=expand(config_d['L2'] +"ukb_baseline_{{wind}}/{{model}}/{{source}}.{{samplesize}}.{chrom}.l2.M_5_50",chrom=range(1,23))
     output:
-        dataf="results/sim_ukb_{source}/{model}_{trait}_{sp}_{h2}_{samplesize}.int.log"
+        dataf="results/sim_ukb_{source}/{model}_{trait}_{sp}_{h2}_{samplesize}_{wind}.int.log"
     params:
-        baseline=config_d['L2']+"ukb_baseline/{model}/{source}.{samplesize}.",
-        weights=config_d['L2']+"ukb_baseline/{model}/{source}.{samplesize}.",#,config_d['WEIGHTS']+"weights.hm3_noMHC.",
-        odir="results/sim_ukb_{source}/{model}_{trait}_{sp}_{h2}_{samplesize}.int"
+        baseline=config_d['L2']+"ukb_baseline_{wind}/{model}/{source}.{samplesize}.",
+        weights=config_d['L2']+"ukb_baseline_{wind}/{model}/{source}.{samplesize}.",#,config_d['WEIGHTS']+"weights.hm3_noMHC.",
+        odir="results/sim_ukb_{source}/{model}_{trait}_{sp}_{h2}_{samplesize}_{wind}.int"
     shell:
         config_d['LDSC']+"ldsc.py --h2 {input.gwasf} --ref-ld-chr {params.baseline} --w-ld-chr {params.weights} --out {params.odir}"
 
@@ -945,107 +946,17 @@ rule baseline_ldsc:
 rule baseline_ldsc_noi:
     input:
         gwasf=config_d['GWAS'] +"ldsc_input/{model}_{trait}_{sp}_{h2}_{samplesize}.sumstats.gz",
-        baselinef=expand(config_d['L2'] +"ukb_baseline/{{model}}/{{source}}.{{samplesize}}.{chrom}.l2.ldscore.gz",chrom=range(1,23)),
-        baseline_l2m=expand(config_d['L2'] +"ukb_baseline/{{model}}/{{source}}.{{samplesize}}.{chrom}.l2.M",chrom=range(1,23)),
-        baseline_l2m50=expand(config_d['L2'] +"ukb_baseline/{{model}}/{{source}}.{{samplesize}}.{chrom}.l2.M_5_50",chrom=range(1,23))
+        baselinef=expand(config_d['L2'] +"ukb_baseline_{{wind}}/{{model}}/{{source}}.{{samplesize}}.{chrom}.l2.ldscore.gz",chrom=range(1,23)),
+        baseline_l2m=expand(config_d['L2'] +"ukb_baseline_{{wind}}/{{model}}/{{source}}.{{samplesize}}.{chrom}.l2.M",chrom=range(1,23)),
+        baseline_l2m50=expand(config_d['L2'] +"ukb_baseline_{{wind}}/{{model}}/{{source}}.{{samplesize}}.{chrom}.l2.M_5_50",chrom=range(1,23))
     output:
-        dataf="results/sim_ukb_{source}/{model}_{trait}_{sp}_{h2}_{samplesize}.noint.log"
+        dataf="results/sim_ukb_{source}/{model}_{trait}_{sp}_{h2}_{samplesize}_{wind}.noint.log"
     params:
-        baseline=config_d['L2']+"ukb_baseline/{model}/{source}.{samplesize}.",
-        weights=config_d['L2']+"ukb_baseline/{model}/{source}.{samplesize}.",#,config_d['WEIGHTS']+"weights.hm3_noMHC.",
-        odir="results/sim_ukb_{source}/{model}_{trait}_{sp}_{h2}_{samplesize}.noint"
+        baseline=config_d['L2']+"ukb_baseline_{wind}/{model}/{source}.{samplesize}.",
+        weights=config_d['L2']+"ukb_baseline_{wind}/{model}/{source}.{samplesize}.",#,config_d['WEIGHTS']+"weights.hm3_noMHC.",
+        odir="results/sim_ukb_{source}/{model}_{trait}_{sp}_{h2}_{samplesize}_{wind}.noint"
     shell:
         config_d['LDSC']+"ldsc.py --h2 {input.gwasf} --ref-ld-chr {params.baseline} --w-ld-chr {params.weights} --no-intercept --out {params.odir}"
-
-def aggregate_input_io(wildcards):
-    #checkpoint_output = checkpoints.plink_gwas_cov_o.get(nt=wildcards.nt,h2=wildcards.h2,samplesize=wildcards.samplesize)
-    #nt = int(wildcards.nt)
-    part_s = "results/sim_ukb_ind/onec_{{trait}}_{sp}_{h2}_{samplesize}.hsq".format(
-        h2=wildcards.h2,
-        samplesize=wildcards.samplesize)
-    out_fl_b = expand(part_s,
-                      trait=range(1,10+1))    
-    return out_fl_b
-
-def aggregate_input_ip(wildcards):
-    #checkpoint_output = checkpoints.plink_gwas_cov_p.get(nt=wildcards.nt,h2=wildcards.h2,samplesize=wildcards.samplesize)
-    #nt = int(wildcards.nt)
-    part_s = "results/sim_ukb_ind/poly_{{trait}}_{sp}_{h2}_{samplesize}.hsq".format(
-        h2=wildcards.h2,
-        samplesize=wildcards.samplesize)
-    out_fl_b = expand(part_s,
-                      trait=range(1,10+1))    
-    return out_fl_b
-
-
-def aggregate_input_o(wildcards):
-    #checkpoint_output = checkpoints.plink_gwas_cov_o.get(nt=wildcards.nt,h2=wildcards.h2,samplesize=wildcards.samplesize)
-    #nt = int(wildcards.nt)
-    part_s = "results/sim_ukb_{source}/onec_{{trait}}_{sp}_{h2}_{samplesize}.{{inter}}".format(
-        h2=wildcards.h2,
-        source=wildcards.source,
-        samplesize=wildcards.samplesize)
-    out_fl_b = expand(part_s,
-                      trait=range(1,10+1),
-                      inter = ["int.log","noint.log","shrink.RDS","noshrink.RDS"])    
-    return out_fl_b
-
-def aggregate_input_p(wildcards):
-    #checkpoint_output = checkpoints.plink_gwas_cov_p.get(nt=wildcards.nt,h2=wildcards.h2,samplesize=wildcards.samplesize)
-    #nt = int(wildcards.nt)
-    part_s = "results/sim_ukb_{source}/poly_{{trait}}_{sp}_{h2}_{samplesize}.{{inter}}".format(
-        h2=wildcards.h2,
-        source=wildcards.source,
-        samplesize=wildcards.samplesize)
-    out_fl_b = expand(part_s,
-                      trait=range(1,10+1),
-                      inter = ["int.log","noint.log","shrink.RDS","noshrink.RDS"])    
-    return out_fl_b
-
-
-rule cat_filefo:
-    input:
-        aggregate_input_o
-    output:
-        config_d["GWAS"]+"gwas_covar_fl_{source}/onec_{h2}_{trait}_{sp}_{samplesize}"
-    shell:
-        "echo {input} > {output}"
-
-
-rule cat_filefp:
-    input:
-        aggregate_input_p
-    output:
-        config_d["GWAS"]+"gwas_covar_fl_{source}/poly_{h2}_{trait}_{sp}_{samplesize}"
-    shell:
-        "echo {input} > {output}"
-
-
-rule cat_fileio:
-    input:
-        aggregate_input_io
-    output:
-        config_d["GWAS"]+"gwas_covar_il_ind/onec_{h2}_{trait}_{sp}_{samplesize}"
-    shell:
-        "echo {input} > {output}"
-
-rule cat_fileip:
-    input:
-        aggregate_input_ip
-    output:
-        config_d["GWAS"]+"gwas_covar_il_ind/poly_{h2}_{trait}_{sp}_{samplesize}"
-    shell:
-        "echo {input} > {output}"
-
-rule cat_fileipo:
-    input:
-        config_d["GWAS"]+"gwas_covar_il_ind/{model}_{h2}_{trait}_{sp}_{samplesize}",
-        config_d["GWAS"]+"gwas_covar_fl_ind/{model}_{h2}_{trait}_{sp}_{samplesize}",
-        config_d["GWAS"]+"gwas_covar_fl_panel/{model}_{h2}_{trait}_{sp}_{samplesize}"
-    output:
-        flag="{model}_{h2}_{trait}_{sp}_{samplesize}.txt"
-    shell:
-        "echo {input} > {output}"
 
 rule cat_grm_bin_h2:
     input:
