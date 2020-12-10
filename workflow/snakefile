@@ -75,7 +75,7 @@ include: "rssp_snakefile"
 
 rule all:
     input:
-        expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}.{shr}.RDS",model=["polym","kgsubsnps"],nt=ntr,samplesize="10000",h2=h2r,ip=["ind","panel"],shr=["noshrink","shrink"],sp=["10","05","01"])
+        expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}.{shr}.RDS",model=["polym","kgsubsnps"],nt=ntr,samplesize="10000",h2=h2r,ip=["ind","panel"],shr=["noshrink","shrink"],sp=["10","05","01"]),
         expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}_{wind}.noint.log",ip=["ind","panel"],model=["polym","kgsubsnps"],h2=h2r,nt=ntr,samplesize="10000",wind=["1","10"],sp=["10","05","01"]),
         expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}_{wind}.int.log",ip=["ind","panel"],model=["polym","kgsubsnps"],h2=h2r,nt=ntr,samplesize="10000",wind=["1","10"],sp=["10","05","01"])
 
