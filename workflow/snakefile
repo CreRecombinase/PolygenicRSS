@@ -80,7 +80,7 @@ include: "rssp_snakefile"
 rule all:
     input:
         expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}.{shr}.RDS",model=model,nt=ntr,samplesize="10000",h2=h2r,ip=ip,shr=["noshrink"],sp=sp),
-        expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}_{wind}.noint.log",ip=ip,h2=h2r,nt=ntr,samplesize="10000",wind=["1"],sp=sp),
+        expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}_{wind}.noint.log",model=model,ip=ip,h2=h2r,nt=ntr,samplesize="10000",wind=["1"],sp=sp),
         expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}_{wind}.int.log",ip=ip,model=model,h2=h2r,nt=ntr,samplesize="10000",wind=["1"],sp=sp)
 
 
