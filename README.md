@@ -1,7 +1,7 @@
 # PolygenicRSS
 
 
-![DAG or simulation][wf.png]
+![DAG or simulation](wf.png)
 
 # Configuration
 
