@@ -112,6 +112,22 @@ The rule `sub_gwass_gcta_pm:`, rather than having a `shell:` section that gives 
 
 In this R script the input file `vecf` is read in using the package `vroom` for quickly reading `tsv`s or `csv`s.  Z scores are calculated, then the data is written in `tsv` format to the file `tempf`. `snakemake` handles calling R in such a way that the `snakemake` object exists, and the `@input` and `@output` are filled correctly.
 
+## Running the Methods
+
+The first rule in a `snakefile` is customarily called "all", and it specifies the outputs that will be run if snakemake is run with now arguments.  Right now it looks like this
+
+```snakemake
+  rule all:
+      input:
+          expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}.{shr}.RDS",model=model,nt=ntr,samplesize="10000",h2=h2r,ip=ip,shr=["noshrink"],sp=sp),
+          expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}_{wind}.noint.log",model=model,ip=ip,h2=h2r,nt=ntr,samplesize="10000",wind=["1"],sp=sp),
+          expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}_{wind}.int.log",ip=ip,model=model,h2=h2r,nt=ntr,samplesize="10000",wind=["1"],sp=sp),
+          expand("results/sim_ukb_ind/{model}_{nt}_{sp}_{h2}_{samplesize}.hsq",model=model,h2=h2r,nt=ntr,sp=sp,samplesize="10000")
+```
+
+The `.RDS` files are the output of `RSSp`. The `.log` files are `ldsc` with and without a varying intercept (`noint.log` is without a varying intercept, and `int.log` is with a varying intercept).  `.hsq` files are The output of GCTA.  The `expand` snakemake function "expands" the first argument, a python string with `{wildcards}`, using all possible combinations of the rest of the arguments. So for example `expand("results/sim_ukb_{ip}/polym_{nt}_10_{h2}_10.noshrink.RDS",nt=range(1,11),h2=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8],ip=["ind","panel"])` expands to the $10 \times 8 \times 2=160$ combinations of `nt`, `h2`, and `ip` as specified.  This will run RSSp on 8 different values of `h2` using in-sample and out-of-sample LD (`ip="ind"` and `ip="panel"` respectively), with 10 genetic architectures simulated for each value of `h2`.
+
+
 
 ## Simulating GWAS
 
@@ -122,3 +138,11 @@ To simulate GWAS you'll need genotypes, and if you're using the UK biobank you'l
 ### Causal variants/genetic architecture
 
 The simulation framework is currently only set up for simulating under a `GCTA`-style normal effect-size prior.  The file `"/scratch/${USER}/intersect_snplist/ukb_subset/model_{samplesize}/{model}.txt"` contains one variant-id per line, and every variant listed in the file will have a non-zero effect in the GWAS simulation. The file `"/scratch/${USER}/intersect_snplist/ukb_subset/model_{samplesize}/{model}.txt"`
+
+
+# Notes
+
+## Increasing the sample size.  
+
+The current simulations were done with 10000 samples.  To run with more samples requires generating a GWAS/LD sample split with > `{samplesize}`, computing GRM within each split, removing related individuals, then randomly downsampling each sample list (without replacement) to end with the desired `{samplesize}` cohorts.  While `{samplesize}` is controlled via a snakemake parameter (i.e the sample size is not hard coded in the snakemake rules), the larger GRM sample size is set in the `workflow/config_base.yaml`, in the `SAMPLEN` line.  It is currently set to `12000`.  After removing closely related individuals, `/gpfs/data/xhe-lab/polyg/
+grm_cut/sub/grm.singleton.txt` has `11275` unrelated individuals and `/gpfs/data/xhe-lab/polyg/grm_cut/panel/grm.singleton.txt` has 11330 unrelated individuals, meaning that any sample-size can be simulated as long as `{samplesize}<min(11275,11330)`.  To simulate data with a larger sample size, the value of `SAMPLEN` should be raised so that there are enough unrelated individuals in the GWAS and LD cohorts to satisfy `{samplesize}`
