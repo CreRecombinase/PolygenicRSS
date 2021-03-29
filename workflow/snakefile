@@ -1,6 +1,7 @@
 import os
 import yaml
 from yaml import Loader
+import getpass
 import json
 import re
 
@@ -13,6 +14,8 @@ def host_loader(loader,node):
     # print(ret_opt)
     return ret_opt[0]
 
+def user_loader(loader,node):
+    return getpass.getuser()+"/"
 
 def dep_loader(loader,node):
     options = loader.construct_mapping(node,deep=True)
@@ -25,7 +28,9 @@ def dep_loader(loader,node):
     return full_path
 
 yaml.Loader.add_constructor('!Host', host_loader)
+yaml.Loader.add_constructor('!User', user_loader)
 yaml.Loader.add_constructor('!Dep', dep_loader)
+
 
 with open("../workflow/config_base.yaml") as stream:
     config=yaml.load(stream,Loader=Loader)
@@ -48,10 +53,7 @@ wildcard_constraints:
     model="[^/]+",
     ps="[^_]+"
 
-#      chrom="\d+",
-#      gwas="[fgdptb]+",
-#      new_base="[a-z]+",
-#      region_id="\d+"
+
 genome_chr=range(1,23)
 
 
@@ -59,7 +61,8 @@ ldc = 10
 h2r = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8]
 ntr = range(1,11)
 
-model=["smallpoly"] #["polym","kgsubsnps"]
+#model=["smallpoly"]
+model= ["polym","kgsubsnps"]
 ip = ["ind"] #["ind","panel"]
 sp = ["10"] #["10", "05", "01"]
 include: "ukb_snakefile"
@@ -68,23 +71,15 @@ include: "rssp_snakefile"
 #include: "ukb_gwas_snakefile"
 #localrules: cat_grm_bin,cat_filefo,cat_filefp,cat_fileio,cat_fileipo,bgensplit_inp
 
-# 
-# print(all_ukb_traits[0:10])
-#expand(config_d["UKB_PED"]+"chr{chrom}_"+config_d["SAMPLEN"]+"_01.bgen",chrom=genome_chr)
 
 #all_ukb_traits,= glob_wildcards(config_d["UKB_GWAS"]+"{trait}_irnt.gwas.imputed_v3.both_sexes.tsv.bgz")
 #expand("results/sim_ukb_{ip}/{model}_{nt}_05_{h2}_{samplesize}.int.log",ip=["ind","panel"],model=["polym"],h2=h2r,nt=ntr,samplesize="10000"),
 #          expand("results/sim_ukb_{ip}/{model}_{nt}_10_{h2}_{samplesize}.noshrink.RDS",model=["polym","kgsubsnps"],nt=ntr,samplesize="10000",h2=h2r,ip=["ind","panel"]),
-#          expand("results/sim_ukb_ind/{model}_{nt}_10_{h2}_{samplesize}.hsq",model=["polym","kgsubsnps"],h2=h2r,nt=ntr,samplesize="10000"),
+#          
 
 rule all:
     input:
         expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}.{shr}.RDS",model=model,nt=ntr,samplesize="10000",h2=h2r,ip=ip,shr=["noshrink"],sp=sp),
         expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}_{wind}.noint.log",model=model,ip=ip,h2=h2r,nt=ntr,samplesize="10000",wind=["1"],sp=sp),
-        expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}_{wind}.int.log",ip=ip,model=model,h2=h2r,nt=ntr,samplesize="10000",wind=["1"],sp=sp)
-
-
-        #expand(config_d["GWAS"]+"pheno/{model}_{h2}_{trait}_10_{samplesize}.1.causals",model=["poly"],trait=range(1,11),h2=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8],nt=[n_cvrt[host]],samplesize=[samplen[host]])
-
-        #
-        #expand(config_d["GWAS"]+"gwas_covar_fl_panel/onec_{h2}_{nt}_10_10000",
+        expand("results/sim_ukb_{ip}/{model}_{nt}_{sp}_{h2}_{samplesize}_{wind}.int.log",ip=ip,model=model,h2=h2r,nt=ntr,samplesize="10000",wind=["1"],sp=sp),
+        expand("results/sim_ukb_ind/{model}_{nt}_{sp}_{h2}_{samplesize}.hsq",model=model,h2=h2r,nt=ntr,sp=sp,samplesize="10000")

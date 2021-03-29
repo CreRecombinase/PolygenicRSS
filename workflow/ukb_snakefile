@@ -1,14 +1,16 @@
 rule nodup_snplist:
+  """ Generate a de-duplicated list of variants from the original snp list"""
     input:
         bimf = config_d["UKB_BGEN"] + "ukb_mfi_chr{chrom}_v3.txt.gz"
     params:
-        host = host
+        host = "gardner"
     output:
         snplistf = config_d["SNPLIST_D"]+"chr{chrom}_01.txt"
     script:
         "../scripts/uniq_bim.R"
 
 rule index_bgen:
+  """Index bgen file"""
     input:
         ukb_bgen = ancient(config_d["UKB_BGEN"] + "ukb_imp_chr{chrom}_v3.bgen")
     output:
@@ -17,6 +19,7 @@ rule index_bgen:
         "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/bgen-default-f3kwhoklsgjdeojgjjzt6g4d5bqqmttt/bin/bgenix -g {input.ukb_bgen} -index -clobber"
 
 rule index_ss_bgen:
+  """ Index common var bgen file"""
     input:
         ukb_bgen = config_d["UKB_PED"]+"chr{chrom}_"+config_d["SAMPLEN"]+"_01.bgen"
     output:
@@ -25,6 +28,7 @@ rule index_ss_bgen:
         "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/bgen-default-f3kwhoklsgjdeojgjjzt6g4d5bqqmttt/bin/bgenix -g {input.ukb_bgen} -index -clobber"
 
 rule index_ss_bgen2:
+  """ Index common var bgen file in gwas cohort or LD cohort (sub or panel)"""
     input:
         ukb_bgen = config_d["UKB_PED"]+"{ps}/chr{chrom}_"+config_d["SAMPLEN"]+"_01.bgen"
     output:
@@ -33,6 +37,7 @@ rule index_ss_bgen2:
         "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/bgen-default-f3kwhoklsgjdeojgjjzt6g4d5bqqmttt/bin/bgenix -g {input.ukb_bgen} -index -clobber"
 
 rule index_ss_bgen3:
+    """ Index bgen file in gwas cohort or LD cohort (sub or panel)"""
     input:
         ukb_bgen = config_d["UKB_PED"]+"{ps}/chr{chrom}_"+config_d["SAMPLEN"]+".bgen"
     output:
@@ -41,6 +46,7 @@ rule index_ss_bgen3:
         "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/bgen-default-f3kwhoklsgjdeojgjjzt6g4d5bqqmttt/bin/bgenix -g {input.ukb_bgen} -index -clobber"
 
 rule ss_bgenix:
+  """Subset the original BGEN genotype data to only loci with unique IDs"""
     input:
         ukb_bgen = ancient(config_d["UKB_BGEN"] + "ukb_imp_chr{chrom}_v3.bgen"),
         snplistf = config_d["SNPLIST_D"]+"chr{chrom}_01.txt"
@@ -51,6 +57,7 @@ rule ss_bgenix:
 
 
 rule sub_bgen_idx:
+  """Index the common variant bgen file"""
     input:
         bgen = config_d["SNPLIST_D"]+"chr{chrom}_01.bgen"
     output:
@@ -60,6 +67,7 @@ rule sub_bgen_idx:
 
 
 rule independent_variants_bgi:
+  """Read the bgen index (it's a sqlite file) to get variants that aren't duplicated"""
     input:
         a_dbf = expand(config_d["UKB_PED"]+"{{ps}}/chr{chrom}_"+config_d["SAMPLEN"]+".bgen.bgi",chrom=genome_chr)
     output:
@@ -68,8 +76,10 @@ rule independent_variants_bgi:
         "../scripts/ind_vars_db.R"
 
 rule tbgen2bgen:
+  """Pull out sample or panel samples from common variant subset.  Do so in chunks (24 chunks per chromosome).  Sample subset is really slow for bgenix, so the chunks speed it up"""
     input:
         bgen = config_d["SNPLIST_D"]+"chr{chrom}_01.bgen",
+        bgeni = config_d["SNPLIST_D"]+"chr{chrom}_01.bgen.bgi",
         bgf="splitted/chr{chrom}_{scatteritem}.txt",
         samplef= config_d["UKB_SAMPLE"],
         singlef = config_d["GWAS"]+"grm_cut/{ps}_"+config_d["SAMPLEN"]+".txt"
@@ -80,6 +90,7 @@ rule tbgen2bgen:
         config_d["BGENIXCMD"]+" -g {input.bgen} -incl-range {input.bgf} | "+config_d["QCTCMD"]+" -g - -s {input.samplef} -incl-samples <(cut -f 1 {input.singlef}) -filetype bgen -bgen-bits 8 -og {output.bgenf} -bgen-compression zstd -threads {threads}"
 
 rule cbgen2bgen:
+    """Condense chunks per-chromosome."""
     input:
         expand(config_d["UKB_PED"]+"{{ps}}/chr{{chrom}}_01_"+config_d["SAMPLEN"]+"_tmp_{scatteritem}.bgen",scatteritem=range(24))
     output:
@@ -89,6 +100,7 @@ rule cbgen2bgen:
 
 
 rule gen_sample_bgen:
+  """Generates sample list from bgen"""
     input:
         inpf=config_d["UKB_PED"]+"{ps}/chr{chrom}_"+config_d["SAMPLEN"]+".bgen"
     output:
@@ -97,6 +109,7 @@ rule gen_sample_bgen:
         config_d["QCTCMD"]+" -g {input.inpf} -os {output.onpf}"
 
 rule rgen_sample_bgen:
+  """Adds sex info to bgen sample file"""
     input:
         onpf=config_d["UKB_PED"]+"{ps}/chr{chrom}_"+config_d["SAMPLEN"]+".temp_sample",
         samplef= config_d["UKB_SAMPLE"],
@@ -106,11 +119,9 @@ rule rgen_sample_bgen:
         "../scripts/add_sex.R"
 
 rule bgensplit_inp:
-    input:
-        bgen = config_d["SNPLIST_D"]+"chr{chrom}_01.bgen"
+  """Split each chromosome into 24 chunks according to LDetect blocks.  This step is for computational purposes only"""
     params:
         chrom="{chrom}"
-
     output:
         ldmap_rs=expand("splitted/chr{{chrom}}_{scatteritem}.txt",scatteritem=range(24))
     script:
@@ -149,6 +160,7 @@ rule bgensplit_inp:
 
 
 rule make_bfile_list:
+  """Creates a file that has the list of bgens that will go into gcta_p_grm.  Doesn't need to be run on the cluster"""
     input:
         bgf=expand(config_d["UKB_PED"]+"{{ps}}/chr{chrom}_"+config_d["SAMPLEN"]+".bgen",chrom=genome_chr)
     params:
@@ -161,6 +173,7 @@ rule make_bfile_list:
                 out.write(fn+"\n")
 
 rule bgen2plink:
+  """Convert bgen to plink"""
     input:
         ukb_sample = config_d["UKB_SAMPLE"],
         target_bgen = config_d["UKB_PED"]+"chr{chrom}.bgen"
@@ -174,105 +187,73 @@ rule bgen2plink:
         "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/plink2-master-cy4i77vbnkwgzpc56eaghkq27shwgcam/bin/plink2 --sample {input.ukb_sample} --bgen {input.target_bgen}  --make-bed --out {params.output_p}"
 
 
-rule cat_bgen_bgen:
-    input:
-        target_bgen = expand(config_d["UKB_PED"]+"chr{chrom}.bgen",chrom=range(1,23)),
-        ukb_sample = config_d["UKB_SAMPLE"]
-    output:
-        target_bgen = config_d["UKB_PED"]+"all.bgen"
-    shell:
-        "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/bgen-default-f3kwhoklsgjdeojgjjzt6g4d5bqqmttt/bin/cat-bgen -g {input.target_bgen} -og {output.target_bgen}"
-
-rule all_bgen2plink:
-    input:
-        ukb_sample = config_d["UKB_SAMPLE"] ,
-        target_bgen = config_d["UKB_PED"]+"all.bgen"
-    params:
-        output_p = config_d["UKB_PED"]+"all"
-    output:
-        target_bim = config_d["UKB_PED"]+"all.bim",
-        target_bed = config_d["UKB_PED"]+"all.bed",
-        target_fam = config_d["UKB_PED"]+"all.fam"
-    shell:
-        "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/plink2-master-cy4i77vbnkwgzpc56eaghkq27shwgcam/bin/plink2 --sample {input.ukb_sample} --bgen {input.target_bgen} ref-last --make-bed --out {params.output_p}"
-
-
-# rule which_ld_prune:
+# rule cat_bgen_bgen:
 #     input:
-#         famf=config_d["UKB_PED"]+"chr{chrom}.fam",
-#         bimf=config_d["UKB_PED"]+"chr{chrom}.bim",
-#         bedf=config_d["UKB_PED"]+"chr{chrom}.bed"
+#         target_bgen = expand(config_d["UKB_PED"]+"chr{chrom}_"+config_d["SAMPLEN"]+".bgen",chrom=range(1,23)),
+#         ukb_sample = config_d["UKB_SAMPLE"]
+#     output:
+#         target_bgen = config_d["UKB_PED"]+"all.bgen"
+#     shell:
+#         "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/bgen-default-f3kwhoklsgjdeojgjjzt6g4d5bqqmttt/bin/cat-bgen -g {input.target_bgen} -og {output.target_bgen}"
+
+# rule all_bgen2plink:
+#     input:
+#         ukb_sample = config_d["UKB_SAMPLE"] ,
+#         target_bgen = config_d["UKB_PED"]+"all.bgen"
 #     params:
-#         in_pref=config_d["UKB_PED"]+"chr{chrom}",
-#         out_pref=config_d["GWAS"]+"ldp_out/{chrom}"
+#         output_p = config_d["UKB_PED"]+"all"
 #     output:
-#         inf=temp(config_d["GWAS"]+"ldp_out/{chrom}.prune.in"),
-#         outf=temp(config_d["GWAS"]+"ldp_out/{chrom}.prune.out")
+#         target_bim = config_d["UKB_PED"]+"all.bim",
+#         target_bed = config_d["UKB_PED"]+"all.bed",
+#         target_fam = config_d["UKB_PED"]+"all.fam"
 #     shell:
-#         "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/plink-master-aaxmha3khjivjpx5m5zyeg6zk6d6dj3o/bin/plink --bfile {params.in_pref} --indep-pairwise 50 5 0.2 --out {params.out_pref} --threads {threads}"
+#         "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/plink2-master-cy4i77vbnkwgzpc56eaghkq27shwgcam/bin/plink2 --sample {input.ukb_sample} --bgen {input.target_bgen} ref-last --make-bed --out {params.output_p}"
 
-# rule ld_prune:
+
+
+# rule all_sub_plink:
 #     input:
-#         famf=rules.which_ld_prune.input.famf,
-#         bimf=rules.which_ld_prune.input.bimf,
-#         bedf=rules.which_ld_prune.input.bedf,
-#         inf=rules.which_ld_prune.output.inf
+#         famf=config_d["UKB_PED"]+"all.fam",
+#         bimf=config_d["UKB_PED"]+"all.bim",
+#         bedf=config_d["UKB_PED"]+"all.bed",
+#         sample_f= config_d["GWAS"]+"grm_cut/sub_"+config_d["SAMPLEN"]+".txt"
 #     params:
-#         in_pref=rules.which_ld_prune.params.in_pref,
-#         out_pref=config_d["UKB_PED"]+"ldi_bed/chr{chrom}"
+#         ip=config_d["UKB_PED"]+"all",
+#         op=config_d["UKB_PED"]+"all_"+config_d["SAMPLEN"]
 #     output:
-#         famf=temp(config_d["UKB_PED"]+"ldi_bed/chr{chrom}.fam"),
-#         bimf=temp(config_d["UKB_PED"]+"ldi_bed/chr{chrom}.bim"),
-#         bedf=temp(config_d["UKB_PED"]+"ldi_bed/chr{chrom}.bed"),
+#         famf=temp(config_d["UKB_PED"]+"t_all_"+config_d["SAMPLEN"]+".fam"),
+#         bimf=temp(config_d["UKB_PED"]+"t_all_"+config_d["SAMPLEN"]+".bim"),
+#         bedf=temp(config_d["UKB_PED"]+"t_all_"+config_d["SAMPLEN"]+".bed")
 #     shell:
-#         "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/plink-master-aaxmha3khjivjpx5m5zyeg6zk6d6dj3o/bin/plink --bfile {params.in_pref} --extract {input.inf} --make-bed --out {params.out_pref} --threads {threads}"
+#         "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/plink2-master-cy4i77vbnkwgzpc56eaghkq27shwgcam/bin/plink2 --bfile {params.ip} --keep {input.sample_f} --make-bed --out {params.op}"
 
-# rule sub_ukb_big:
+# rule all_gen_grm:
 #     input:
-#         config_d["UKB_SAMPLE"]
+#         famf=config_d["UKB_PED"]+"all_"+config_d["SAMPLEN"]+".fam",
+#         bimf=config_d["UKB_PED"]+"all_"+config_d["SAMPLEN"]+".bim",
+#         bedf=config_d["UKB_PED"]+"all_"+config_d["SAMPLEN"]+".bed"
+#     params:
+#         in_pref=config_d["UKB_PED"]+"all_"+config_d["SAMPLEN"]+"",
+#         out_pref=config_d["GWAS"]+"split_grm/grm",
+#         chunks_tot=config_d["CHUNKN"],
+#         chunk_i="{i}"
 #     output:
-#         singlef=config_d["GWAS"]+"grm_cut/sub_"+config_d["SAMPLEN"]+".txt"
+#         grm_bin=config_d["GWAS"]+"split_grm/grm.grm.bin.{i}",
+#         grm_Nf= config_d["GWAS"]+"split_grm/grm.grm.N.bin.{i}"
 #     shell:
-#         "tail -n +2 {input} | grep -v '^-' | shuf -n "+config_d["SAMPLEN"]+" > {output.singlef}"
+#         "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/plink2-master-cy4i77vbnkwgzpc56eaghkq27shwgcam/bin/plink2 --bfile {params.in_pref} --make-grm-bin --parallel {params.chunk_i} {params.chunks_tot} --out {params.out_pref} --threads {threads}"
 
-rule all_sub_plink:
-    input:
-        famf=config_d["UKB_PED"]+"all.fam",
-        bimf=config_d["UKB_PED"]+"all.bim",
-        bedf=config_d["UKB_PED"]+"all.bed",
-        sample_f= config_d["GWAS"]+"grm_cut/sub_"+config_d["SAMPLEN"]+".txt"
-    params:
-        ip=config_d["UKB_PED"]+"all",
-        op=config_d["UKB_PED"]+"all_"+config_d["SAMPLEN"]
-    output:
-        famf=temp(config_d["UKB_PED"]+"t_all_"+config_d["SAMPLEN"]+".fam"),
-        bimf=temp(config_d["UKB_PED"]+"t_all_"+config_d["SAMPLEN"]+".bim"),
-        bedf=temp(config_d["UKB_PED"]+"t_all_"+config_d["SAMPLEN"]+".bed")
-    shell:
-        "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/plink2-master-cy4i77vbnkwgzpc56eaghkq27shwgcam/bin/plink2 --bfile {params.ip} --keep {input.sample_f} --make-bed --out {params.op}"
 
-rule all_gen_grm:
-    input:
-        famf=config_d["UKB_PED"]+"all_"+config_d["SAMPLEN"]+".fam",
-        bimf=config_d["UKB_PED"]+"all_"+config_d["SAMPLEN"]+".bim",
-        bedf=config_d["UKB_PED"]+"all_"+config_d["SAMPLEN"]+".bed"
-    params:
-        in_pref=config_d["UKB_PED"]+"all_"+config_d["SAMPLEN"]+"",
-        out_pref=config_d["GWAS"]+"split_grm/grm",
-        chunks_tot=config_d["CHUNKN"],
-        chunk_i="{i}"
-    output:
-        grm_bin=config_d["GWAS"]+"split_grm/grm.grm.bin.{i}",
-        grm_Nf= config_d["GWAS"]+"split_grm/grm.grm.N.bin.{i}"
-    shell:
-        "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/plink2-master-cy4i77vbnkwgzpc56eaghkq27shwgcam/bin/plink2 --bfile {params.in_pref} --make-grm-bin --parallel {params.chunk_i} {params.chunks_tot} --out {params.out_pref} --threads {threads}"
+
+
 
 rule gcta_p_grm:
+  """ Generate a GRM on the 12000 sample subsets, chunked in 50 steps"""
     input:
         ff="{ps}/file_list.txt",
         bgff=expand(config_d["UKB_PED"]+"{{ps}}/chr{chrom}_"+config_d["SAMPLEN"]+".bgen",chrom=genome_chr),
         bgix=expand(config_d["UKB_PED"]+"{{ps}}/chr{chrom}_"+config_d["SAMPLEN"]+".bgen.bgi",chrom=genome_chr),
-        samplef="/scratch/t.cri.nknoblauch/intersect_snplist/ukb_subset/{ps}/chr1_"+config_d["SAMPLEN"]+".sample"
+        samplef=config_d["UKB_PED"]+"{ps}/chr1_"+config_d["SAMPLEN"]+".sample"
     params:
         out_pref=config_d["GWAS"]+"split_grm/{ps}/grm",
         chunks_tot=config_d["CHUNKN"],
@@ -288,11 +269,12 @@ rule gcta_p_grm:
 
 
 rule gcta_si_grm:
+    """ Generate a GRM on the 10000 sample subsets (technically you can change this), chunked in 50 steps"""
     input:
-      famf=config_d["UKB_PED"]+"all_{samplesize}_ind.fam",
-      bimf=config_d["UKB_PED"]+"all_{samplesize}_ind.bim",
-      bedf=config_d["UKB_PED"]+"all_{samplesize}_ind.bed",
-      snp_list=config_d["MODELD"]+"model_{samplesize}/{model}.txt",
+        famf=config_d["UKB_PED"]+"all_{samplesize}_ind.fam",
+        bimf=config_d["UKB_PED"]+"all_{samplesize}_ind.bim",
+        bedf=config_d["UKB_PED"]+"all_{samplesize}_ind.bed",
+        snp_list=config_d["MODELD"]+"model_{samplesize}/{model}.txt",
     params:
         in_pref=config_d["UKB_PED"]+"all_{samplesize}_ind",
         out_pref=config_d["GWAS"]+"split_grm_{model}_{samplesize}/grm",
@@ -305,38 +287,6 @@ rule gcta_si_grm:
     threads: 1
     shell:
         "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/gcta-1.93.2beta-yz57zzuencwoygoiry6q62ab23tdpd27/bin/gcta64 --bfile {params.in_pref} --extract {input.snp_list} --make-grm-part {params.chunks_tot} {params.chunk_i} --out {params.out_pref} --threads {threads}"
-
-
-
-
-
-rule subset_bgen2:
-  input:
-      bgf=config_d["UKB_PED"]+"{ps}/chr{chrom}_"+config_d["SAMPLEN"]+".bgen",
-      grm_id=config_d["GWAS"]+"grm_cut/{ps}_{samplesize}.sample"
-  params:
-      out_pref=config_d["UKB_PED"]+"{ps}/chr{chrom}_{samplesize}_01_ind"
-  output:
-      bgf=config_d["UKB_PED"]+"{ps}/chr{chrom}_{samplesize}_01_ind.bgen",
-      samplef=config_d["UKB_PED"]+"{ps}/chr{chrom}_{samplesize}_01_ind.sample"
-  shell:
-      config_d["QCTCMD"]+" -g {input.bgf} -incl-samples {input.grm_id} -og {output.bgf} -os {output.samplef} -bgen-compression \"zstd\" "
-
-rule cat_bgen2:
-    input:
-        target_bgen=expand(config_d["UKB_PED"]+"sub/chr{chrom}_{{samplesize}}_01_ind.bgen",chrom=genome_chr)
-    output:
-        config_d["UKB_PED"]+"all_{samplesize}_01_ind.bgen"
-    shell:
-        "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/bgen-default-f3kwhoklsgjdeojgjjzt6g4d5bqqmttt/bin/cat-bgen -g {input.target_bgen} -og {output}"
-
-rule cat_bgen_panel:
-    input:
-        target_bgen=expand(config_d["UKB_PED"]+"panel/chr{chrom}_{{samplesize}}_01_ind.bgen",chrom=genome_chr)
-    output:
-        config_d["UKB_PED"]+"split_map/temppanel_{samplesize}_01_ind.bgen"
-    shell:
-        "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/bgen-default-f3kwhoklsgjdeojgjjzt6g4d5bqqmttt/bin/cat-bgen -g {input.target_bgen} -og {output}"
 
 
 
@@ -360,13 +310,44 @@ rule cat_bgen_panel:
 
 
 
-rule cat_grm_bin:
+# rule gcta_si_grm:
+#     input:
+#         famf=config_d["UKB_PED"]+"all_{samplesize}_ind.fam",
+#         bimf=config_d["UKB_PED"]+"all_{samplesize}_ind.bim",
+#         bedf=config_d["UKB_PED"]+"all_{samplesize}_ind.bed",
+#         snp_list=config_d["MODELD"]+"model_{samplesize}/{model}.txt",
+#     params:
+#         in_pref=config_d["UKB_PED"]+"all_{samplesize}_ind",
+#         out_pref=config_d["GWAS"]+"split_grm_{model}_{samplesize}/grm",
+#         chunks_tot=config_d["CHUNKN"],
+#         chunk_i="{i}"
+#     output:
+#         grm_bf= config_d["GWAS"]+"split_grm_{model}_{samplesize}/grm.part_"+config_d["CHUNKN"]+"_{i}.grm.id",
+#         grm_Nf= config_d["GWAS"]+"split_grm_{model}_{samplesize}/grm.part_"+config_d["CHUNKN"]+"_{i}.grm.bin",
+#         grm_idf= config_d["GWAS"]+"split_grm_{model}_{samplesize}/grm.part_"+config_d["CHUNKN"]+"_{i}.grm.N.bin"
+#     threads: 1
+#     shell:
+#         "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/gcta-1.93.2beta-yz57zzuencwoygoiry6q62ab23tdpd27/bin/gcta64 --bfile {params.in_pref} --extract {input.snp_list} --make-grm-part {params.chunks_tot} {params.chunk_i} --out {params.out_pref} --threads {threads}"
+
+
+
+
+rule cat_grm_bin_p:
     input:
-        grm_bin=[config_d["GWAS"]+"split_grm/{ps}/grm.part_"+config_d["CHUNKN"]+"_{:02d}.grm.bin".format(i) for i in range(1,int(config_d["CHUNKN"])+1)]
+        grm_bin=[config_d["GWAS"]+"split_grm/panel/grm.part_"+config_d["CHUNKN"]+"_{:02d}.grm.bin".format(i) for i in range(1,int(config_d["CHUNKN"])+1)]
     output:
-        grm_bin=config_d["GWAS"]+"grm/{ps}/grm.grm.bin"
+        grm_bin=config_d["GWAS"]+"grm/panel/grm.grm.bin"
     shell:
         "cat {input.grm_bin} > {output.grm_bin}"
+
+
+rule cat_grm_bin_s:
+    input:
+        grm_bin=[config_d["GWAS"]+"split_grm/sub/grm.part_"+config_d["CHUNKN"]+"_{:02d}.grm.bin".format(i) for i in range(1,int(config_d["CHUNKN"])+1)]
+    output:
+        grm_bin=config_d["GWAS"]+"grm/sub/grm.grm.bin"
+    shell:
+        "cat {input.grm_bin} > {output.grm_bin}"        
 
 rule cat_grm_N_bin:
     input:
@@ -386,24 +367,42 @@ rule cat_grm_id:
         "cat {input.grm_bin} > {output.grm_id}"
 
 
-rule cut_grm:
+rule cut_grm_s:
     input:
-        grm_bin=rules.cat_grm_bin.output.grm_bin,
-        grm_id=rules.cat_grm_id.output.grm_id
+        grm_bin=config_d["GWAS"]+"grm/sub/grm.grm.bin",
+        grm_id=config_d["GWAS"]+"grm/sub/grm.grm.id",
     params:
-        in_pref=config_d["GWAS"]+"grm/{ps}/grm",
+        in_pref=config_d["GWAS"]+"grm/sub/grm",
         cut="0.05",
-        cut_pref=config_d["GWAS"]+"grm_cut/{ps}/grm"
+        cut_pref=config_d["GWAS"]+"grm_cut/sub/grm"
     output:
-        singlef=config_d["GWAS"]+"grm_cut/{ps}/grm.singleton.txt",
-        fam_f=config_d["GWAS"]+"grm_cut/{ps}/grm.family.txt",
-        log_f=config_d["GWAS"]+"grm_cut/{ps}/grm.log"
+        singlef=config_d["GWAS"]+"grm_cut/sub/grm.singleton.txt",
+        fam_f=config_d["GWAS"]+"grm_cut/sub/grm.family.txt",
+        log_f=config_d["GWAS"]+"grm_cut/sub/grm.log"
     shell:
         "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/gcta-1.93.2beta-yz57zzuencwoygoiry6q62ab23tdpd27/bin/gcta64 --grm {params.in_pref} --grm-singleton {params.cut} --out {params.cut_pref}"
 
+
+rule cut_grm_p:
+    input:
+        grm_bin=config_d["GWAS"]+"grm/panel/grm.grm.bin",
+        grm_id=config_d["GWAS"]+"grm/panel/grm.grm.id",
+    params:
+        in_pref=config_d["GWAS"]+"grm/panel/grm",
+        cut="0.05",
+        cut_pref=config_d["GWAS"]+"grm_cut/panel/grm"
+    output:
+        singlef=config_d["GWAS"]+"grm_cut/panel/grm.singleton.txt",
+        fam_f=config_d["GWAS"]+"grm_cut/panel/grm.family.txt",
+        log_f=config_d["GWAS"]+"grm_cut/panel/grm.log"
+    shell:
+        "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/gcta-1.93.2beta-yz57zzuencwoygoiry6q62ab23tdpd27/bin/gcta64 --grm {params.in_pref} --grm-singleton {params.cut} --out {params.cut_pref}"
+
+
+
 rule sub_ukb_s:
     input:
-        singlef=config_d["GWAS"]+"grm_cut/sub/grm.singleton.txt"
+        singlef=rules.cut_grm_s.output.singlef
     params:
         samplesize="{samplesize}"
     output:
@@ -415,7 +414,7 @@ rule sub_ukb_s:
 
 rule sub_ukb_p:
     input:
-        singlef=config_d["GWAS"]+"grm_cut/panel/grm.singleton.txt"
+        singlef=rules.cut_grm_p.output.singlef
     params:
         samplesize="{samplesize}"
     output:
@@ -423,6 +422,54 @@ rule sub_ukb_p:
         samplef=config_d["GWAS"]+"grm_cut/panel_{samplesize}.sample"
     shell:
         "grep -v '^-' {input.singlef} | shuf -n {params.samplesize}  > {output.singlef} && cut -f 1 {output.singlef} > {output.samplef}"
+
+
+
+
+
+
+
+rule subset_bgen_panel:
+  input:
+      bgf=config_d["UKB_PED"]+"panel/chr{chrom}_"+config_d["SAMPLEN"]+".bgen",
+      grm_id=rules.sub_ukb_p.output.samplef
+  params:
+      out_pref=config_d["UKB_PED"]+"panel/chr{chrom}_{samplesize}_01_ind"
+  output:
+      bgf=config_d["UKB_PED"]+"panel/chr{chrom}_{samplesize}_01_ind.bgen",
+      samplef=config_d["UKB_PED"]+"panel/chr{chrom}_{samplesize}_01_ind.sample"
+  shell:
+      config_d["QCTCMD"]+" -g {input.bgf} -incl-samples {input.grm_id} -og {output.bgf} -os {output.samplef} -bgen-compression \"zstd\" "
+
+rule subset_bgen_sub:
+  input:
+      bgf=config_d["UKB_PED"]+"sub/chr{chrom}_"+config_d["SAMPLEN"]+".bgen",
+      grm_id=rules.sub_ukb_s.output.samplef
+  params:
+      out_pref=config_d["UKB_PED"]+"sub/chr{chrom}_{samplesize}_01_ind"
+  output:
+      bgf=config_d["UKB_PED"]+"sub/chr{chrom}_{samplesize}_01_ind.bgen",
+      samplef=config_d["UKB_PED"]+"sub/chr{chrom}_{samplesize}_01_ind.sample"
+  shell:
+      config_d["QCTCMD"]+" -g {input.bgf} -incl-samples {input.grm_id} -og {output.bgf} -os {output.samplef} -bgen-compression \"zstd\" "
+
+
+
+rule cat_bgen2:
+    input:
+        target_bgen=expand(config_d["UKB_PED"]+"sub/chr{chrom}_{{samplesize}}_01_ind.bgen",chrom=genome_chr)
+    output:
+        config_d["UKB_PED"]+"all_{samplesize}_01_ind.bgen"
+    shell:
+        "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/bgen-default-f3kwhoklsgjdeojgjjzt6g4d5bqqmttt/bin/cat-bgen -g {input.target_bgen} -og {output}"
+
+rule cat_bgen_panel:
+    input:
+        target_bgen=expand(config_d["UKB_PED"]+"panel/chr{chrom}_{{samplesize}}_01_ind.bgen",chrom=genome_chr)
+    output:
+        config_d["UKB_PED"]+"split_map/temppanel_{samplesize}_01_ind.bgen"
+    shell:
+        "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/bgen-default-f3kwhoklsgjdeojgjjzt6g4d5bqqmttt/bin/cat-bgen -g {input.target_bgen} -og {output}"
 
 rule sub_grm:
     input:
@@ -474,6 +521,7 @@ rule plink2_pca:
 #         "/gpfs/data/xhe-lab/software/spack/opt/spack/linux-rhel6-haswell/gcc-9.2.0/plink2-master-cy4i77vbnkwgzpc56eaghkq27shwgcam/bin/plink2 --bfile {params.in_pref} --keep {input.grm_id} --make-bed --out {params.out_pref}"
 
 rule ref_fam:
+  """Split the entire sample into non-overlapping sets of 'SAMPLEN'"""
     input:
         famf=config_d["UKB_SAMPLE"]
     params:
@@ -592,6 +640,17 @@ rule causal_snps_polymatch:
     script:
         "../scripts/filter_freq.R"
 
+
+
+rule kgsubsnps:
+    input:
+        snp_list=config_d["MODELD"]+"model_{samplesize}/polym.txt",
+        kgs=config_d["KGSD"]+"kgsubsnps.txt"
+    output:
+        snp_list=config_d["MODELD"]+"model_{samplesize}/kgsubsnps.txt"
+    shell:
+        """fgrep -w -f {input.kgs} {input.snp_list} > {output.snp_list}"""
+
 rule sparse_causal_snps_polymatch:
     input:
         snp_list=config_d["MODELD"]+"model_{samplesize}/{model}.txt"
@@ -612,6 +671,19 @@ rule really_sparse_causal_snps_polymatch:
         sample_frac=0.125
     script:
         "../scripts/sample_frac.R"
+
+
+
+
+rule really_sparse_causal_snps_polymatch_smallpoly:
+    input:
+        snp_list=config_d["MODELD"]+"model_spp_10000/polym.txt"
+    output:
+        snp_list=config_d["MODELD"]+"model_10000/smallpoly.txt"
+    params:
+        sample_frac=0.125
+    shell:
+        """cp {input} {output}"""
 
 rule causal_snps_poly:
     input:
@@ -922,6 +994,8 @@ rule cmp_baselineb_ldscores:
         plink=config_d["UKB_PED"]+"split_map/{source}_{samplesize}_chr{chrom}",
         odir=config_d['L2']+"ukb_baseline_{wind}/{model}/{source}.{samplesize}.{chrom}",
         wind="{wind}"
+    container:
+        "docker://ghcr.io/crerecombinase/ldsc"
     shell:
         config_d['LDSC']+"ldsc.py --l2 --bfile {params.plink}  --extract {input.snp_list} --ld-wind-cm {params.wind} --out {params.odir}"
 
@@ -938,6 +1012,8 @@ rule baseline_ldsc:
         baseline=config_d['L2']+"ukb_baseline_{wind}/{model}/{source}.{samplesize}.",
         weights=config_d['L2']+"ukb_baseline_{wind}/{model}/{source}.{samplesize}.",#,config_d['WEIGHTS']+"weights.hm3_noMHC.",
         odir="results/sim_ukb_{source}/{model}_{trait}_{sp}_{h2}_{samplesize}_{wind}.int"
+    container:
+        "docker://ghcr.io/crerecombinase/ldsc"
     shell:
         config_d['LDSC']+"ldsc.py --h2 {input.gwasf} --ref-ld-chr {params.baseline} --w-ld-chr {params.weights} --out {params.odir}"
 
@@ -955,6 +1031,8 @@ rule baseline_ldsc_noi:
         baseline=config_d['L2']+"ukb_baseline_{wind}/{model}/{source}.{samplesize}.",
         weights=config_d['L2']+"ukb_baseline_{wind}/{model}/{source}.{samplesize}.",#,config_d['WEIGHTS']+"weights.hm3_noMHC.",
         odir="results/sim_ukb_{source}/{model}_{trait}_{sp}_{h2}_{samplesize}_{wind}.noint"
+    container:
+        "docker://ghcr.io/crerecombinase/ldsc"
     shell:
         config_d['LDSC']+"ldsc.py --h2 {input.gwasf} --ref-ld-chr {params.baseline} --w-ld-chr {params.weights} --no-intercept --out {params.odir}"
 

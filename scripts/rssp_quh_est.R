@@ -1,3 +1,6 @@
+## input_f  <- c("/gpfs/data/xhe-lab/polyg/ld_noshrink_polym/ind_10000_chr6_1.h5","/gpfs/data/xhe-lab/polyg/ld_noshrink_polym/ind_10000_chr6_2.h5","/gpfs/data/xhe-lab/polyg/ld_noshrink_polym/ind_10000_chr6_3.h5","/gpfs/data/xhe-lab/polyg/ld_noshrink_polym/ind_10000_chr6_4.h5","/gpfs/data/xhe-lab/polyg/ld_noshrink_polym/ind_10000_chr6_5.h5","/gpfs/data/xhe-lab/polyg/ld_noshrink_polym/ind_10000_chr6_6.h5","/gpfs/data/xhe-lab/polyg/ld_noshrink_polym/ind_10000_chr6_7.h5","/gpfs/data/xhe-lab/polyg/ld_noshrink_polym/ind_10000_chr6_8.h5","/gpfs/data/xhe-lab/polyg/ld_noshrink_polym/ind_10000_chr6_9.h5","/gpfs/data/xhe-lab/polyg/ld_noshrink_polym/ind_10000_chr6_10.h5")
+
+## sumstat_h5 <- "/gpfs/data/xhe-lab/polyg/gwas_h5/polym_10_0.6_10000_sumstats.h5"
 library(RSSp)
 library(dplyr)
 library(EigenH5)
@@ -8,7 +11,7 @@ library(purrr)
 input_f <- snakemake@input[["h5f"]]
 sumstat_h5 <- snakemake@input[["gwasf"]]
                                         #snplist_f <- snakemake@input[["snp_list"]]
-                                        #snplist_df <- tibble(rsid=rsid2int(scan(snplist_f,what=character())))
+                                        #snplist_df <- tibble(rsid=rsid2int(scan(snplist_f","what=character())))
 
 offset_df <- read_df_h5(sumstat_h5,"ldmap_region_offset") %>% mutate(ldmr=ldetect_EUR[value])
 panel_size <- as.integer(snakemake@params[["samplesize"]] %||% 10000)
@@ -69,7 +72,13 @@ read_r <- function(tldmr,tf) {
 }
 
 rssp_df <- map2_dfr(all_reg_df$ldmr,all_reg_df$file, read_r) %>% filter(D > 1e-5)
-for(i in seq_len(ncol(rssp_df$quh))){
-  x <- rssp_df$quh[,i]
-  tibble(quh=x,D=rssp_df$D,ldmr=rssp_df$ldmr) %>%   qs::qsave(oldf[i])
+stopifnot(NCOL(rssp_df$quh)>0)
+if(NCOL(rssp_df$quh)==1){
+  x <- rssp_df$quh
+  tibble(quh=x,D=rssp_df$D,ldmr=rssp_df$ldmr) %>%   qs::qsave(oldf[1])
+}else{
+  for(i in seq_len(ncol(rssp_df$quh))){
+    x <- rssp_df$quh[,i]
+    tibble(quh=x,D=rssp_df$D,ldmr=rssp_df$ldmr) %>%   qs::qsave(oldf[i])
+  }
 }

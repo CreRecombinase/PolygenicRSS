@@ -4,6 +4,7 @@ library(purrr)
 library(readr)
 library(vroom)
 input_f <- snakemake@input[["bimf"]]
+stopifnot(file.exists(input_f),!is.null(input_f))
 output_f <- snakemake@output[["snplistf"]]
 host <- snakemake@params[["host"]] %||% "gardner"
 has_chr <- as.logical(snakemake@params[["has_chr"]] %||% FALSE)
@@ -37,21 +38,21 @@ rpb <- function(file, compact = TRUE,has_chr=FALSE, cols = bim_cols(chrom=col_ch
 
 
 
-      walk2(input_f, output_f,
-            function(input,output){
-              rpb(input,has_chr=has_chr) %>%
-                count(rsid) %>%
-                filter(n==1) %>%
-                pull(rsid) %>% 
-                write_lines(output)
-            })
+  walk2(input_f, output_f,
+        function(input,output){
+          rpb(input,has_chr=has_chr) %>%
+            count(rsid) %>%
+            filter(n==1) %>%
+            pull(rsid) %>% 
+            write_lines(output)
+        })
 }else{
-  input_df <- vroom::vroom(input_f,delim="\t",col_names=FALSE)
+  input_df <- readr::read_tsv(input_f,col_names=FALSE)
   ctp <- count(input_df,X3)
   sct <- semi_join(input_df,
-                     filter(ctp,n==1))
+                   filter(ctp,n==1))
   sct_snp <- sct %>% filter(nchar(X4)==1,
                             nchar(X5)==1)
   filter(sct_snp,
          X6>0.01) %>% pull(X2) %>% write_lines(output_f)
-  }
+}
